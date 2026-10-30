@@ -1,0 +1,23 @@
+name: Build and test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test and package
+        shell: pwsh
+        run: ./build-release.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Stroik-Windows-x64
+          path: |
+            dist/Stroik.exe
+            dist/Stroik.exe.sha256
+            dist/Stroik-*-Windows-x64.zip

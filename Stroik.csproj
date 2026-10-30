@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Stroik</AssemblyName>
+    <RootNamespace>Stroik</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>Stroik</Product>
+    <Authors>Proszczok</Authors>
+    <Description>Accessible instrument tuner for blind and visually impaired musicians / Dostępny stroiciel instrumentów dla osób niewidomych i słabowidzących.</Description>
+    <Copyright>Copyright (c) 2026 Proszczok</Copyright>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+  </ItemGroup>
+</Project>
