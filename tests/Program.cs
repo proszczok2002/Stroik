@@ -77,17 +77,47 @@ string profile = Path.Combine(Path.GetTempPath(), "stroik-test-" + Guid.NewGuid(
 try
 {
     var original = new Preferences { Method = TuningMethod.Electronic, ConcertA = 435,
-        TargetMidi = 67, View = TunerView.Classic, DarkTheme = true, AutoStrike = true };
+        TargetMidi = 40, Instrument = InstrumentKind.Guitar, View = TunerView.Classic, DarkTheme = true, AutoStrike = true };
     Preferences.SaveToFile(profile, original);
     var loaded = Preferences.ReadFile(profile);
     if (loaded.Method != original.Method || loaded.ConcertA != 435 ||
-        loaded.View != original.View || !loaded.DarkTheme || !loaded.AutoStrike)
+        loaded.View != original.View || loaded.Instrument != InstrumentKind.Guitar || !loaded.DarkTheme || !loaded.AutoStrike)
         throw new Exception("Profil nie zachował ustawień.");
     File.WriteAllText(profile, "{\"ConcertA\":999}");
     try { Preferences.ReadFile(profile); throw new Exception("Zaakceptowano niepoprawny profil."); }
     catch (InvalidDataException) { }
 }
 finally { File.Delete(profile); }
+foreach ((InstrumentKind kind, int[] expected) in new (InstrumentKind, int[])[]
+{
+    (InstrumentKind.Guitar, [40, 45, 50, 55, 59, 64]),
+    (InstrumentKind.Ukulele, [67, 60, 64, 69]),
+    (InstrumentKind.Violin, [55, 62, 69, 76]),
+    (InstrumentKind.Bass, [28, 33, 38, 43])
+})
+{
+    int[] actual = InstrumentCatalog.Strings(kind).Select(s => s.Midi).ToArray();
+    if (!actual.SequenceEqual(expected) || InstrumentCatalog.DefaultMidi(kind) != expected[0])
+        throw new Exception($"Niepoprawna kolejność lub oktawy strun: {kind}.");
+    foreach (int midi in expected)
+    {
+        double frequency = PitchDetector.NoteFromMidi(midi, 440).Frequency;
+        if (InstrumentCatalog.NearestOpenString(kind, frequency, 440) != midi)
+            throw new Exception($"Tryb automatyczny nie rozpoznał struny {kind}: {midi}.");
+    }
+}
+if (InstrumentCatalog.HasStrings(InstrumentKind.Piano) || InstrumentCatalog.HasStrings(InstrumentKind.Chromatic))
+    throw new Exception("Tryby pełnozakresowe nie powinny ograniczać dźwięków.");
+var oldProfile = System.Text.Json.JsonSerializer.Deserialize<Preferences>("{\"ProfileVersion\":1,\"TargetMidi\":67}");
+if (oldProfile?.Instrument != InstrumentKind.Piano)
+    throw new Exception("Stary profil bez wyboru instrumentu nie zachował pianina.");
+try
+{
+    new Preferences { Instrument = (InstrumentKind)99 }.Validate();
+    throw new Exception("Zaakceptowano nieznany instrument.");
+}
+catch (InvalidDataException) { }
+
 using (var wave = TuningFork.BuildWave(440))
 {
     if (wave.Length != 44 + 44100 * 3 * 2)
@@ -105,6 +135,7 @@ var uiThread = new Thread(() =>
         using var form = new TunerForm();
         var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
         var method = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_method", flags)!.GetValue(form)!;
+        var instrument = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_instrument", flags)!.GetValue(form)!;
         var target = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_target", flags)!.GetValue(form)!;
         var octave = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_octave", flags)!.GetValue(form)!;
         var view = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_view", flags)!.GetValue(form)!;
@@ -113,7 +144,10 @@ var uiThread = new Thread(() =>
         var language = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_language", flags)!.GetValue(form)!;
         var dark = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_dark", flags)!.GetValue(form)!;
         var updates = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_updates", flags)!.GetValue(form)!;
-        if (method.Items.Count != 2 || target.Items.Count != NoteCatalog.HighestMidi - NoteCatalog.LowestMidi + 2 ||
+        if (method.Items.Count != 2 || instrument.Items.Count != 6 ||
+            target.Items.Count != (InstrumentCatalog.HasStrings((InstrumentKind)instrument.SelectedIndex)
+                ? InstrumentCatalog.Strings((InstrumentKind)instrument.SelectedIndex).Count + 1
+                : NoteCatalog.HighestMidi - NoteCatalog.LowestMidi + 2) ||
             octave.Items.Count != 9 || view.Items.Count != 2 || string.IsNullOrWhiteSpace(target.AccessibleName))
             throw new Exception("Interfejs nie udostępnia wszystkich metod, oktaw lub opisów dostępności.");
         if (tabs.TabPages.Count != 2 || tabs.SelectedIndex != 0 ||
@@ -123,19 +157,44 @@ var uiThread = new Thread(() =>
             throw new Exception($"Zakładki: count={tabs.TabPages.Count}, selected={tabs.SelectedIndex}, parent={language.Parent?.GetType().Name}, tabParent={language.Parent?.Parent?.GetType().Name}, lang={language.Parent?.Parent == settingsTab}, dark={dark.Parent == language.Parent}, updates={updates.Parent == language.Parent}, draw={tabs.DrawMode}");
         var englishField = typeof(TunerForm).GetField("_english", flags)!;
         var applyLanguage = typeof(TunerForm).GetMethod("ApplyLanguage", flags)!;
+        var populateChoices = typeof(TunerForm).GetMethod("PopulateChoices", flags)!;
+        var readSettings = typeof(TunerForm).GetMethod("ReadSettings", flags)!;
+        Preferences originalSettings = (Preferences)readSettings.Invoke(form, null)!;
+        foreach (InstrumentKind kind in Enum.GetValues<InstrumentKind>())
+        {
+            var fixture = new Preferences { Instrument = kind, TargetMidi = InstrumentCatalog.DefaultMidi(kind),
+                English = originalSettings.English };
+            populateChoices.Invoke(form, [fixture]);
+            applyLanguage.Invoke(form, null);
+            int expectedCount = InstrumentCatalog.HasStrings(kind) ? InstrumentCatalog.Strings(kind).Count + 1
+                : NoteCatalog.HighestMidi - NoteCatalog.LowestMidi + 2;
+            if (instrument.SelectedIndex != (int)kind || target.Items.Count != expectedCount ||
+                target.SelectedIndex != (InstrumentCatalog.HasStrings(kind) ? 1 : NoteCatalog.DefaultMidi - NoteCatalog.LowestMidi + 1))
+                throw new Exception($"Lista dźwięków nie odpowiada instrumentowi {kind}.");
+            if (kind == InstrumentKind.Guitar &&
+                !target.Items[1]!.ToString()!.Contains("6:", StringComparison.Ordinal))
+                throw new Exception("Lista gitary nie wskazuje numeru struny.");
+        }
+        populateChoices.Invoke(form, [originalSettings]);
+        applyLanguage.Invoke(form, null);
         bool originalEnglish = (bool)englishField.GetValue(form)!;
         foreach (bool english in new[] { false, true })
         {
             englishField.SetValue(form, english);
+            populateChoices.Invoke(form, [new Preferences { Instrument = InstrumentKind.Guitar, TargetMidi = 40, English = english }]);
             applyLanguage.Invoke(form, null);
-            if (tabs.TabPages[0].Text != (english ? "Tuner" : "Stroik") ||
+            if (instrument.Items[1]!.ToString() != (english ? "Guitar" : "Gitara") ||
+                !target.Items[1]!.ToString()!.StartsWith(english ? "String 6:" : "Struna 6:", StringComparison.Ordinal) ||
+                tabs.TabPages[0].Text != (english ? "Tuner" : "Stroik") ||
                 settingsTab.Text != (english ? "Settings" : "Ustawienia") ||
                 settingsTab.AccessibleName != settingsTab.Text ||
                 string.IsNullOrWhiteSpace(language.AccessibleName) ||
+                string.IsNullOrWhiteSpace(instrument.AccessibleName) ||
                 string.IsNullOrWhiteSpace(updates.AccessibleName))
                 throw new Exception("Zakładki lub ich etykiety dostępności nie przełączają się PL/EN.");
         }
         englishField.SetValue(form, originalEnglish);
+        populateChoices.Invoke(form, [originalSettings]);
         applyLanguage.Invoke(form, null);
     }
     catch (Exception error) { uiError = error; }

@@ -10,6 +10,7 @@
     <Compile Include="../PitchDetector.cs" Link="PitchDetector.cs" />
     <Compile Include="../Updater.cs" Link="Updater.cs" />
     <Compile Include="../NoteCatalog.cs" Link="NoteCatalog.cs" />
+    <Compile Include="../InstrumentCatalog.cs" Link="InstrumentCatalog.cs" />
     <Compile Include="../Preferences.cs" Link="Preferences.cs" />
     <Compile Include="../TuningFork.cs" Link="TuningFork.cs" />
     <Compile Include="../TunerForm.cs" Link="TunerForm.cs" />

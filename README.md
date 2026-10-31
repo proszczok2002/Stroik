@@ -1,4 +1,4 @@
-# Stroik 1.02
+# Stroik 1.03
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -16,15 +16,32 @@ Przy pierwszym uruchomieniu wybrany jest **Kamerton**. Przycisk **Uderz kamerton
 
 ## Widoki i dźwięki
 
-**Widok dla początkujących** pokazuje wskazówki i wybór oktawy. **Widok klasyczny** zachowuje zwięzły układ; wybór oktawy można w nim włączyć polem przed listą dźwięków. Tab przechodzi do następnej kontrolki, Shift+Tab wraca do poprzedniej. Na liście dźwięków strzałki przechodzą bez przerwy przez granice oktaw. Naciśnij **I** lub **S**, aby przejść do kolejnego dźwięku z krzyżykiem: cis, dis, fis lub gis.
+**Widok dla początkujących** pokazuje wskazówki właściwe dla wybranego instrumentu. **Widok klasyczny** zachowuje zwięzły układ. Tab przechodzi do następnej kontrolki, Shift+Tab wraca do poprzedniej. Przy pianinie i w trybie chromatycznym dostępny jest wybór oktawy oraz pełna lista dźwięków; strzałki przechodzą przez granice oktaw, a **I** lub **S** wybiera kolejny dźwięk z krzyżykiem. Przy instrumentach strunowych strzałki przechodzą po pustych strunach, a wybór oktawy jest ukryty.
 
-Lista obejmuje 88 klawiszy fortepianu, od A subkontra do c pięciokreślnego. Domyślnie wybrane jest **g w oktawie razkreślnej** (dawne G4). W trybie elektronicznym można też wybrać automatyczne rozpoznanie najbliższej nuty. Polskie H odpowiada angielskiemu B, a polskie B — angielskiemu B-flat. Przy wysokich i bardzo niskich dźwiękach wynik mikrofonu zależy szczególnie od sprzętu i harmonicznych; sprawdzono tony syntetyczne, nie każdy instrument.
+Pianino i tryb chromatyczny obejmują 88 dźwięków od A subkontra do c pięciokreślnego. Domyślnie wybrane jest **pianino i g w oktawie razkreślnej** (G4). Przy wysokich i bardzo niskich dźwiękach wynik mikrofonu zależy szczególnie od sprzętu i harmonicznych; sprawdzono tony syntetyczne, nie każdy instrument.
+
+## Wybór instrumentu
+
+W polu **Instrument** wybierz pianino / fortepian, gitarę, ukulele, skrzypce, gitarę basową albo tryb chromatyczny. Lista dźwięków zmienia się na puste struny w standardowym stroju:
+
+| Instrument | Struny w kolejności listy |
+| --- | --- |
+| Gitara | E2–A2–D3–G3–H3–E4 (struny 6–1) |
+| Ukulele | G4–C4–E4–A4 (struny 4–1, wysokie G) |
+| Skrzypce | G3–D4–A4–E5 (struny 4–1) |
+| Gitara basowa | E1–A1–D2–G2 (struny 4–1) |
+
+Polskie **H** odpowiada angielskiemu **B**, a polskie **B** — angielskiemu **B-flat**. Listy strun odnoszą się do [standardowej gitary](https://www.fender.com/articles/setup/standard-tuning-how-eadgbe-came-to-be), [ukulele](https://kalabrand.com/pages/ukulele-tuning), [skrzypiec](https://www.yamaha.com/en/musical_instrument_guide/violin/mechanism/mechanism002.html) i [basu](https://www.fender.com/articles/instruments/5-tips-to-move-from-guitar-to-bass).
+
+W trybie elektronicznym można wybrać ręcznie strunę albo **Automatycznie**. Przy wybranym instrumencie automatyczny wynik porównuje usłyszany dźwięk z najbliższą pustą struną tego instrumentu; przy pianinie i w trybie chromatycznym z najbliższą nutą. Kamerton gra wybrany dźwięk. Dla alternatywnych strojów, ukulele z niskim G, pięciostrunowego basu lub gry na progach użyj trybu chromatycznego i ręcznie wybierz dźwięk. Program zapamiętuje instrument oraz zapisuje go w profilach JSON. Starsze profile bez tego pola wczytują się jako pianino.
+
+**Ważne dla pianina:** wybór instrumentu nie mierzy indywidualnej nieharmoniczności strun i nie oblicza rozszerzonego stroju oktaw. Sam wskaźnik częstotliwości nie zastępuje fachowego strojenia całego pianina. [Piano Technicians Guild wyjaśnia strojenie rozszerzone](https://my.ptg.org/communities/community-home/digestviewer/viewthread?CommunityKey=6265a40b-9fd2-4152-a628-bd7c7d770cbf&MessageKey=c2e42d9f-6450-4ec6-a2d3-48f3b6a2ae79&tab=digestviewer).
 
 ## Ustawienia i profile
 
-Kolejność ustawień to częstotliwość odniesienia A, czułość mikrofonu, próg oceny w centach, oktawa i dźwięk docelowy. Standard wynosi **A=440 Hz**. Przy starym instrumencie czasem właściwy jest niższy strój, np. 430–435 Hz, ale sama epoka nie wyznacza bezpiecznej wartości. **Przed podniesieniem naciągu starego pianina do 440 Hz poproś technika o ocenę jego konstrukcji, stanu i właściwego stroju.** Nie zakładaj, że każdy instrument z XIX wieku powinien być strojony do 430–435 Hz. [Piano Technicians Guild: zmiana wysokości stroju](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising) · [PTG: stan starszego instrumentu](https://my.ptg.org/ptgmain/piano/care/care-faqs)
+Po metodzie strojenia wybiera się instrument i widok. Dalej są częstotliwość odniesienia A, czułość mikrofonu, próg oceny w centach oraz dźwięk lub struna docelowa. Oktawa jest dostępna dla pianina i trybu chromatycznego. Standard wynosi **A=440 Hz**. Przy starym instrumencie czasem właściwy jest niższy strój, np. 430–435 Hz, ale sama epoka nie wyznacza bezpiecznej wartości. **Przed podniesieniem naciągu starego pianina do 440 Hz poproś technika o ocenę jego konstrukcji, stanu i właściwego stroju.** Nie zakładaj, że każdy instrument z XIX wieku powinien być strojony do 430–435 Hz. [Piano Technicians Guild: zmiana wysokości stroju](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising) · [PTG: stan starszego instrumentu](https://my.ptg.org/ptgmain/piano/care/care-faqs)
 
-Czułość jest opisana według warunków (cichy instrument, normalna, hałas w tle). Próg „dobrze” jest podawany w centach, a odchyłka także w hercach. Ustawienia są zapisywane lokalnie, w tym język, motyw, metoda, widok, dźwięk i odstęp kamertonu.
+Czułość jest opisana według warunków (cichy instrument, normalna, hałas w tle). Próg „dobrze” jest podawany w centach, a odchyłka także w hercach. Ustawienia są zapisywane lokalnie, w tym język, motyw, metoda, instrument, widok, dźwięk i odstęp kamertonu.
 
 **Ctrl+S** lub **Zapisz plik ustawień** w menu kontekstowym zapisuje profil JSON. **Ctrl+O** lub **Wczytaj plik ustawień** przywraca profil. Możesz utworzyć profile dla domu, kawiarni i instrumentu historycznego. Plik zawiera ustawienia, w tym metodę strojenia; nie zawiera nagrań. Zakładka **Ustawienia** zawiera wybór języka, ciemny motyw i przycisk ręcznego sprawdzenia aktualizacji. Zakładka **Stroik** zawiera pozostałe parametry strojenia oraz profile. Między zakładkami można przechodzić klawiaturą; kontrolki mają polskie i angielskie nazwy dostępności.
 

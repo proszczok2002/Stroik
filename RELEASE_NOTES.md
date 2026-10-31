@@ -1,17 +1,21 @@
-# Stroik 1.02 / Stroik 1.02
+# Stroik 1.03 / Stroik 1.03
 
 ## Polski
 
-Język programu, ciemny motyw i przycisk **Sprawdź aktualizacje** znajdują się teraz w osobnej zakładce **Ustawienia**. Zakładka **Stroik** zawiera kamerton, stroik elektroniczny, wybór oktawy i dźwięku oraz profile. Nazwy zakładek i kontrolek są dostępne po polsku i angielsku; nawigacja klawiaturą działa przez Tab i Shift+Tab. Nagłówki zakładek dostosowują się do ciemnego motywu.
+Wybierz **pianino / fortepian, gitarę, ukulele, skrzypce, gitarę basową albo tryb chromatyczny**. Gitara, ukulele, skrzypce i bas pokazują standardowe puste struny we właściwych oktawach. Pianino i tryb chromatyczny zachowują pełną listę 88 dźwięków. Lista, wskazówki dla początkujących i nazwy dostępności działają po polsku i angielsku.
 
-Pobierz `Stroik.exe` oraz `Stroik.exe.sha256`. Archiwum ZIP zawiera również dokumentację PL/EN i licencję. Program jest samodzielny dla Windows x64 i nie jest podpisany cyfrowo. Stroik 1.01 może pobrać tę wersję przez aktualizator po potwierdzeniu użytkownika. Wersja 1.0 ma tę samą ścieżkę aktualizacji przez GitHub.
+W stroiku elektronicznym wybierz strunę ręcznie lub ustaw **Automatycznie**. Wtedy program porównuje zmierzony dźwięk z najbliższą pustą struną wybranego instrumentu. Kamerton odtwarza częstotliwość wybranej struny lub nuty. Wybór instrumentu jest zapamiętywany i zapisywany w profilach JSON; stare profile domyślnie używają pianina. Dla stroju alternatywnego użyj trybu chromatycznego.
 
-Testy automatyczne sprawdzają położenie kontrolek w zakładkach oraz etykiety obu języków. Faktyczny odczyt NVDA, mikrofon i instrument wymagają próby na sprzęcie.
+Wybór pianina nie oblicza indywidualnego stroju rozszerzonego oktaw. Działanie z rzeczywistym mikrofonem, instrumentem i NVDA wymaga próby na sprzęcie.
+
+Pobierz samodzielny, niepodpisany cyfrowo Stroik.exe dla Windows x64. Plik Stroik.exe.sha256 pozwala zweryfikować pobrany EXE. ZIP zawiera EXE, sumę, instrukcje PL/EN i licencję. Użytkownicy poprzednich wersji otrzymają propozycję aktualizacji przez GitHub po uruchomieniu programu.
 
 ## English
 
-Language, dark theme and **Check for updates** now live in a separate **Settings** tab. The **Tuner** tab contains the tuning fork, electronic tuner, octave and note selection, and profiles. Tab and control names are localized in Polish and English; Tab and Shift+Tab navigate between controls. Tab headers also follow the dark theme.
+Choose **piano, guitar, ukulele, violin, bass guitar or chromatic mode**. The guitar, ukulele, violin and bass presets show standard open strings in the correct octaves. Piano and chromatic modes retain the complete 88-key note range. The lists, beginner guidance and accessibility names are available in Polish and English.
 
-Download `Stroik.exe` and `Stroik.exe.sha256`. The ZIP includes PL/EN documentation and the license. This is a self-contained, unsigned Windows x64 executable. Stroik 1.01 can download this version through the updater after user confirmation. Version 1.0 uses the same GitHub update path.
+In electronic mode, select a string manually or choose **Automatic** to compare the measured pitch with the selected instrument's nearest open string. The tuning fork plays the selected string or note. The instrument choice is remembered and saved in JSON profiles; older profiles default to piano. Use chromatic mode for alternate tunings.
 
-Automated tests check tab placement and both interface languages. Real NVDA speech, microphone behavior and instrument accuracy require hardware testing.
+Piano mode does not calculate an individual stretched-octave tuning curve. Real microphone, instrument and NVDA behavior requires hardware testing.
+
+Download the self-contained, unsigned Stroik.exe for Windows x64. Use Stroik.exe.sha256 to verify it. The ZIP includes the EXE, checksum, PL/EN guides and license. Previous versions can offer this GitHub update at startup.

@@ -1,5 +1,12 @@
 # Changelog / Historia zmian
 
+## 1.0.3 (Stroik 1.03) — 2026-10-31
+
+- Added piano, guitar, ukulele, violin, bass guitar and chromatic instrument choices, with standard open-string lists and localized labels.
+- Automatic electronic tuning now compares a string instrument against its nearest open string; piano and chromatic modes retain the full 88-key range.
+- Added instrument-specific beginner guidance, saved instrument choice and backward-compatible JSON profiles.
+- Updated Polish and English documentation and tests for presets, automatic selection and UI lists.
+
 ## 1.0.2 (Stroik 1.02) — 2026-10-31
 
 - Moved language, dark theme and manual update check to a dedicated Settings tab.

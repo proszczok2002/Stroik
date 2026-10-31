@@ -12,6 +12,7 @@ internal sealed class Preferences
     public bool DarkTheme { get; set; }
     public TuningMethod Method { get; set; } = TuningMethod.TuningFork;
     public TunerView View { get; set; } = TunerView.Beginner;
+    public InstrumentKind Instrument { get; set; } = InstrumentKind.Piano;
     public double ConcertA { get; set; } = 440;
     public int SensitivityIndex { get; set; } = 1;
     public int ToleranceCents { get; set; } = 5;
@@ -42,7 +43,7 @@ internal sealed class Preferences
 
     internal void Validate()
     {
-        if (ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) ||
+        if (ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) ||
             !double.IsFinite(ConcertA) || ConcertA is < 390 or > 466 ||
             SensitivityIndex is < 0 or > 2 || ToleranceCents is < 1 or > 20 ||
             TargetMidi is < -1 or > NoteCatalog.HighestMidi ||
