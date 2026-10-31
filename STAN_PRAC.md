@@ -42,3 +42,13 @@ Nie wykonano jeszcze pełnej próby aktualizacji po kliknięciu „Tak” z uruc
 - Kod aktualizatora z tagu v1.0.0 wykrył publiczną wersję 1.0.1, pobrał EXE o rozmiarze 116168828 bajtów i zweryfikował jego SHA-256.
 - Izolowana podmiana starego EXE 1.0 nowym EXE 1.01: kod procesu pomocniczego 0, nowy plik ma poprawną sumę, nowa aplikacja uruchomiła się, stara kopia została usunięta.
 - Pełne przejście przez graficzny przycisk „Tak” w uruchomionym EXE 1.0 nie zostało wykonane, ponieważ narzędzie sterowania oknem nie uruchomiło się w tym środowisku. Nie wykonano też próby z rzeczywistym NVDA, mikrofonem, głośnikami i instrumentem.
+
+## Wydanie 1.02 — 31 października 2026 r.
+
+- Kod wydania: commit 574f626fc95e045cff56b89638d1845c8aa68911, tag v1.0.2, tytuł „Stroik 1.02”.
+- Wydanie publiczne: https://github.com/proszczok2002/Stroik/releases/tag/v1.0.2
+- Język, ciemny motyw i ręczne sprawdzanie aktualizacji przeniesiono do osobnej zakładki Ustawienia / Settings. Główna zakładka Stroik / Tuner pozostaje miejscem strojenia i profili.
+- Testy lokalne i GitHub Actions https://github.com/proszczok2002/Stroik/actions/runs/41181927009 zakończyły się sukcesem. Test struktury WinForms sprawdził umieszczenie kontrolek, domyślną zakładkę i polskie oraz angielskie nazwy dostępności.
+- Publiczne EXE, SHA-256 i ZIP pobrano bez uwierzytelniania; ich sumy są identyczne z plikami lokalnymi. SHA-256 EXE: EFA4914705544ABD5DCB5A9FCB3554E42B0D21F34886070EEA122846C874F689. Publiczne API najnowszego wydania wskazuje v1.0.2.
+- Użytkownik zgłosił w rozmowie, że aktualizator z poprzedniego wydania zadziałał. Tego zgłoszenia nie należy mylić z osobnym testem NVDA lub sprzętu audio.
+- Bezpośrednia próba odczytu nowego interfejsu w NVDA nie została wykonana; narzędzie do sterowania oknem nie uruchamia się w tym środowisku.
