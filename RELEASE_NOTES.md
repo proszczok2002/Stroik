@@ -1,17 +1,17 @@
-# Stroik 1.01 / Stroik 1.01
+# Stroik 1.02 / Stroik 1.02
 
 ## Polski
 
-Nowa wersja dodaje **kamerton** z ręcznym lub automatycznym, okresowym uderzeniem oraz **stroik elektroniczny** z mikrofonem. Ostatnio wybrana metoda jest zapamiętywana. Dostępne są widok klasyczny i widok dla początkujących, nazwy dźwięków z tradycyjnymi oktawami, lista całego zakresu 88 klawiszy oraz skróty I/S do podwyższonych dźwięków.
+Język programu, ciemny motyw i przycisk **Sprawdź aktualizacje** znajdują się teraz w osobnej zakładce **Ustawienia**. Zakładka **Stroik** zawiera kamerton, stroik elektroniczny, wybór oktawy i dźwięku oraz profile. Nazwy zakładek i kontrolek są dostępne po polsku i angielsku; nawigacja klawiaturą działa przez Tab i Shift+Tab. Nagłówki zakładek dostosowują się do ciemnego motywu.
 
-Ustawienia można zapisać do profilu JSON przez **Ctrl+S** lub menu kontekstowe, a potem wczytać przez **Ctrl+O**. Standardowa częstotliwość odniesienia wynosi A=440 Hz. Przy starszym pianinie wysokość stroju powinien określić technik po ocenie instrumentu; wiek sam nie uzasadnia konkretnej wartości.
+Pobierz `Stroik.exe` oraz `Stroik.exe.sha256`. Archiwum ZIP zawiera również dokumentację PL/EN i licencję. Program jest samodzielny dla Windows x64 i nie jest podpisany cyfrowo. Stroik 1.01 może pobrać tę wersję przez aktualizator po potwierdzeniu użytkownika. Wersja 1.0 ma tę samą ścieżkę aktualizacji przez GitHub.
 
-Pobierz `Stroik.exe` i `Stroik.exe.sha256`. ZIP zawiera także dokumentację polską i angielską oraz licencję. Plik jest samodzielny dla Windows x64 i nie jest podpisany cyfrowo. Aktualizator wersji 1.0 sprawdzi nowe wydanie przy uruchomieniu i po zgodzie podmieni EXE. Działanie z konkretnym mikrofonem, instrumentem, głośnikami i NVDA wymaga próby na sprzęcie.
+Testy automatyczne sprawdzają położenie kontrolek w zakładkach oraz etykiety obu języków. Faktyczny odczyt NVDA, mikrofon i instrument wymagają próby na sprzęcie.
 
 ## English
 
-This release adds a **synthesized tuning fork** with manual or timed strikes alongside the **electronic microphone tuner**. Stroik remembers the last method. Classic and beginner views include traditional octave names, navigation across the full 88-key piano range, and I/S shortcuts for sharp notes.
+Language, dark theme and **Check for updates** now live in a separate **Settings** tab. The **Tuner** tab contains the tuning fork, electronic tuner, octave and note selection, and profiles. Tab and control names are localized in Polish and English; Tab and Shift+Tab navigate between controls. Tab headers also follow the dark theme.
 
-Settings can be saved to a JSON profile using **Ctrl+S** or the context menu and restored with **Ctrl+O**. A=440 Hz remains the standard reference. A technician should assess an older piano before choosing its pitch; age alone does not determine a safe value.
+Download `Stroik.exe` and `Stroik.exe.sha256`. The ZIP includes PL/EN documentation and the license. This is a self-contained, unsigned Windows x64 executable. Stroik 1.01 can download this version through the updater after user confirmation. Version 1.0 uses the same GitHub update path.
 
-Download `Stroik.exe` and `Stroik.exe.sha256`. The ZIP also includes Polish and English documentation and the license. This is a self-contained, unsigned Windows x64 executable. The 1.0 updater should detect the new release at startup and replace the EXE after consent. Real microphone, instrument, speaker and NVDA behavior requires hardware testing.
+Automated tests check tab placement and both interface languages. Real NVDA speech, microphone behavior and instrument accuracy require hardware testing.

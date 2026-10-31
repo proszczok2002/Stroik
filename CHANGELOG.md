@@ -1,5 +1,11 @@
 # Changelog / Historia zmian
 
+## 1.0.2 (Stroik 1.02) — 2026-10-31
+
+- Moved language, dark theme and manual update check to a dedicated Settings tab.
+- Localized Tuner/Settings tab labels and accessibility names in Polish and English.
+- Styled tab headers for the dark theme and kept the Tuner tab selected on startup.
+- Added structural tests for tab placement and both interface languages.
 ## 1.0.1 (Stroik 1.01) — 2026-10-31
 
 - Two tuning methods: synthesized struck tuning fork with manual or timed strikes, and electronic microphone tuner. The last method is remembered.

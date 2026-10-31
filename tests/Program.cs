@@ -108,9 +108,35 @@ var uiThread = new Thread(() =>
         var target = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_target", flags)!.GetValue(form)!;
         var octave = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_octave", flags)!.GetValue(form)!;
         var view = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_view", flags)!.GetValue(form)!;
+        var tabs = (System.Windows.Forms.TabControl)typeof(TunerForm).GetField("_tabs", flags)!.GetValue(form)!;
+        var settingsTab = (System.Windows.Forms.TabPage)typeof(TunerForm).GetField("_settingsTab", flags)!.GetValue(form)!;
+        var language = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_language", flags)!.GetValue(form)!;
+        var dark = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_dark", flags)!.GetValue(form)!;
+        var updates = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_updates", flags)!.GetValue(form)!;
         if (method.Items.Count != 2 || target.Items.Count != NoteCatalog.HighestMidi - NoteCatalog.LowestMidi + 2 ||
             octave.Items.Count != 9 || view.Items.Count != 2 || string.IsNullOrWhiteSpace(target.AccessibleName))
             throw new Exception("Interfejs nie udostępnia wszystkich metod, oktaw lub opisów dostępności.");
+        if (tabs.TabPages.Count != 2 || tabs.SelectedIndex != 0 ||
+            language.Parent is null || language.Parent.Parent != settingsTab ||
+            dark.Parent != language.Parent || updates.Parent != language.Parent ||
+            tabs.DrawMode != System.Windows.Forms.TabDrawMode.OwnerDrawFixed)
+            throw new Exception($"Zakładki: count={tabs.TabPages.Count}, selected={tabs.SelectedIndex}, parent={language.Parent?.GetType().Name}, tabParent={language.Parent?.Parent?.GetType().Name}, lang={language.Parent?.Parent == settingsTab}, dark={dark.Parent == language.Parent}, updates={updates.Parent == language.Parent}, draw={tabs.DrawMode}");
+        var englishField = typeof(TunerForm).GetField("_english", flags)!;
+        var applyLanguage = typeof(TunerForm).GetMethod("ApplyLanguage", flags)!;
+        bool originalEnglish = (bool)englishField.GetValue(form)!;
+        foreach (bool english in new[] { false, true })
+        {
+            englishField.SetValue(form, english);
+            applyLanguage.Invoke(form, null);
+            if (tabs.TabPages[0].Text != (english ? "Tuner" : "Stroik") ||
+                settingsTab.Text != (english ? "Settings" : "Ustawienia") ||
+                settingsTab.AccessibleName != settingsTab.Text ||
+                string.IsNullOrWhiteSpace(language.AccessibleName) ||
+                string.IsNullOrWhiteSpace(updates.AccessibleName))
+                throw new Exception("Zakładki lub ich etykiety dostępności nie przełączają się PL/EN.");
+        }
+        englishField.SetValue(form, originalEnglish);
+        applyLanguage.Invoke(form, null);
     }
     catch (Exception error) { uiError = error; }
 });

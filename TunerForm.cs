@@ -7,6 +7,9 @@ namespace Stroik;
 
 internal sealed class TunerForm : Form
 {
+    private readonly TabControl _tabs = new() { Dock = DockStyle.Fill, DrawMode = TabDrawMode.OwnerDrawFixed };
+    private readonly TabPage _tunerTab = new(), _settingsTab = new();
+    private readonly Label _preferencesIntro = MakeLabel();
     private readonly Label _heading = MakeLabel(20), _intro = MakeLabel(), _status = MakeLabel();
     private readonly Label _methodTitle = MakeLabel(), _viewTitle = MakeLabel(), _beginnerHint = MakeLabel();
     private readonly Label _resultTitle = MakeLabel(), _details = MakeLabel(), _settingsTitle = MakeLabel(14);
@@ -53,12 +56,18 @@ internal sealed class TunerForm : Form
 
         var content = new TableLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, ColumnCount = 1, Padding = new Padding(18) };
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        Controls.Add(content);
+        Controls.Add(_tabs);
+        _tabs.TabPages.AddRange([_tunerTab, _settingsTab]);
+        _tabs.SelectedIndex = 0;
+        _tunerTab.Controls.Add(content);
+        var settingsContent = new TableLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, ColumnCount = 1, Padding = new Padding(18) };
+        settingsContent.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        _settingsTab.Controls.Add(settingsContent);
         Add(content, _heading); Add(content, _intro);
         Add(content, _methodTitle); Add(content, _method); Add(content, _viewTitle); Add(content, _view);
         Add(content, _beginnerHint); Add(content, _status);
         var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
-        buttons.Controls.AddRange([_start, _stop, _strike, _repeat, _test, _updates]);
+        buttons.Controls.AddRange([_start, _stop, _strike, _repeat, _test]);
         Add(content, buttons);
         Add(content, _autoStrike); Add(content, _intervalTitle); Add(content, _interval); Add(content, _forkHelp);
         Add(content, _resultTitle); Add(content, _result); Add(content, _details);
@@ -71,7 +80,9 @@ internal sealed class TunerForm : Form
         var profileButtons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
         profileButtons.Controls.AddRange([_saveProfile, _loadProfile]);
         Add(content, profileButtons);
-        Add(content, _languageTitle); Add(content, _language); Add(content, _dark);
+        Add(settingsContent, _preferencesIntro);
+        Add(settingsContent, _languageTitle); Add(settingsContent, _language);
+        Add(settingsContent, _dark); Add(settingsContent, _updates);
 
         _initializing = true;
         _language.Items.AddRange(["Polski", "English"]);
@@ -213,8 +224,15 @@ internal sealed class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.01 — dostępny stroiciel", "Stroik 1.01 — accessible tuner");
-        _heading.Text = "Stroik 1.01";
+        Text = T("Stroik 1.02 — dostępny stroiciel", "Stroik 1.02 — accessible tuner");
+        _heading.Text = "Stroik 1.02";
+        _tunerTab.Text = T("Stroik", "Tuner");
+        _settingsTab.Text = T("Ustawienia", "Settings");
+        _tabs.AccessibleName = T("Zakładki Stroika", "Stroik tabs");
+        _tunerTab.AccessibleName = _tunerTab.Text;
+        _settingsTab.AccessibleName = _settingsTab.Text;
+        _preferencesIntro.Text = T("Język, wygląd i aktualizacje programu.", "Language, appearance and program updates.");
+        _tabs.Invalidate();
         _intro.Text = T("Wybierz kamerton lub stroik elektroniczny. Dźwięk docelowy: domyślnie g w oktawie razkreślnej.",
             "Choose a tuning fork or electronic tuner. The default target is G in the one-line octave.");
         _methodTitle.Text = T("Metoda strojenia:", "Tuning method:");
@@ -233,7 +251,7 @@ internal sealed class TunerForm : Form
         _forkHelp.Text = T("Kamerton wydaje krótki, gasnący ton. Jeśli nie masz pewności co do strojenia ze słuchu, najpierw ćwicz na niedrogim, łatwym do obsługi instrumencie, np. ukulele lub gitarze. Zerwanie struny nadal może zranić.",
             "The tuning fork plays a short, decaying tone. If unsure about tuning by ear, first practise on a modest, easy-to-handle instrument such as a ukulele or guitar. A broken string can still cause injury.");
         _resultTitle.Text = T("Ostatni wynik:", "Last result:");
-        _settingsTitle.Text = T("Ustawienia", "Settings");
+        _settingsTitle.Text = T("Parametry strojenia", "Tuning parameters");
         _concertTitle.Text = T("Częstotliwość odniesienia A w hercach (standard 440 Hz):", "A reference frequency in hertz (standard 440 Hz):");
         _concertHelp.Text = T("Starszy instrument może wymagać niższego stroju, np. 430–435 Hz, ale wiek nie wyznacza bezpiecznej wartości. Przed podniesieniem naciągu starego pianina do 440 Hz poproś technika o ocenę stanu, konstrukcji i właściwej wysokości stroju.",
             "An older instrument may need a lower pitch, such as 430–435 Hz, but age alone does not determine a safe value. Before raising an old piano to 440 Hz, ask a piano technician to assess its condition, design and suitable pitch.");
@@ -321,6 +339,19 @@ internal sealed class TunerForm : Form
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
         { MessageBox.Show(this, error.Message, T("Nie można wczytać", "Cannot open"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
+    private void DrawTab(DrawItemEventArgs e)
+    {
+        bool selected = e.Index == _tabs.SelectedIndex;
+        Color background = _dark.Checked
+            ? (selected ? Color.FromArgb(48, 48, 48) : Color.FromArgb(36, 36, 36))
+            : (selected ? SystemColors.ControlLightLight : SystemColors.Control);
+        using var brush = new SolidBrush(background);
+        e.Graphics.FillRectangle(brush, e.Bounds);
+        TextRenderer.DrawText(e.Graphics, _tabs.TabPages[e.Index].Text, _tabs.Font, e.Bounds,
+            _dark.Checked ? Color.WhiteSmoke : SystemColors.ControlText,
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+        if ((e.State & DrawItemState.Focus) != 0) ControlPaint.DrawFocusRectangle(e.Graphics, e.Bounds);
+    }
     private void ApplyTheme()
     {
         Color background = _dark.Checked ? Color.FromArgb(30, 30, 30) : SystemColors.Control;
@@ -332,6 +363,7 @@ internal sealed class TunerForm : Form
             control.ForeColor = foreground;
             if (control is Button button) button.UseVisualStyleBackColor = !_dark.Checked;
         }
+        _tabs.Invalidate();
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))
         {
             int enabled = _dark.Checked ? 1 : 0;

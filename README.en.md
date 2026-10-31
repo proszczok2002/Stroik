@@ -1,4 +1,4 @@
-# Stroik 1.01
+# Stroik 1.02
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -26,11 +26,11 @@ Settings appear in this order: A reference frequency, microphone sensitivity, in
 
 Microphone sensitivity has descriptions for quiet instruments, normal conditions and background noise. Tolerance uses cents; the reported difference also includes hertz. Settings are saved locally, including language, theme, method, view, note and fork interval.
 
-**Ctrl+S** or **Save settings file** in the context menu exports a JSON profile. **Ctrl+O** or **Open settings file** imports one. You can keep profiles for home, a café or a historic instrument. Profiles include the tuning method and no recordings. Language and dark theme can be changed in the app.
+**Ctrl+S** or **Save settings file** in the context menu exports a JSON profile. **Ctrl+O** or **Open settings file** imports one. You can keep profiles for home, a café or a historic instrument. Profiles include the tuning method and no recordings. The **Settings** tab contains language, dark theme and the manual update check. The **Tuner** tab contains the tuning controls and profiles. Both tabs are keyboard accessible and have localized accessibility names.
 
 ## Updates
 
-On launch, Stroik checks the latest stable GitHub release. If a newer version is available, it asks for consent. Choosing **Yes** downloads the EXE and SHA-256 file, checks the hash, closes the old process, replaces the EXE, launches the new one and deletes the old backup. It attempts rollback on replacement failure. **Check for updates** is also available. Automatic replacement requires a writable folder and the filename `Stroik.exe`. Recordings and results are never uploaded.
+On launch, Stroik checks the latest stable GitHub release. If a newer version is available, it asks for consent. Choosing **Yes** downloads the EXE and SHA-256 file, checks the hash, closes the old process, replaces the EXE, launches the new one and deletes the old backup. It attempts rollback on replacement failure. **Check for updates** is available in the **Settings** tab. Automatic replacement requires a writable folder and the filename `Stroik.exe`. Recordings and results are never uploaded.
 
 ## Limits and building
 
