@@ -61,3 +61,14 @@ Nie wykonano jeszcze pełnej próby aktualizacji po kliknięciu „Tak” z uruc
 - build-release.ps1 uruchamia testy, buduje w osobnym katalogu, sprawdza SHA-256, po sukcesie archiwizuje poprzednie pliki i pozostawia nową wersję w dist. Przy nowym numerze wersji archiwizuje też stare katalogi bin/obj oraz katalogi weryfikacji poprzedniego wydania. Skrypt blokuje przypadkowy ponowny build tej samej wersji; świadomy wyjątek przed publikacją wymaga -RebuildSameVersion.
 - Sprawdzono blokadę ponownego buildu bez zmiany aktywnego EXE. Na izolowanej kopii przetestowano przejście z atrapą wersji 1.0.1 do 1.0.2: stare EXE, ZIP, checksum i katalogi kompilacji trafiły do archiwum, ich sumy pozostały zgodne, a aktywny katalog zawierał jeden nowy ZIP i znacznik wersji. Następnie na tej samej kopii zasymulowano przejście do 1.0.3: stare katalogi weryfikacji trafiły do archiwum, a plik projektu pozostał. Wersja 1.0.3 istnieje tylko w izolowanym teście wewnątrz dist/niepotrzebne; nie jest wydaniem ani aktualną wersją projektu.
 - Przy kolejnym wydaniu: zwiększyć wersję w Stroik.csproj, uruchomić build-release.ps1, sprawdzić lokalne pliki i archiwum, poczekać na GitHub Actions, opublikować tag/wydanie oraz porównać pliki pobrane publicznie przez HTTPS.
+
+## Wydanie 1.03 — 31 października 2026 r.
+
+- Kod wydania: commit d5222e8f073f2d9bb1479a2c73d028a1e447db42, tag v1.0.3, tytuł „Stroik 1.03”.
+- Wydanie publiczne: https://github.com/proszczok2002/Stroik/releases/tag/v1.0.3
+- Dodano wybór pianina, gitary, ukulele, skrzypiec, gitary basowej i trybu chromatycznego. Listy strun mają standardowe dźwięki i właściwe oktawy; pianino i tryb chromatyczny zachowują pełny zakres 88 klawiszy.
+- Automatyczny pomiar w trybach strunowych porównuje wynik z najbliższą pustą struną. Wybrany instrument zapisuje się lokalnie i w profilu JSON; stary profil bez tego pola używa pianina. Wskazówki i nazwy kontrolek są po polsku i angielsku.
+- Lokalny build i testy zakończyły się powodzeniem. GitHub Actions dla commita wydania: https://github.com/proszczok2002/Stroik/actions/runs/41183814187 — sukces.
+- Publiczne EXE, plik SHA-256 i ZIP pobrano bez uwierzytelniania; rozmiary i sumy są identyczne z lokalnymi. SHA-256 EXE: FAD405C014E33F17E761485FFE6F61E866A43062E9CBD7D1DD473DDA62CA3B3F.
+- Publiczne API najnowszego wydania wskazuje v1.0.3 jako stabilne wydanie z oboma plikami wymaganymi przez aktualizator. Nie wykonano osobnej próby kliknięcia „Tak” z działającego EXE 1.02 do 1.03; użytkownik wcześniej zgłosił, że aktualizator działał. NVDA, rzeczywisty mikrofon, głośniki i instrumenty nadal wymagają próby na sprzęcie.
+- W głównym katalogu dist pozostają tylko aktualne EXE, checksum, ZIP, kopie bieżącej dokumentacji i znacznik wersji. Wersja 1.02, wcześniejsza kompilacja 1.03 oraz kopie weryfikacyjne znajdują się w dist/niepotrzebne. Kod źródłowy i testy pozostają dostępne do dalszej pracy.
