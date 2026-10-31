@@ -52,3 +52,12 @@ Nie wykonano jeszcze pełnej próby aktualizacji po kliknięciu „Tak” z uruc
 - Publiczne EXE, SHA-256 i ZIP pobrano bez uwierzytelniania; ich sumy są identyczne z plikami lokalnymi. SHA-256 EXE: EFA4914705544ABD5DCB5A9FCB3554E42B0D21F34886070EEA122846C874F689. Publiczne API najnowszego wydania wskazuje v1.0.2.
 - Użytkownik zgłosił w rozmowie, że aktualizator z poprzedniego wydania zadziałał. Tego zgłoszenia nie należy mylić z osobnym testem NVDA lub sprzętu audio.
 - Bezpośrednia próba odczytu nowego interfejsu w NVDA nie została wykonana; narzędzie do sterowania oknem nie uruchamia się w tym środowisku.
+
+## Lokalny stan i zasada kolejnych wydań — 31 października 2026 r.
+
+- Bieżąca publiczna wersja nadal wynosi 1.02 (tag v1.0.2). Ta zmiana dotyczy lokalnego porządku wydań i dokumentacji; nie tworzy nowej wersji programu.
+- W głównym katalogu dist pozostały tylko aktualne Stroik.exe, Stroik.exe.sha256 i Stroik-1.0.2-Windows-x64.zip, aktualne kopie dokumentacji/licencji oraz build-version.txt. SHA-256 EXE: EFA4914705544ABD5DCB5A9FCB3554E42B0D21F34886070EEA122846C874F689, identyczne z publicznym wydaniem.
+- Stare ZIP-y, wcześniejsze EXE, kopie testów aktualizatora i publicznych pobrań, wcześniejsze archiwum oraz zbędny ponowny build przeniesiono bez kasowania do dist/niepotrzebne. Kod źródłowy, testy, lokalny SDK oraz Git pozostają na miejscu.
+- build-release.ps1 uruchamia testy, buduje w osobnym katalogu, sprawdza SHA-256, po sukcesie archiwizuje poprzednie pliki i pozostawia nową wersję w dist. Przy nowym numerze wersji archiwizuje też stare katalogi bin/obj. Skrypt blokuje przypadkowy ponowny build tej samej wersji; świadomy wyjątek przed publikacją wymaga -RebuildSameVersion.
+- Sprawdzono blokadę ponownego buildu bez zmiany aktywnego EXE. Na izolowanej kopii przetestowano przejście z atrapą wersji 1.0.1 do 1.0.2: stare EXE, ZIP, checksum i katalogi kompilacji trafiły do archiwum, ich sumy pozostały zgodne, a aktywny katalog zawierał jeden nowy ZIP i znacznik wersji.
+- Przy kolejnym wydaniu: zwiększyć wersję w Stroik.csproj, uruchomić build-release.ps1, sprawdzić lokalne pliki i archiwum, poczekać na GitHub Actions, opublikować tag/wydanie oraz porównać pliki pobrane publicznie przez HTTPS.
