@@ -64,6 +64,9 @@ if ($previousVersion -ne 'unknown' -and $previousVersion -ne $version) {
     foreach ($relative in @('bin', 'obj', 'tests\bin', 'tests\obj')) {
         Move-ToArchive (Join-Path $repoRoot $relative) (Join-Path 'kompilacje' $relative)
     }
+    foreach ($name in @('verify-public', 'verify-updater')) {
+        Move-ToArchive (Join-Path $output $name) (Join-Path 'weryfikacje' $name)
+    }
 }
 
 try {
@@ -115,6 +118,11 @@ try {
     }
     catch {
         Restore-PreviousRelease
+        $oldPublish = Join-Path $archive 'kompilacje\publish'
+        if ((Test-Path -LiteralPath $oldPublish) -and -not (Test-Path -LiteralPath (Join-Path $output 'publish'))) {
+            $resolvedOld = (Resolve-Path -LiteralPath $oldPublish).ProviderPath
+            Move-Item -LiteralPath (Assert-InWorkspace $resolvedOld) -Destination (Assert-InWorkspace (Join-Path $output 'publish'))
+        }
         throw
     }
     Write-Host "EXE SHA-256: $newHash"
