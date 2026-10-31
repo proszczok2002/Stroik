@@ -61,6 +61,63 @@ try
 }
 catch (InvalidDataException) { }
 
+foreach (double expected in new[] { 27.5, 41.203, 2093.005, 4186.009 })
+{
+    var estimate = PitchDetector.Estimate(Tone(expected, 48000, 8192), 48000);
+    if (estimate is null || Math.Abs(estimate.Value.Frequency - expected) > Math.Max(0.7, expected * 0.006) ||
+        estimate.Value.Confidence < 0.75)
+        throw new Exception($"Błędny pomiar skrajnej oktawy {expected} Hz: {estimate}");
+}
+if (NoteCatalog.Label(67, false) != "g w oktawie razkreślnej" ||
+    NoteCatalog.Label(67, true) != "G, one-line octave" ||
+    NoteCatalog.Octave(71) != 4 || NoteCatalog.Octave(72) != 5 ||
+    NoteCatalog.NextSharp(60) != 61 || NoteCatalog.NextSharp(61) != 63)
+    throw new Exception("Błędna nawigacja lub tradycyjna nazwa dźwięku.");
+string profile = Path.Combine(Path.GetTempPath(), "stroik-test-" + Guid.NewGuid().ToString("N") + ".json");
+try
+{
+    var original = new Preferences { Method = TuningMethod.Electronic, ConcertA = 435,
+        TargetMidi = 67, View = TunerView.Classic, DarkTheme = true, AutoStrike = true };
+    Preferences.SaveToFile(profile, original);
+    var loaded = Preferences.ReadFile(profile);
+    if (loaded.Method != original.Method || loaded.ConcertA != 435 ||
+        loaded.View != original.View || !loaded.DarkTheme || !loaded.AutoStrike)
+        throw new Exception("Profil nie zachował ustawień.");
+    File.WriteAllText(profile, "{\"ConcertA\":999}");
+    try { Preferences.ReadFile(profile); throw new Exception("Zaakceptowano niepoprawny profil."); }
+    catch (InvalidDataException) { }
+}
+finally { File.Delete(profile); }
+using (var wave = TuningFork.BuildWave(440))
+{
+    if (wave.Length != 44 + 44100 * 3 * 2)
+        throw new Exception("Kamerton wygenerował niepoprawny plik WAV.");
+    byte[] header = new byte[4];
+    wave.ReadExactly(header);
+    if (System.Text.Encoding.ASCII.GetString(header) != "RIFF")
+        throw new Exception("Kamerton nie wygenerował pliku RIFF.");
+}
+Exception? uiError = null;
+var uiThread = new Thread(() =>
+{
+    try
+    {
+        using var form = new TunerForm();
+        var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var method = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_method", flags)!.GetValue(form)!;
+        var target = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_target", flags)!.GetValue(form)!;
+        var octave = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_octave", flags)!.GetValue(form)!;
+        var view = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_view", flags)!.GetValue(form)!;
+        if (method.Items.Count != 2 || target.Items.Count != NoteCatalog.HighestMidi - NoteCatalog.LowestMidi + 2 ||
+            octave.Items.Count != 9 || view.Items.Count != 2 || string.IsNullOrWhiteSpace(target.AccessibleName))
+            throw new Exception("Interfejs nie udostępnia wszystkich metod, oktaw lub opisów dostępności.");
+    }
+    catch (Exception error) { uiError = error; }
+});
+uiThread.SetApartmentState(ApartmentState.STA);
+uiThread.Start();
+uiThread.Join();
+if (uiError is not null) throw new Exception("Kontrola interfejsu nie powiodła się.", uiError);
 Console.WriteLine("Wszystkie kontrole pomiaru zakończone poprawnie.");
 
 static short[] Tone(double frequency, int sampleRate, int length)

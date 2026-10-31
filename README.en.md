@@ -1,42 +1,42 @@
-# Stroik 1.0
+# Stroik 1.01
 
-**An accessible instrument tuner for Windows, designed for blind and visually impaired musicians.** It works with the keyboard and exposes results to screen readers, including NVDA. It measures a single note through the default Windows microphone and reports the note, tuning direction, and difference in hertz.
+**An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
-[Dokumentacja po polsku](README.md) · [Releases](https://github.com/proszczok2002/Stroik/releases)
+[Dokumentacja po polsku](README.md) · [Latest release](https://github.com/proszczok2002/Stroik/releases/latest) · [Changelog](CHANGELOG.md)
 
-## Download and run
+## Download
 
-Download `Stroik.exe` from the [latest release](https://github.com/proszczok2002/Stroik/releases/latest). It is a self-contained Windows x64 executable; no .NET installation is needed. Put it in a folder where you have write permission. Windows may show a SmartScreen warning for the unsigned executable.
+Download `Stroik.exe` from GitHub Releases. It is self-contained and needs no .NET installation. Keep it in a writable folder for automatic updates. The EXE is unsigned, so Windows may display a SmartScreen warning. Compare its SHA-256 with `Stroik.exe.sha256` using `Get-FileHash .\Stroik.exe -Algorithm SHA256`.
 
-The release also contains `Stroik.exe.sha256`. To verify the download in PowerShell, run `Get-FileHash .\Stroik.exe -Algorithm SHA256` and compare the result.
+## Tuning methods
 
-## Tuning with a screen reader
+**Tuning fork** is selected on the first launch. **Strike tuning fork** plays a decaying tone for the selected note. Automatic strikes can be enabled with an interval of 1–10 seconds. This is a synthesized approximation of a struck fork, not a recording. Volume depends on Windows and your speakers. If unsure about tuning by ear, practise first on a modest, easy-to-handle instrument such as a ukulele or guitar; a broken string can still injure.
 
-1. Start NVDA and run `Stroik.exe`.
-2. Select **Start microphone**. Stroik uses the default Windows audio input.
-3. Play one note and let it stop. After about 0.45 seconds of silence, the result appears in a text field and is announced through UI Automation.
-4. **Repeat result** announces the last note again. **Test screen reader announcement** checks the notification without using the microphone.
-5. Navigate all controls with Tab; buttons also have Alt access keys.
+**Electronic tuner** uses the default Windows microphone. Start the microphone, play one note, then let it stop. After about 0.45 seconds of silence, the result appears in a text field and is announced through UI Automation. Buttons repeat the last result and test a screen reader announcement without the microphone. The last selected method is remembered across launches.
 
-Choose a specific **target note**, or let Stroik find the nearest note automatically. A4 defaults to 440 Hz. The in-tune threshold is set in cents, while the spoken difference is in hertz. Adjust microphone sensitivity for quiet instruments or background noise. English B corresponds to Polish H; English B-flat corresponds to Polish B.
+## Views and notes
 
-Settings include **Polski / English** and a **dark theme**. Preferences are saved locally in your Windows user profile. On supported Windows versions, the selected theme also applies to the title bar; native drop-down lists may still follow Windows settings.
+**Beginner view** provides guidance and an octave selector. **Classic view** uses a compact layout; its octave selector can be enabled with the checkbox just before the note list. Tab and Shift+Tab move between controls. Arrow keys move continuously across octave boundaries in the note list. Press **I** or **S** there to move to the next sharp note.
 
-## GitHub updates
+The list covers the full 88-key piano range, A0–C8. The default is **G in the one-line octave** (formerly G4). The electronic tuner also offers automatic nearest-note detection. English B corresponds to Polish H; English B-flat is Polish B. Microphone measurement at the extremes depends heavily on hardware and harmonics; synthetic tones have been tested, not every real instrument.
 
-At startup, Stroik checks the latest stable GitHub release. If it finds a newer version, it asks for confirmation. Choosing **Yes** downloads `Stroik.exe` and its SHA-256 file from the same release, verifies the checksum, closes the app, replaces the current EXE, and starts the new version. The old file is deleted after a successful replacement. If replacement fails, Stroik attempts to restore the previous file. You can also use **Check for updates**.
+## Settings and profiles
 
-Automatic replacement requires the file to be named `Stroik.exe` and stored in a writable folder. Tuning continues to work offline. Stroik retrieves release metadata and, only after consent, update files. It does not upload audio recordings or results.
+Settings appear in this order: A reference frequency, microphone sensitivity, in-tune tolerance in cents, octave and target note. **A=440 Hz** is the standard. Some older instruments may need a lower pitch such as 430–435 Hz, but age alone does not determine a safe value. **Before raising an old piano to 440 Hz, ask a piano technician to assess its design, condition and appropriate pitch.** Do not assume every nineteenth-century instrument should use 430–435 Hz. [Piano Technicians Guild: pitch raising](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising) · [PTG: care for older pianos](https://my.ptg.org/ptgmain/piano/care/care-faqs)
 
-## Range and limitations
+Microphone sensitivity has descriptions for quiet instruments, normal conditions and background noise. Tolerance uses cents; the reported difference also includes hertz. Settings are saved locally, including language, theme, method, view, note and fork interval.
 
-The measurement range is approximately 55–1200 Hz. Stroik expects one reasonably steady note. Displaying 0.1 Hz is output resolution, not guaranteed accuracy. Actual accuracy depends on the microphone, instrument, and room. Measurement pauses for 1.5 seconds after an announcement to avoid interpreting the screen reader's voice from speakers as another note. Headphones may help.
+**Ctrl+S** or **Save settings file** in the context menu exports a JSON profile. **Ctrl+O** or **Open settings file** imports one. You can keep profiles for home, a café or a historic instrument. Profiles include the tuning method and no recordings. Language and dark theme can be changed in the app.
 
-Automated tests use generated tones. Real NVDA speech, microphone behavior, and instrument accuracy require separate hardware testing.
+## Updates
 
-## Build from source
+On launch, Stroik checks the latest stable GitHub release. If a newer version is available, it asks for consent. Choosing **Yes** downloads the EXE and SHA-256 file, checks the hash, closes the old process, replaces the EXE, launches the new one and deletes the old backup. It attempts rollback on replacement failure. **Check for updates** is also available. Automatic replacement requires a writable folder and the filename `Stroik.exe`. Recordings and results are never uploaded.
 
-Use .NET SDK 10 on Windows. In the project folder:
+## Limits and building
+
+The approximate microphone detection range is 27.5–4200 Hz for one steady note. Displaying 0.1 Hz does not imply guaranteed accuracy. Measurement pauses for 1.5 seconds after a result to avoid mistaking a screen reader's voice for another note. Real microphone, instrument, NVDA and speaker behavior requires hardware testing.
+
+Build on Windows with .NET SDK 10:
 
 ```powershell
 dotnet run --project tests/PitchChecks.csproj -c Release
@@ -44,8 +44,4 @@ dotnet build Stroik.csproj -c Release
 .\build-release.ps1
 ```
 
-The script creates `dist/Stroik.exe`, `dist/Stroik.exe.sha256`, and a ZIP archive. Each future release must increase the version in `Stroik.csproj`, use a `vX.Y.Z` tag, and publish both the EXE and SHA-256 file in GitHub Releases for the updater to detect it.
-
-Pitch detection uses the YIN method described by de Cheveigné and Kawahara in “YIN, a fundamental frequency estimator for speech and music,” *JASA* 2002. Audio input uses Windows `waveIn`; screen reader notifications use UI Automation.
-
-The code is available under the [MIT license](LICENSE). Please report bugs and ideas through [Issues](https://github.com/proszczok2002/Stroik/issues).
+The script creates an EXE, SHA-256 file and ZIP in `dist`. Pitch detection uses YIN, audio input uses Windows waveIn, and accessibility announcements use UI Automation. The project uses the [MIT license](LICENSE). Please report bugs through [Issues](https://github.com/proszczok2002/Stroik/issues).

@@ -24,10 +24,10 @@ internal static class PitchDetector
         for (int i = 0; i < length; i++) signal[i] = samples[i];
 
         double rate = sampleRate;
-        int minTau = Math.Max(2, (int)Math.Floor(rate / 1200));
-        int maxTau = Math.Min((int)Math.Ceiling(rate / 55), length - 3);
+        int minTau = Math.Max(2, (int)Math.Floor(rate / 4200));
+        int maxTau = Math.Min((int)Math.Ceiling(rate / 27.5), length - 3);
         int comparisonLength = Math.Min(2048, length - maxTau - 2);
-        if (comparisonLength < maxTau * 2) return null;
+        if (comparisonLength < 512) return null;
 
         var normalized = new double[maxTau + 1];
         double runningSum = 0;
@@ -73,7 +73,7 @@ internal static class PitchDetector
         double divisor = 2 * (2 * center - left - right);
         double correction = divisor == 0 ? 0 : Math.Clamp((right - left) / divisor, -1, 1);
         double frequency = rate / (bestTau + correction);
-        if (!double.IsFinite(frequency) || frequency < 55 || frequency > 1200) return null;
+        if (!double.IsFinite(frequency) || frequency < 27.5 || frequency > 4200) return null;
         return (frequency, 1 - center);
     }
 

@@ -1,42 +1,42 @@
-# Stroik 1.0
+# Stroik 1.01
 
-**Dostępny stroiciel instrumentów dla Windows, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Program działa z klawiaturą i udostępnia wyniki czytnikom ekranu, w tym NVDA. Mierzy wysokość pojedynczego dźwięku z domyślnego mikrofonu Windows i podaje nutę, kierunek strojenia oraz odchyłkę w hercach.
+**Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
-[English documentation](README.en.md) · [Wydania](https://github.com/proszczok2002/Stroik/releases)
+[English documentation](README.en.md) · [Najnowsze wydanie](https://github.com/proszczok2002/Stroik/releases/latest) · [Historia zmian](CHANGELOG.md)
 
-## Pobieranie i uruchamianie
+## Pobieranie
 
-Pobierz `Stroik.exe` z [najnowszego wydania](https://github.com/proszczok2002/Stroik/releases/latest). To samodzielny plik dla Windows x64; nie wymaga instalacji .NET. Umieść go w folderze, do którego masz prawo zapisu, i uruchom. Windows może wyświetlić ostrzeżenie SmartScreen dla niepodpisanego pliku.
+Pobierz `Stroik.exe` z GitHub Releases. Jest to samodzielny plik, który nie wymaga instalacji .NET. Umieść go w folderze z prawem zapisu, aby działała automatyczna aktualizacja. Plik nie jest podpisany cyfrowo, więc Windows może wyświetlić ostrzeżenie SmartScreen. Sumę SHA-256 można porównać z `Stroik.exe.sha256` poleceniem `Get-FileHash .\Stroik.exe -Algorithm SHA256`.
 
-Wydanie zawiera także `Stroik.exe.sha256`. Sumę pobranego pliku można sprawdzić poleceniem `Get-FileHash .\Stroik.exe -Algorithm SHA256` w PowerShell.
+## Metody strojenia
 
-## Strojenie z czytnikiem ekranu
+Przy pierwszym uruchomieniu wybrany jest **Kamerton**. Przycisk **Uderz kamerton** odtwarza gasnący ton o częstotliwości wybranego dźwięku. Można też włączyć automatyczne uderzenia i ustawić odstęp od 1 do 10 sekund. To synteza dźwięku zbliżonego do kamertonu widełkowego, a nie próbka prawdziwego kamertonu. Głośność zależy od Windows i głośników. Podczas strojenia ze słuchu na początek warto ćwiczyć na niedrogim, łatwym do obsługi instrumencie, np. ukulele lub gitarze; zerwana struna nadal może zranić.
 
-1. Włącz NVDA i uruchom `Stroik.exe`.
-2. Naciśnij **Włącz mikrofon**. Program korzysta z domyślnego wejścia audio Windows.
-3. Zagraj jedną nutę, po czym pozwól jej ucichnąć. Po około 0,45 sekundy ciszy wynik zostanie umieszczony w polu tekstowym i zgłoszony przez UI Automation.
-4. **Powtórz wynik** ponownie zgłasza ostatnią nutę. **Sprawdź komunikat NVDA** sprawdza samo powiadomienie bez mikrofonu.
-5. Do wszystkich elementów można przechodzić klawiszem Tab; przyciski mają skróty z klawiszem Alt.
+**Stroik elektroniczny** korzysta z domyślnego mikrofonu Windows. Włącz mikrofon, zagraj jedną nutę i pozwól jej ucichnąć. Po około 0,45 sekundy ciszy wynik pojawi się w polu tekstowym i zostanie zgłoszony przez UI Automation. Dostępne są przyciski powtórzenia wyniku i sprawdzenia komunikatu NVDA bez użycia mikrofonu. Ostatnia metoda jest zapamiętywana przy ponownym uruchomieniu.
 
-Można wybrać konkretny **dźwięk docelowy** albo wykrywać najbliższą nutę automatycznie. A4 domyślnie wynosi 440 Hz. Próg „dobrze” jest podawany w centach, a komunikat w hercach. Czułość mikrofonu pomaga przy cichych instrumentach lub hałasie. Polskie H odpowiada angielskiemu B, a polskie B angielskiemu B-flat.
+## Widoki i dźwięki
 
-W ustawieniach można przełączyć **Polski / English** i **ciemny motyw**. Wybór jest zapisywany w lokalnym profilu użytkownika. Na obsługiwanych wersjach Windows ciemny motyw obejmuje także pasek tytułu; wygląd natywnej listy rozwijanej może zależeć od ustawień Windows.
+**Widok dla początkujących** pokazuje wskazówki i wybór oktawy. **Widok klasyczny** zachowuje zwięzły układ; wybór oktawy można w nim włączyć polem przed listą dźwięków. Tab przechodzi do następnej kontrolki, Shift+Tab wraca do poprzedniej. Na liście dźwięków strzałki przechodzą bez przerwy przez granice oktaw. Naciśnij **I** lub **S**, aby przejść do kolejnego dźwięku z krzyżykiem: cis, dis, fis lub gis.
 
-## Aktualizacje przez GitHub
+Lista obejmuje 88 klawiszy fortepianu, od A subkontra do c pięciokreślnego. Domyślnie wybrane jest **g w oktawie razkreślnej** (dawne G4). W trybie elektronicznym można też wybrać automatyczne rozpoznanie najbliższej nuty. Polskie H odpowiada angielskiemu B, a polskie B — angielskiemu B-flat. Przy wysokich i bardzo niskich dźwiękach wynik mikrofonu zależy szczególnie od sprzętu i harmonicznych; sprawdzono tony syntetyczne, nie każdy instrument.
 
-Przy uruchomieniu Stroik sprawdza najnowsze stabilne wydanie na GitHubie. Gdy znajdzie nowszą wersję, pokazuje okno z pytaniem. Po wybraniu **Tak** pobiera `Stroik.exe` i jego plik SHA-256 z tego samego wydania, weryfikuje sumę, zamyka program, zastępuje dotychczasowe EXE i uruchamia nową wersję. Stary plik jest usuwany po udanej podmianie. Jeśli podmiana się nie uda, program próbuje przywrócić poprzedni plik. Dostępny jest także przycisk **Sprawdź aktualizacje**.
+## Ustawienia i profile
 
-Automatyczna podmiana wymaga, aby plik nazywał się `Stroik.exe` i znajdował się w folderze z prawem zapisu. Przy pracy offline strojenie nadal działa. Program pobiera wyłącznie metadane wydania i, po zgodzie, pliki aktualizacji; nie wysyła nagrań ani wyników do sieci.
+Kolejność ustawień to częstotliwość odniesienia A, czułość mikrofonu, próg oceny w centach, oktawa i dźwięk docelowy. Standard wynosi **A=440 Hz**. Przy starym instrumencie czasem właściwy jest niższy strój, np. 430–435 Hz, ale sama epoka nie wyznacza bezpiecznej wartości. **Przed podniesieniem naciągu starego pianina do 440 Hz poproś technika o ocenę jego konstrukcji, stanu i właściwego stroju.** Nie zakładaj, że każdy instrument z XIX wieku powinien być strojony do 430–435 Hz. [Piano Technicians Guild: zmiana wysokości stroju](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising) · [PTG: stan starszego instrumentu](https://my.ptg.org/ptgmain/piano/care/care-faqs)
 
-## Zakres i ograniczenia
+Czułość jest opisana według warunków (cichy instrument, normalna, hałas w tle). Próg „dobrze” jest podawany w centach, a odchyłka także w hercach. Ustawienia są zapisywane lokalnie, w tym język, motyw, metoda, widok, dźwięk i odstęp kamertonu.
 
-Zakres pomiaru to około 55–1200 Hz. Program zakłada jeden względnie stabilny dźwięk. Wyświetlenie 0,1 Hz oznacza rozdzielczość wyniku, nie gwarantowaną dokładność. Dokładność zależy od mikrofonu, instrumentu i warunków akustycznych. Po ogłoszeniu wyniku pomiar jest wstrzymywany na 1,5 sekundy, aby głos czytnika z głośników nie został uznany za nową nutę. Słuchawki mogą pomóc.
+**Ctrl+S** lub **Zapisz plik ustawień** w menu kontekstowym zapisuje profil JSON. **Ctrl+O** lub **Wczytaj plik ustawień** przywraca profil. Możesz utworzyć profile dla domu, kawiarni i instrumentu historycznego. Plik zawiera ustawienia, w tym metodę strojenia; nie zawiera nagrań. Język i ciemny motyw można zmienić w oknie programu.
 
-Testy automatyczne korzystają z generowanych tonów. Działanie z konkretnym mikrofonem, instrumentem i wersją NVDA wymaga osobnej próby na sprzęcie.
+## Aktualizacje
 
-## Budowanie ze źródeł
+Program sprawdza najnowsze stabilne wydanie GitHub przy uruchomieniu. Po znalezieniu nowszej wersji pyta o zgodę. Po wybraniu **Tak** pobiera EXE i plik SHA-256, sprawdza sumę, zamyka stary proces, podmienia EXE, uruchamia nowy i usuwa starą kopię. W razie niepowodzenia podmiany próbuje przywrócić poprzedni plik. Dostępny jest również przycisk **Sprawdź aktualizacje**. Automatyczna podmiana wymaga nazwy `Stroik.exe` i prawa zapisu w jego folderze. Program nie wysyła nagrań ani wyników do internetu.
 
-Potrzebny jest .NET SDK 10 na Windows. W katalogu projektu:
+## Ograniczenia i budowanie
+
+Pomiar mikrofonem działa w przybliżeniu w zakresie 27,5–4200 Hz i zakłada jeden stabilny dźwięk. Pokazywanie 0,1 Hz nie oznacza gwarantowanej dokładności. Pomiar wstrzymuje się na 1,5 sekundy po wyniku, aby głos czytnika ekranu nie został uznany za kolejną nutę. Działanie z konkretnym mikrofonem, instrumentem, NVDA i głośnikami wymaga sprawdzenia na sprzęcie.
+
+Do budowania potrzebny jest .NET SDK 10 na Windows:
 
 ```powershell
 dotnet run --project tests/PitchChecks.csproj -c Release
@@ -44,8 +44,4 @@ dotnet build Stroik.csproj -c Release
 .\build-release.ps1
 ```
 
-Skrypt tworzy `dist/Stroik.exe`, `dist/Stroik.exe.sha256` i archiwum ZIP. Każde kolejne wydanie musi mieć zwiększoną wersję w `Stroik.csproj`, tag `vX.Y.Z` oraz oba pliki EXE i SHA-256 w GitHub Releases, aby aktualizator je wykrył.
-
-Detektor wykorzystuje metodę YIN opisaną przez de Cheveigné i Kawaharę w „YIN, a fundamental frequency estimator for speech and music”, *JASA* 2002. Wejście audio korzysta z Windows `waveIn`, a powiadomienia czytnika z UI Automation.
-
-Kod jest udostępniony na [licencji MIT](LICENSE). Zgłoszenia błędów i pomysły są mile widziane w [Issues](https://github.com/proszczok2002/Stroik/issues).
+Skrypt tworzy EXE, SHA-256 i ZIP w katalogu `dist`. Detekcja wysokości używa metody YIN, wejście audio — Windows waveIn, a komunikaty dostępności — UI Automation. Kod jest dostępny na [licencji MIT](LICENSE). Błędy można zgłaszać przez [Issues](https://github.com/proszczok2002/Stroik/issues).
