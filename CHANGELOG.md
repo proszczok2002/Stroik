@@ -1,5 +1,12 @@
 # Changelog / Historia zmian
 
+## 1.0.5 (Stroik 1.05) — 2026-11-01
+
+- Added Alt+U to toggle automatic tuning fork strikes; switching off stops the timer and current tone.
+- Retries transient GitHub errors and interrupted EXE downloads while retaining SHA-256 verification.
+- Shows startup update status and errors in Settings in Polish and English, with manual retry.
+- Checks target-folder write access before closing the old app and retries cleanup of a temporarily locked old EXE.
+- Added deterministic retry tests and an opt-in live GitHub API/download probe.
 ## 1.0.4 (Stroik 1.04) — 2026-11-01
 
 - Added optional hands-free advancement after two pitch-verified strikes following an in-tune result, plus Ctrl+N manual navigation.

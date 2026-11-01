@@ -1,4 +1,4 @@
-# Stroik 1.04
+# Stroik 1.05
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -46,6 +46,11 @@ Microphone sensitivity has descriptions for quiet instruments, normal conditions
 **Ctrl+S** or **Save settings file** in the context menu exports a JSON profile. **Ctrl+O** or **Open settings file** imports one. You can keep profiles for home, a café or a historic instrument. Profiles include the tuning method and no recordings. The **Settings** tab contains language, dark theme and the manual update check. The **Tuner** tab contains the tuning controls and profiles. Both tabs are keyboard accessible and have localized accessibility names.
 
 
+## Fixes in 1.05
+
+**Alt+U** toggles automatic strikes in tuning fork mode. Pressing it again stops the timer and immediately silences the playing tone. The choice is saved in settings and profiles.
+
+The updater retries transient network errors and interrupted EXE downloads. The startup check result or error is shown in **Settings**; **Check for updates** retries manually. Before closing the app, it checks write access to the EXE folder. After a successful replacement, the new version retries removing the old copy if it was briefly locked. SHA-256 verification remains mandatory.
 ## New in 1.04
 
 **Hands-free navigation.** In electronic mode, after an in-tune result, wait for the announcement to finish. Two distinct quick strikes of the same string or key (within 0.9 seconds, each recognized at the target pitch) select the next note. This option can be turned off. **Ctrl+N** or **Next note** advances manually. Detection depends on the microphone, playing level and instrument; check the selected note before moving a tuning lever.

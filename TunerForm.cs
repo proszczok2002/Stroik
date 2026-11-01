@@ -17,7 +17,7 @@ internal sealed class TunerForm : Form
     private readonly Label _toleranceTitle = MakeLabel(), _octaveTitle = MakeLabel(), _targetTitle = MakeLabel();
     private readonly Label _noteHelp = MakeLabel(), _languageTitle = MakeLabel(), _intervalTitle = MakeLabel(), _forkHelp = MakeLabel();
     private readonly Label _ukuleleTitle = MakeLabel(), _orderTitle = MakeLabel(), _orderHelp = MakeLabel(), _guideText = MakeLabel();
-    private readonly Label _visualHelp = MakeLabel(), _calibrationTitle = MakeLabel(), _calibrationHelp = MakeLabel(), _strikeHelp = MakeLabel();
+    private readonly Label _visualHelp = MakeLabel(), _calibrationTitle = MakeLabel(), _calibrationHelp = MakeLabel(), _strikeHelp = MakeLabel(), _updateStatus = MakeLabel();
     private readonly Button _start = new() { AutoSize = true }, _stop = new() { AutoSize = true, Enabled = false };
     private readonly Button _repeat = new() { AutoSize = true, Enabled = false }, _test = new() { AutoSize = true };
     private readonly Button _updates = new() { AutoSize = true }, _strike = new() { AutoSize = true };
@@ -59,6 +59,7 @@ internal sealed class TunerForm : Form
     private double _reference = 440, _toleranceCents = 5, _minimumRms = 0.008;
     private DateTime _ignoreUntil;
     private string? _lastAnnouncement;
+    private string _updateStatusPl = "Aktualizacje nie zostały jeszcze sprawdzone.", _updateStatusEn = "Updates have not been checked yet.";
     private bool _english, _hasResult, _initializing, _changingOctave;
     private double _lastMeasured, _lastReference, _lastTolerance;
     private int _lastTarget;
@@ -111,7 +112,7 @@ internal sealed class TunerForm : Form
         Add(settingsContent, _languageTitle); Add(settingsContent, _language);
         Add(settingsContent, _dark); Add(settingsContent, _visualMode); Add(settingsContent, _visualHelp);
         Add(settingsContent, _calibrationTitle); Add(settingsContent, _calibration); Add(settingsContent, _calibrationHelp);
-        Add(settingsContent, _updates);
+        Add(settingsContent, _updates); Add(settingsContent, _updateStatus);
 
         _initializing = true;
         _language.Items.AddRange(["Polski", "English"]);
@@ -162,7 +163,7 @@ internal sealed class TunerForm : Form
         _sensitivity.SelectedIndexChanged += (_, _) => { if (_sensitivity.SelectedItem is Choice choice) _minimumRms = choice.Value; Persist(); };
         _language.SelectedIndexChanged += (_, _) => { if (_initializing) return; _english = _language.SelectedIndex == 1; var current = ReadSettings(); PopulateChoices(current); ApplyLanguage(); ApplyViewUI(); ApplyMethodUI(); SetContextMenu(); Persist(); };
         _dark.CheckedChanged += (_, _) => { ApplyTheme(); Persist(); };
-        _autoStrike.CheckedChanged += (_, _) => { UpdateStrikeTimer(); Persist(); };
+        _autoStrike.CheckedChanged += (_, _) => { if (!_autoStrike.Checked) _fork.Stop(); UpdateStrikeTimer(); Persist(); };
         _interval.ValueChanged += (_, _) => { UpdateStrikeTimer(); Persist(); };
         _doubleStrike.CheckedChanged += (_, _) => { _doubleStrikeEnabled = _doubleStrike.Checked; Persist(); };
         _visualMode.CheckedChanged += (_, _) => { _visualEnabled = _visualMode.Checked; ApplyViewUI(); Persist(); };
@@ -174,7 +175,25 @@ internal sealed class TunerForm : Form
         AcceptButton = _method.SelectedIndex == 0 ? _strike : _start;
     }
 
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (keyData == (Keys.Alt | Keys.U) && _method.SelectedIndex == 0)
+        {
+            _autoStrike.Checked = !_autoStrike.Checked;
+            Announce(_autoStrike.Checked
+                ? T("Automatyczne uderzenia kamertonu włączone.", "Automatic tuning fork strikes on.")
+                : T("Automatyczne uderzenia kamertonu wyłączone.", "Automatic tuning fork strikes off."));
+            return true;
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
+    }
+
     private string T(string pl, string en) => _english ? en : pl;
+    private void SetUpdateStatus(string pl, string en)
+    {
+        _updateStatusPl = pl; _updateStatusEn = en;
+        _updateStatus.Text = T(pl, en);
+    }
     private static Label MakeLabel(float size = 0) => new() { AutoSize = true, Dock = DockStyle.Fill, Padding = new Padding(0, 5, 0, 5), Font = size > 0 ? new Font(FontFamily.GenericSansSerif, size, FontStyle.Bold) : SystemFonts.DefaultFont };
     private static void Add(TableLayoutPanel panel, Control control)
     {
@@ -319,8 +338,8 @@ internal sealed class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.04 — dostępny stroiciel", "Stroik 1.04 — accessible tuner");
-        _heading.Text = "Stroik 1.04";
+        Text = T("Stroik 1.05 — dostępny stroiciel", "Stroik 1.05 — accessible tuner");
+        _heading.Text = "Stroik 1.05";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tabs.AccessibleName = T("Zakładki Stroika", "Stroik tabs");
@@ -356,7 +375,9 @@ internal sealed class TunerForm : Form
         _repeat.Text = T("&Powtórz wynik", "&Repeat result");
         _test.Text = T("Sprawdź komunikat &NVDA", "&Test screen reader announcement");
         _updates.Text = T("Sprawdź &aktualizacje", "Check for &updates");
-        _autoStrike.Text = T("Uderzaj kamerton automatycznie", "Strike tuning fork automatically");
+        _updateStatus.Text = T(_updateStatusPl, _updateStatusEn);
+        _updateStatus.AccessibleName = T("Stan aktualizacji", "Update status");
+        _autoStrike.Text = T("Uderzaj kamerton automatycznie (Alt+U)", "Strike tuning fork automatically (Alt+U)");
         _doubleStrike.Text = T("Po dobrym wyniku dwa szybkie uderzenia przechodzą do następnego dźwięku", "After an in-tune result, two quick strikes advance to the next note");
         _strikeHelp.Text = T("Dwa oddzielne uderzenia tego samego dźwięku w ciągu 0,9 sekundy. Każde musi mieć rozpoznaną wysokość; najpierw poczekaj na komunikat i jego wyciszenie. Ctrl+N przechodzi ręcznie.", "Two distinct strikes of the same pitch within 0.9 seconds. Each must have a recognized pitch; wait for the result announcement and its pause first. Ctrl+N advances manually.");
         _intervalTitle.Text = T("Odstęp między uderzeniami w sekundach:", "Seconds between strikes:");
@@ -722,28 +743,35 @@ internal sealed class TunerForm : Form
     {
         bool prompted = false;
         _updates.Enabled = false;
+        SetUpdateStatus("Sprawdzanie aktualizacji…", "Checking for updates…");
         try
         {
             ReleaseInfo? release = await Updater.FindNewReleaseAsync();
             if (release is null)
             {
+                SetUpdateStatus("Masz najnowszą wersję.", "You have the latest version.");
                 if (!quiet) MessageBox.Show(this, T("Masz najnowszą wersję.", "You have the latest version."), T("Aktualizacje", "Updates"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             prompted = true;
+            SetUpdateStatus($"Dostępna wersja {release.Version}.", $"Version {release.Version} is available.");
             if (MessageBox.Show(this,
                 T($"Dostępna jest wersja {release.Version}. Pobrać ją, zamknąć program i podmienić plik EXE?",
                   $"Version {release.Version} is available. Download it, close the app, and replace the EXE file?"),
                 T("Nowa wersja Stroika", "New Stroik version"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
             UseWaitCursor = true;
+            SetUpdateStatus("Pobieranie i weryfikacja aktualizacji…", "Downloading and verifying the update…");
             string downloaded = await Updater.DownloadVerifiedAsync(release);
             UseWaitCursor = false;
             Updater.LaunchReplacement(downloaded);
+            SetUpdateStatus("Instalowanie aktualizacji…", "Installing the update…");
             Close();
         }
         catch (Exception error)
         {
             UseWaitCursor = false;
+            SetUpdateStatus("Nie udało się sprawdzić lub zainstalować aktualizacji. Spróbuj ponownie przyciskiem Sprawdź aktualizacje. Szczegóły: " + error.Message,
+                "Could not check or install the update. Retry with Check for updates. Details: " + error.Message);
             if (!quiet || prompted) MessageBox.Show(this, error.Message, T("Błąd aktualizacji", "Update error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally { _updates.Enabled = true; }

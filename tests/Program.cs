@@ -1,4 +1,5 @@
 using Stroik;
+using System.Net;
 
 foreach (double expected in new[] { 65.406, 110.0, 261.626, 440.0, 523.251, 880.0, 1174.659 })
 {
@@ -61,6 +62,28 @@ try
 }
 catch (InvalidDataException) { }
 
+using (var handler = new SequenceHandler(HttpStatusCode.ServiceUnavailable, HttpStatusCode.OK))
+using (var testClient = new HttpClient(handler))
+using (var recovered = await Updater.GetWithRetryAsync(testClient, new Uri("https://example.com/stroik")))
+{
+    if (recovered.StatusCode != HttpStatusCode.OK || handler.Calls != 2)
+        throw new Exception("Aktualizator nie ponowił chwilowego błędu sieciowego.");
+}
+using (var handler = new SequenceHandler(HttpStatusCode.NotFound, HttpStatusCode.OK))
+using (var testClient = new HttpClient(handler))
+{
+    try
+    {
+        using var unexpected = await Updater.GetWithRetryAsync(testClient, new Uri("https://example.com/stroik"));
+        throw new Exception("Aktualizator zaakceptował brakujący plik.");
+    }
+    catch (HttpRequestException) when (handler.Calls == 1) { }
+}
+string currentExe = Path.Combine(Path.GetTempPath(), "Stroik.exe");
+string ownedBackup = currentExe + ".old-" + Guid.NewGuid().ToString("N");
+if (!Updater.IsOwnedBackup(currentExe, ownedBackup) ||
+    Updater.IsOwnedBackup(currentExe, Path.Combine(Path.GetTempPath(), "Other.exe.old-" + Guid.NewGuid().ToString("N"))))
+    throw new Exception("Błędna walidacja starej kopii EXE.");
 foreach (double expected in new[] { 27.5, 41.203, 2093.005, 4186.009 })
 {
     var estimate = PitchDetector.Estimate(Tone(expected, 48000, 8192), 48000);
@@ -192,6 +215,22 @@ var uiThread = new Thread(() =>
             dark.Parent != language.Parent || updates.Parent != language.Parent ||
             tabs.DrawMode != System.Windows.Forms.TabDrawMode.OwnerDrawFixed)
             throw new Exception($"Zakładki: count={tabs.TabPages.Count}, selected={tabs.SelectedIndex}, parent={language.Parent?.GetType().Name}, tabParent={language.Parent?.Parent?.GetType().Name}, lang={language.Parent?.Parent == settingsTab}, dark={dark.Parent == language.Parent}, updates={updates.Parent == language.Parent}, draw={tabs.DrawMode}");
+        var autoStrike = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_autoStrike", flags)!.GetValue(form)!;
+        var strikeTimer = (System.Windows.Forms.Timer)typeof(TunerForm).GetField("_strikeTimer", flags)!.GetValue(form)!;
+        var processCmdKey = typeof(TunerForm).GetMethod("ProcessCmdKey", flags)!;
+        int originalMethod = method.SelectedIndex;
+        bool originalAutoStrike = autoStrike.Checked;
+        method.SelectedIndex = 0;
+        autoStrike.Checked = false;
+        var shortcutMessage = System.Windows.Forms.Message.Create(IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero);
+        object?[] shortcutArgs = [shortcutMessage, System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.U];
+        if ((bool)processCmdKey.Invoke(form, shortcutArgs)! != true || !autoStrike.Checked || !strikeTimer.Enabled)
+            throw new Exception("Alt+U nie włączył automatycznego kamertonu.");
+        shortcutArgs = [shortcutMessage, System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.U];
+        if ((bool)processCmdKey.Invoke(form, shortcutArgs)! != true || autoStrike.Checked || strikeTimer.Enabled)
+            throw new Exception("Alt+U nie zatrzymał automatycznego kamertonu.");
+        autoStrike.Checked = originalAutoStrike;
+        method.SelectedIndex = originalMethod;
         var englishField = typeof(TunerForm).GetField("_english", flags)!;
         var applyLanguage = typeof(TunerForm).GetMethod("ApplyLanguage", flags)!;
         var populateChoices = typeof(TunerForm).GetMethod("PopulateChoices", flags)!;
@@ -247,7 +286,25 @@ uiThread.SetApartmentState(ApartmentState.STA);
 uiThread.Start();
 uiThread.Join();
 if (uiError is not null) throw new Exception("Kontrola interfejsu nie powiodła się.", uiError);
-Console.WriteLine("Wszystkie kontrole pomiaru zakończone poprawnie.");
+if (args.Contains("--github-probe", StringComparer.Ordinal))
+{
+    ReleaseInfo? release = await Updater.FindNewReleaseAsync();
+    if (release is null) throw new Exception("Publiczne API GitHub nie wskazało nowszego wydania.");
+    using var checksumResponse = await Updater.GetWithRetryAsync(new HttpClient(), release.Checksum);
+    string publicHash = Updater.ParseChecksum(await checksumResponse.Content.ReadAsStringAsync());
+    Console.WriteLine($"GitHub updater probe: {release.Version}; EXE SHA-256 {publicHash}");
+    if (args.Contains("--download-probe", StringComparer.Ordinal))
+    {
+        string downloaded = await Updater.DownloadVerifiedAsync(release);
+        string verifyDirectory = Path.Combine(Environment.CurrentDirectory, "dist", "verify-updater");
+        Directory.CreateDirectory(verifyDirectory);
+        string copy = Path.Combine(verifyDirectory, $"Stroik-{release.Version}.exe");
+        File.Copy(downloaded, copy, true);
+        Directory.Delete(Path.GetDirectoryName(downloaded)!, true);
+        using var copiedFile = File.OpenRead(copy);
+        Console.WriteLine($"Verified download: {new FileInfo(copy).Length} bytes; {Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(copiedFile))}");
+    }
+}Console.WriteLine("Wszystkie kontrole pomiaru zakończone poprawnie.");
 
 static short[] Tone(double frequency, int sampleRate, int length)
 {
@@ -260,4 +317,18 @@ static short[] Tone(double frequency, int sampleRate, int length)
         samples[i] = (short)Math.Round(value * short.MaxValue);
     }
     return samples;
+}
+
+sealed class SequenceHandler(params HttpStatusCode[] statuses) : HttpMessageHandler
+{
+    internal int Calls { get; private set; }
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        int index = Math.Min(Calls++, statuses.Length - 1);
+        return Task.FromResult(new HttpResponseMessage(statuses[index])
+        {
+            Content = new StringContent("{}"),
+            RequestMessage = request
+        });
+    }
 }
