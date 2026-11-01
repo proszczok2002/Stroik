@@ -1,5 +1,13 @@
 # Changelog / Historia zmian
 
+## 1.0.4 (Stroik 1.04) — 2026-11-01
+
+- Added optional hands-free advancement after two pitch-verified strikes following an in-tune result, plus Ctrl+N manual navigation.
+- Added piano plans: ascending notes or alternating five-note blocks on both sides of the starting note, in semitone or whole-tone steps.
+- Added bilingual piano key-position descriptions, an optional marked keyboard and a live pitch deviation meter.
+- Corrected physical string orientation and added standard and A/G-swapped high-G ukulele presets.
+- Added manual microphone reading correction in cents and best-effort screen reader detection for default graphics visibility.
+- Saved all new choices in backward-compatible JSON profiles; updated PL/EN guidance and tests.
 ## 1.0.3 (Stroik 1.03) — 2026-10-31
 
 - Added piano, guitar, ukulele, violin, bass guitar and chromatic instrument choices, with standard open-string lists and localized labels.

@@ -1,4 +1,4 @@
-# Stroik 1.03
+# Stroik 1.04
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -33,7 +33,7 @@ W polu **Instrument** wybierz pianino / fortepian, gitarę, ukulele, skrzypce, g
 
 Polskie **H** odpowiada angielskiemu **B**, a polskie **B** — angielskiemu **B-flat**. Listy strun odnoszą się do [standardowej gitary](https://www.fender.com/articles/setup/standard-tuning-how-eadgbe-came-to-be), [ukulele](https://kalabrand.com/pages/ukulele-tuning), [skrzypiec](https://www.yamaha.com/en/musical_instrument_guide/violin/mechanism/mechanism002.html) i [basu](https://www.fender.com/articles/instruments/5-tips-to-move-from-guitar-to-bass).
 
-W trybie elektronicznym można wybrać ręcznie strunę albo **Automatycznie**. Przy wybranym instrumencie automatyczny wynik porównuje usłyszany dźwięk z najbliższą pustą struną tego instrumentu; przy pianinie i w trybie chromatycznym z najbliższą nutą. Kamerton gra wybrany dźwięk. Dla alternatywnych strojów, ukulele z niskim G, pięciostrunowego basu lub gry na progach użyj trybu chromatycznego i ręcznie wybierz dźwięk. Program zapamiętuje instrument oraz zapisuje go w profilach JSON. Starsze profile bez tego pola wczytują się jako pianino.
+W trybie elektronicznym można wybrać ręcznie strunę albo **Automatycznie**. Przy wybranym instrumencie automatyczny wynik porównuje usłyszany dźwięk z najbliższą pustą struną tego instrumentu; przy pianinie i w trybie chromatycznym z najbliższą nutą. Kamerton gra wybrany dźwięk. Dla innych alternatywnych strojów, ukulele z niskim G, pięciostrunowego basu lub gry na progach użyj trybu chromatycznego i ręcznie wybierz dźwięk. Program zapamiętuje instrument oraz zapisuje go w profilach JSON. Starsze profile bez tego pola wczytują się jako pianino.
 
 **Ważne dla pianina:** wybór instrumentu nie mierzy indywidualnej nieharmoniczności strun i nie oblicza rozszerzonego stroju oktaw. Sam wskaźnik częstotliwości nie zastępuje fachowego strojenia całego pianina. [Piano Technicians Guild wyjaśnia strojenie rozszerzone](https://my.ptg.org/communities/community-home/digestviewer/viewthread?CommunityKey=6265a40b-9fd2-4152-a628-bd7c7d770cbf&MessageKey=c2e42d9f-6450-4ec6-a2d3-48f3b6a2ae79&tab=digestviewer).
 
@@ -45,6 +45,18 @@ Czułość jest opisana według warunków (cichy instrument, normalna, hałas w 
 
 **Ctrl+S** lub **Zapisz plik ustawień** w menu kontekstowym zapisuje profil JSON. **Ctrl+O** lub **Wczytaj plik ustawień** przywraca profil. Możesz utworzyć profile dla domu, kawiarni i instrumentu historycznego. Plik zawiera ustawienia, w tym metodę strojenia; nie zawiera nagrań. Zakładka **Ustawienia** zawiera wybór języka, ciemny motyw i przycisk ręcznego sprawdzenia aktualizacji. Zakładka **Stroik** zawiera pozostałe parametry strojenia oraz profile. Między zakładkami można przechodzić klawiaturą; kontrolki mają polskie i angielskie nazwy dostępności.
 
+
+## Nowości w 1.04
+
+**Sterowanie bez dotykania komputera.** W stroiku elektronicznym, po uzyskaniu wyniku „dobrze”, odczekaj aż komunikat się skończy. Dwa osobne szybkie uderzenia w tę samą strunę lub klawisz (w ciągu 0,9 s, rozpoznane jako ten sam dźwięk) wybierają następny dźwięk. Opcję można wyłączyć. **Ctrl+N** lub przycisk **Następny dźwięk** działa ręcznie. Rozpoznawanie zależy od mikrofonu, głośności i charakteru instrumentu; nie przestawiaj klucza stroikowego bez sprawdzenia wybranej nuty.
+
+**Kolejność pianina.** Do wyboru jest przechodzenie w górę od wybranej nuty albo naprzemienne bloki po pięć półtonów w prawo i w lewo od nuty początkowej. Wariant całotonowy przechodzi co dwa półtony i pomija połowę nut; trzeba je później nastroić osobno. Plan pomaga w nawigacji, ale nie gwarantuje bezpiecznego rozkładu naprężeń ani nie zastępuje [oceny technika i procedury podnoszenia stroju](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising).
+
+**Przewodnik po klawiaturze.** Przy pianinie opis wskazuje położenie białego lub czarnego klawisza względem grup dwóch i trzech czarnych klawiszy. Po włączeniu grafiki w zakładce **Ustawienia** wirtualna klawiatura oznacza wybrany klawisz kropką, a stroik elektroniczny pokazuje bieżącą odchyłkę na wskaźniku. Gdy aplikacja wykryje czytnik ekranu, grafika jest domyślnie wyłączona; wykrywanie nie jest niezawodne, więc ustawienie można zmienić ręcznie.
+
+**Ukulele i położenie strun.** Standardowy strój z wysokim G to od podłogi A4–E4–C4–G4 (struny 1–4). Wariant z zamienionymi A i G to G4–E4–C4–A4. Wybór jest zapamiętywany w ustawieniach i profilach. Na gitarze od podłogi są E4–H3–G3–D3–A2–E2, więc G to struna 3. [Kala: kolejność strun ukulele](https://kalabrand.com/blogs/home/ukulele-tuning-decoded) · [Fender: numeracja strun gitary](https://www.fender.com/articles/chords/read-guitar-chord-charts)
+
+**Korekta mikrofonu.** W zakładce **Ustawienia** można ręcznie wprowadzić korektę od −100 do +100 centów, po porównaniu ze znanym wzorcem. Wartość dodatnia podwyższa odczyt. To stała korekta pomiaru, nie automatyczna kalibracja mikrofonu. Ustawienie zapisuje się w profilu JSON.
 ## Aktualizacje
 
 Program sprawdza najnowsze stabilne wydanie GitHub przy uruchomieniu. Po znalezieniu nowszej wersji pyta o zgodę. Po wybraniu **Tak** pobiera EXE i plik SHA-256, sprawdza sumę, zamyka stary proces, podmienia EXE, uruchamia nowy i usuwa starą kopię. W razie niepowodzenia podmiany próbuje przywrócić poprzedni plik. Przycisk **Sprawdź aktualizacje** znajduje się w zakładce **Ustawienia**. Automatyczna podmiana wymaga nazwy `Stroik.exe` i prawa zapisu w jego folderze. Program nie wysyła nagrań ani wyników do internetu.

@@ -1,4 +1,4 @@
-# Stroik 1.03
+# Stroik 1.04
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -33,7 +33,7 @@ Choose piano, guitar, ukulele, violin, bass guitar or chromatic mode in the **In
 
 English **B** is Polish **H**; English **B-flat** is Polish **B**. The presets use the standard tunings described by [Fender for guitar](https://www.fender.com/articles/setup/standard-tuning-how-eadgbe-came-to-be), [Kala for ukulele](https://kalabrand.com/pages/ukulele-tuning), [Yamaha for violin](https://www.yamaha.com/en/musical_instrument_guide/violin/mechanism/mechanism002.html) and [Fender for bass](https://www.fender.com/articles/instruments/5-tips-to-move-from-guitar-to-bass).
 
-In electronic mode, select an open string or **Automatic**. With a string instrument selected, automatic mode compares the input with the nearest open string of that instrument; piano and chromatic modes use the nearest chromatic note. The tuning fork plays the selected pitch. For alternate tunings, low-G ukulele, five-string bass or fretted notes, use chromatic mode and select the note manually. The instrument is remembered and included in JSON profiles. Older profiles without this field load as piano.
+In electronic mode, select an open string or **Automatic**. With a string instrument selected, automatic mode compares the input with the nearest open string of that instrument; piano and chromatic modes use the nearest chromatic note. The tuning fork plays the selected pitch. For other alternate tunings, low-G ukulele, five-string bass or fretted notes, use chromatic mode and select the note manually. The instrument is remembered and included in JSON profiles. Older profiles without this field load as piano.
 
 **Piano limitation:** selecting piano does not measure each string's inharmonicity or calculate a stretched-octave tuning curve. A frequency indicator alone cannot replace skilled whole-piano tuning. [Piano Technicians Guild explains stretch tuning](https://my.ptg.org/communities/community-home/digestviewer/viewthread?CommunityKey=6265a40b-9fd2-4152-a628-bd7c7d770cbf&MessageKey=c2e42d9f-6450-4ec6-a2d3-48f3b6a2ae79&tab=digestviewer).
 
@@ -45,6 +45,18 @@ Microphone sensitivity has descriptions for quiet instruments, normal conditions
 
 **Ctrl+S** or **Save settings file** in the context menu exports a JSON profile. **Ctrl+O** or **Open settings file** imports one. You can keep profiles for home, a café or a historic instrument. Profiles include the tuning method and no recordings. The **Settings** tab contains language, dark theme and the manual update check. The **Tuner** tab contains the tuning controls and profiles. Both tabs are keyboard accessible and have localized accessibility names.
 
+
+## New in 1.04
+
+**Hands-free navigation.** In electronic mode, after an in-tune result, wait for the announcement to finish. Two distinct quick strikes of the same string or key (within 0.9 seconds, each recognized at the target pitch) select the next note. This option can be turned off. **Ctrl+N** or **Next note** advances manually. Detection depends on the microphone, playing level and instrument; check the selected note before moving a tuning lever.
+
+**Piano order.** Move upward from the selected note or alternate blocks of five semitones to the right and left of the starting note. The whole-tone variant moves in two-semitone steps and skips half the notes; tune those separately afterwards. The plan guides navigation but cannot ensure safe tension distribution or replace a [technician's assessment and pitch-raising procedure](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising).
+
+**Keyboard guide.** In piano mode, a text description locates each white or black key relative to groups of two and three black keys. Enable graphics in **Settings** for a virtual keyboard with the selected key marked by a dot and a live tuning deviation meter in electronic mode. Graphics default to off when a screen reader is detected. Detection is imperfect, and the setting can always be changed manually.
+
+**Ukulele and string position.** Standard high-G tuning, floor to ceiling, is A4–E4–C4–G4 (strings 1–4). The swapped A/G option is G4–E4–C4–A4. The choice persists in settings and JSON profiles. On guitar, floor to ceiling is E4–B3–G3–D3–A2–E2; G is string 3. [Kala: ukulele string order](https://kalabrand.com/blogs/home/ukulele-tuning-decoded) · [Fender: guitar string numbering](https://www.fender.com/articles/chords/read-guitar-chord-charts)
+
+**Microphone correction.** Enter a manual correction from −100 to +100 cents in **Settings**, after comparing with a known reference. Positive values raise the reading. This is a fixed measurement offset, not automatic microphone calibration. The value is included in JSON profiles.
 ## Updates
 
 On launch, Stroik checks the latest stable GitHub release. If a newer version is available, it asks for consent. Choosing **Yes** downloads the EXE and SHA-256 file, checks the hash, closes the old process, replaces the EXE, launches the new one and deletes the old backup. It attempts rollback on replacement failure. **Check for updates** is available in the **Settings** tab. Automatic replacement requires a writable folder and the filename `Stroik.exe`. Recordings and results are never uploaded.

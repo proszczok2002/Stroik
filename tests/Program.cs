@@ -77,11 +77,17 @@ string profile = Path.Combine(Path.GetTempPath(), "stroik-test-" + Guid.NewGuid(
 try
 {
     var original = new Preferences { Method = TuningMethod.Electronic, ConcertA = 435,
-        TargetMidi = 40, Instrument = InstrumentKind.Guitar, View = TunerView.Classic, DarkTheme = true, AutoStrike = true };
+        TargetMidi = 69, Instrument = InstrumentKind.Ukulele, UkuleleTuning = UkuleleTuning.SwappedAG,
+        PianoOrder = PianoOrder.AlternateFiveSemitones, PlanAnchorMidi = 67,
+        DoubleStrikeAdvance = false, MicrophoneCorrectionCents = 12.5M, VisualMode = false,
+        View = TunerView.Classic, DarkTheme = true, AutoStrike = true };
     Preferences.SaveToFile(profile, original);
     var loaded = Preferences.ReadFile(profile);
     if (loaded.Method != original.Method || loaded.ConcertA != 435 ||
-        loaded.View != original.View || loaded.Instrument != InstrumentKind.Guitar || !loaded.DarkTheme || !loaded.AutoStrike)
+        loaded.View != original.View || loaded.Instrument != InstrumentKind.Ukulele ||
+        loaded.UkuleleTuning != UkuleleTuning.SwappedAG || loaded.PianoOrder != PianoOrder.AlternateFiveSemitones ||
+        loaded.PlanAnchorMidi != 67 || loaded.DoubleStrikeAdvance || loaded.MicrophoneCorrectionCents != 12.5M ||
+        loaded.VisualMode != false || !loaded.DarkTheme || !loaded.AutoStrike)
         throw new Exception("Profil nie zachował ustawień.");
     File.WriteAllText(profile, "{\"ConcertA\":999}");
     try { Preferences.ReadFile(profile); throw new Exception("Zaakceptowano niepoprawny profil."); }
@@ -118,6 +124,31 @@ try
 }
 catch (InvalidDataException) { }
 
+if (!InstrumentCatalog.Strings(InstrumentKind.Ukulele, UkuleleTuning.SwappedAG)
+        .Select(s => s.Midi).SequenceEqual(new[] { 69, 60, 64, 67 }) ||
+    InstrumentCatalog.NearestOpenString(InstrumentKind.Ukulele, 392, 440, UkuleleTuning.SwappedAG) != 67)
+    throw new Exception("Zamiana G/A w ukulele ma błędne położenie lub wysokość.");
+int[] radial = TuningPlan.Build(67, PianoOrder.AlternateFiveSemitones).Take(11).ToArray();
+if (!radial.SequenceEqual(new[] { 67, 68, 69, 70, 71, 72, 66, 65, 64, 63, 62 }) ||
+    TuningPlan.Next(67, 72, PianoOrder.AlternateFiveSemitones) != 66 ||
+    !TuningPlan.Build(67, PianoOrder.AlternateFiveWholeTones).Take(6)
+        .SequenceEqual(new[] { 67, 69, 71, 73, 75, 77 }))
+    throw new Exception("Plan strojenia nie przechodzi po pięciu dźwiękach na każdą stronę.");
+if (!KeyboardGuide.Describe(67, false).Contains("między pierwszym a drugim czarnym", StringComparison.Ordinal) ||
+    !KeyboardGuide.Describe(67, true).Contains("between the first and second black", StringComparison.Ordinal))
+    throw new Exception("Opis położenia G na klawiaturze jest błędny.");
+var navigator = new DoubleStrikeNavigator();
+DateTime strikes = DateTime.UtcNow;
+navigator.Arm(69, 440, strikes);
+if (navigator.Observe(0.02, 0.008, 440, strikes.AddMilliseconds(100)) is not null ||
+    navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(220)) is not null ||
+    navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(420)) != 69)
+    throw new Exception("Dwa szybkie uderzenia nie przeszły do następnego dźwięku.");
+navigator.Arm(69, 440, strikes);
+navigator.Observe(0.02, 0.008, 466, strikes.AddMilliseconds(100));
+navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(220));
+if (navigator.Observe(0.025, 0.008, 466, strikes.AddMilliseconds(420)) is not null)
+    throw new Exception("Dwa uderzenia o złej wysokości przesunęły cel.");
 using (var wave = TuningFork.BuildWave(440))
 {
     if (wave.Length != 44 + 44100 * 3 * 2)
@@ -136,6 +167,10 @@ var uiThread = new Thread(() =>
         var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
         var method = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_method", flags)!.GetValue(form)!;
         var instrument = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_instrument", flags)!.GetValue(form)!;
+        var ukuleleTuning = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_ukuleleTuning", flags)!.GetValue(form)!;
+        var pianoOrder = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_pianoOrder", flags)!.GetValue(form)!;
+        var visualMode = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_visualMode", flags)!.GetValue(form)!;
+        var calibration = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_calibration", flags)!.GetValue(form)!;
         var target = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_target", flags)!.GetValue(form)!;
         var octave = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_octave", flags)!.GetValue(form)!;
         var view = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_view", flags)!.GetValue(form)!;
@@ -145,6 +180,8 @@ var uiThread = new Thread(() =>
         var dark = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_dark", flags)!.GetValue(form)!;
         var updates = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_updates", flags)!.GetValue(form)!;
         if (method.Items.Count != 2 || instrument.Items.Count != 6 ||
+            ukuleleTuning.Items.Count != 2 || pianoOrder.Items.Count != 3 ||
+            visualMode.Parent != language.Parent || calibration.Parent != language.Parent ||
             target.Items.Count != (InstrumentCatalog.HasStrings((InstrumentKind)instrument.SelectedIndex)
                 ? InstrumentCatalog.Strings((InstrumentKind)instrument.SelectedIndex).Count + 1
                 : NoteCatalog.HighestMidi - NoteCatalog.LowestMidi + 2) ||
@@ -172,9 +209,16 @@ var uiThread = new Thread(() =>
                 target.SelectedIndex != (InstrumentCatalog.HasStrings(kind) ? 1 : NoteCatalog.DefaultMidi - NoteCatalog.LowestMidi + 1))
                 throw new Exception($"Lista dźwięków nie odpowiada instrumentowi {kind}.");
             if (kind == InstrumentKind.Guitar &&
-                !target.Items[1]!.ToString()!.Contains("6:", StringComparison.Ordinal))
+                !target.Items[1]!.ToString()!.Contains("6", StringComparison.Ordinal))
                 throw new Exception("Lista gitary nie wskazuje numeru struny.");
         }
+        populateChoices.Invoke(form, [new Preferences { Instrument = InstrumentKind.Ukulele,
+            UkuleleTuning = UkuleleTuning.SwappedAG, TargetMidi = 69 }]);
+        if (ukuleleTuning.SelectedIndex != 1 || target.SelectedIndex != 1 ||
+            !target.Items[1]!.ToString()!.Contains("69", StringComparison.Ordinal) &&
+            !target.Items[1]!.ToString()!.Contains("a w oktawie", StringComparison.Ordinal) &&
+            !target.Items[1]!.ToString()!.Contains("A, one-line", StringComparison.Ordinal))
+            throw new Exception("Alternatywny układ ukulele nie pojawia się w interfejsie.");
         populateChoices.Invoke(form, [originalSettings]);
         applyLanguage.Invoke(form, null);
         bool originalEnglish = (bool)englishField.GetValue(form)!;
@@ -184,7 +228,7 @@ var uiThread = new Thread(() =>
             populateChoices.Invoke(form, [new Preferences { Instrument = InstrumentKind.Guitar, TargetMidi = 40, English = english }]);
             applyLanguage.Invoke(form, null);
             if (instrument.Items[1]!.ToString() != (english ? "Guitar" : "Gitara") ||
-                !target.Items[1]!.ToString()!.StartsWith(english ? "String 6:" : "Struna 6:", StringComparison.Ordinal) ||
+                !target.Items[1]!.ToString()!.StartsWith(english ? "String 6" : "Struna 6", StringComparison.Ordinal) ||
                 tabs.TabPages[0].Text != (english ? "Tuner" : "Stroik") ||
                 settingsTab.Text != (english ? "Settings" : "Ustawienia") ||
                 settingsTab.AccessibleName != settingsTab.Text ||

@@ -13,6 +13,12 @@ internal sealed class Preferences
     public TuningMethod Method { get; set; } = TuningMethod.TuningFork;
     public TunerView View { get; set; } = TunerView.Beginner;
     public InstrumentKind Instrument { get; set; } = InstrumentKind.Piano;
+    public UkuleleTuning UkuleleTuning { get; set; } = UkuleleTuning.Standard;
+    public PianoOrder PianoOrder { get; set; } = PianoOrder.Ascending;
+    public int PlanAnchorMidi { get; set; } = NoteCatalog.DefaultMidi;
+    public bool DoubleStrikeAdvance { get; set; } = true;
+    public decimal MicrophoneCorrectionCents { get; set; }
+    public bool? VisualMode { get; set; }
     public double ConcertA { get; set; } = 440;
     public int SensitivityIndex { get; set; } = 1;
     public int ToleranceCents { get; set; } = 5;
@@ -43,7 +49,9 @@ internal sealed class Preferences
 
     internal void Validate()
     {
-        if (ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) ||
+        if (ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) || !Enum.IsDefined(UkuleleTuning) || !Enum.IsDefined(PianoOrder) ||
+            PlanAnchorMidi is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi ||
+            MicrophoneCorrectionCents is < -100 or > 100 ||
             !double.IsFinite(ConcertA) || ConcertA is < 390 or > 466 ||
             SensitivityIndex is < 0 or > 2 || ToleranceCents is < 1 or > 20 ||
             TargetMidi is < -1 or > NoteCatalog.HighestMidi ||

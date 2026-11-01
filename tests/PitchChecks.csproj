@@ -11,6 +11,9 @@
     <Compile Include="../Updater.cs" Link="Updater.cs" />
     <Compile Include="../NoteCatalog.cs" Link="NoteCatalog.cs" />
     <Compile Include="../InstrumentCatalog.cs" Link="InstrumentCatalog.cs" />
+    <Compile Include="../TuningPlan.cs" Link="TuningPlan.cs" />
+    <Compile Include="../DoubleStrikeNavigator.cs" Link="DoubleStrikeNavigator.cs" />
+    <Compile Include="../VisualControls.cs" Link="VisualControls.cs" />
     <Compile Include="../Preferences.cs" Link="Preferences.cs" />
     <Compile Include="../TuningFork.cs" Link="TuningFork.cs" />
     <Compile Include="../TunerForm.cs" Link="TunerForm.cs" />

@@ -16,28 +16,45 @@ internal sealed class TunerForm : Form
     private readonly Label _concertTitle = MakeLabel(), _concertHelp = MakeLabel(), _sensitivityTitle = MakeLabel();
     private readonly Label _toleranceTitle = MakeLabel(), _octaveTitle = MakeLabel(), _targetTitle = MakeLabel();
     private readonly Label _noteHelp = MakeLabel(), _languageTitle = MakeLabel(), _intervalTitle = MakeLabel(), _forkHelp = MakeLabel();
+    private readonly Label _ukuleleTitle = MakeLabel(), _orderTitle = MakeLabel(), _orderHelp = MakeLabel(), _guideText = MakeLabel();
+    private readonly Label _visualHelp = MakeLabel(), _calibrationTitle = MakeLabel(), _calibrationHelp = MakeLabel(), _strikeHelp = MakeLabel();
     private readonly Button _start = new() { AutoSize = true }, _stop = new() { AutoSize = true, Enabled = false };
     private readonly Button _repeat = new() { AutoSize = true, Enabled = false }, _test = new() { AutoSize = true };
     private readonly Button _updates = new() { AutoSize = true }, _strike = new() { AutoSize = true };
+    private readonly Button _next = new() { AutoSize = true };
     private readonly Button _saveProfile = new() { AutoSize = true }, _loadProfile = new() { AutoSize = true };
     private readonly TextBox _result = new() { ReadOnly = true, Multiline = true, Height = 64, TabStop = true };
     private readonly ComboBox _method = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _instrument = new() { DropDownStyle = ComboBoxStyle.DropDownList };
+    private readonly ComboBox _ukuleleTuning = new() { DropDownStyle = ComboBoxStyle.DropDownList };
+    private readonly ComboBox _pianoOrder = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _view = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _octave = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _target = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _sensitivity = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _language = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly CheckBox _dark = new() { AutoSize = true }, _showOctave = new() { AutoSize = true }, _autoStrike = new() { AutoSize = true };
+    private readonly CheckBox _doubleStrike = new() { AutoSize = true }, _visualMode = new() { AutoSize = true };
+    private readonly PitchMeter _meter = new();
+    private readonly KeyboardDiagram _keyboard = new();
     private readonly NumericUpDown _concertA = new() { Minimum = 390, Maximum = 466, DecimalPlaces = 1, Increment = 0.1M, Value = 440 };
     private readonly NumericUpDown _tolerance = new() { Minimum = 1, Maximum = 20, Value = 5 };
     private readonly NumericUpDown _interval = new() { Minimum = 1, Maximum = 10, Value = 3 };
+    private readonly NumericUpDown _calibration = new() { Minimum = -100, Maximum = 100, DecimalPlaces = 1, Increment = 0.1M };
     private readonly System.Windows.Forms.Timer _strikeTimer = new();
     private readonly TuningFork _fork = new();
     private readonly NoteSession _session = new();
+    private readonly DoubleStrikeNavigator _strikeNavigator = new();
+    private readonly object _navigationLock = new();
     private readonly short[] _window = new short[8192];
     private Microphone? _microphone;
     private int _windowCount, _analysisFrame, _targetMidi = NoteCatalog.DefaultMidi;
+    private int _planAnchorMidi = NoteCatalog.DefaultMidi, _lastResolvedTarget = NoteCatalog.DefaultMidi;
+    private volatile UkuleleTuning _ukuleleKind;
+    private volatile bool _doubleStrikeEnabled, _visualEnabled;
+    private double _correctionFactor = 1;
+    private DateTime _lastVisualAt;
+    private bool _advancingTarget;
     private volatile InstrumentKind _instrumentKind = InstrumentKind.Piano;
     private double _reference = 440, _toleranceCents = 5, _minimumRms = 0.008;
     private DateTime _ignoreUntil;
@@ -46,6 +63,7 @@ internal sealed class TunerForm : Form
     private double _lastMeasured, _lastReference, _lastTolerance;
     private int _lastTarget;
     private InstrumentKind _lastInstrument;
+    private UkuleleTuning _lastUkulele;
 
     internal TunerForm()
     {
@@ -69,30 +87,43 @@ internal sealed class TunerForm : Form
         Add(content, _heading); Add(content, _intro);
         Add(content, _methodTitle); Add(content, _method);
         Add(content, _instrumentTitle); Add(content, _instrument);
+        Add(content, _ukuleleTitle); Add(content, _ukuleleTuning);
         Add(content, _viewTitle); Add(content, _view);
         Add(content, _beginnerHint); Add(content, _status);
         var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
-        buttons.Controls.AddRange([_start, _stop, _strike, _repeat, _test]);
+        buttons.Controls.AddRange([_start, _stop, _strike, _next, _repeat, _test]);
         Add(content, buttons);
         Add(content, _autoStrike); Add(content, _intervalTitle); Add(content, _interval); Add(content, _forkHelp);
-        Add(content, _resultTitle); Add(content, _result); Add(content, _details);
+        Add(content, _resultTitle); Add(content, _result); Add(content, _details); Add(content, _meter);
         Add(content, _settingsTitle);
         Add(content, _concertTitle); Add(content, _concertA); Add(content, _concertHelp);
         Add(content, _sensitivityTitle); Add(content, _sensitivity);
         Add(content, _toleranceTitle); Add(content, _tolerance);
         Add(content, _showOctave); Add(content, _octaveTitle); Add(content, _octave);
         Add(content, _targetTitle); Add(content, _target); Add(content, _noteHelp);
+        Add(content, _orderTitle); Add(content, _pianoOrder); Add(content, _orderHelp);
+        Add(content, _doubleStrike); Add(content, _strikeHelp);
+        Add(content, _guideText); Add(content, _keyboard);
         var profileButtons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
         profileButtons.Controls.AddRange([_saveProfile, _loadProfile]);
         Add(content, profileButtons);
         Add(settingsContent, _preferencesIntro);
         Add(settingsContent, _languageTitle); Add(settingsContent, _language);
-        Add(settingsContent, _dark); Add(settingsContent, _updates);
+        Add(settingsContent, _dark); Add(settingsContent, _visualMode); Add(settingsContent, _visualHelp);
+        Add(settingsContent, _calibrationTitle); Add(settingsContent, _calibration); Add(settingsContent, _calibrationHelp);
+        Add(settingsContent, _updates);
 
         _initializing = true;
         _language.Items.AddRange(["Polski", "English"]);
         _language.SelectedIndex = settings.English ? 1 : 0;
         _dark.Checked = settings.DarkTheme;
+        _visualMode.Checked = settings.VisualMode ?? !ScreenReaderDetector.IsActive();
+        _visualEnabled = _visualMode.Checked;
+        _doubleStrike.Checked = settings.DoubleStrikeAdvance;
+        _doubleStrikeEnabled = settings.DoubleStrikeAdvance;
+        _calibration.Value = settings.MicrophoneCorrectionCents;
+        _correctionFactor = Math.Pow(2, (double)_calibration.Value / 1200);
+        _planAnchorMidi = settings.PlanAnchorMidi;
         PopulateChoices(settings);
         _concertA.Value = (decimal)settings.ConcertA;
         _tolerance.Value = settings.ToleranceCents;
@@ -111,17 +142,20 @@ internal sealed class TunerForm : Form
         _start.Click += (_, _) => StartMicrophone();
         _stop.Click += (_, _) => StopMicrophone();
         _strike.Click += (_, _) => Strike();
+        _next.Click += (_, _) => AdvanceTarget(_targetMidi < 0 ? _lastResolvedTarget : _targetMidi);
         _repeat.Click += (_, _) => { if (_lastAnnouncement is not null) Announce(_lastAnnouncement); };
         _test.Click += (_, _) => Announce(T("Stroik. Komunikaty dla czytnika ekranu działają.", "Stroik. Screen reader announcements work."));
         _updates.Click += async (_, _) => await CheckUpdatesAsync(false);
         _saveProfile.Click += (_, _) => SaveProfile();
         _loadProfile.Click += (_, _) => LoadProfile();
-        _method.SelectedIndexChanged += (_, _) => { if (_initializing) return; if (_method.SelectedIndex == 0 && _targetMidi < 0) SelectTarget(InstrumentCatalog.DefaultMidi(_instrumentKind)); ApplyMethodUI(); Persist(); };
-        _instrument.SelectedIndexChanged += (_, _) => { if (_initializing) return; _instrumentKind = (InstrumentKind)_instrument.SelectedIndex; PopulateTargets(_instrumentKind, InstrumentCatalog.DefaultMidi(_instrumentKind)); ApplyLanguage(); ApplyViewUI(); ResetResult(); Persist(); };
+        _method.SelectedIndexChanged += (_, _) => { if (_initializing) return; if (_method.SelectedIndex == 0 && _targetMidi < 0) SelectTarget(InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind)); ApplyMethodUI(); Persist(); };
+        _instrument.SelectedIndexChanged += (_, _) => { if (_initializing) return; _instrumentKind = (InstrumentKind)_instrument.SelectedIndex; PopulateTargets(_instrumentKind, InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind)); _planAnchorMidi = _targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi; ApplyLanguage(); ApplyViewUI(); UpdateGuide(); ResetResult(); Persist(); };
+        _ukuleleTuning.SelectedIndexChanged += (_, _) => { if (_initializing) return; _ukuleleKind = (UkuleleTuning)_ukuleleTuning.SelectedIndex; PopulateTargets(_instrumentKind, InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind)); ApplyLanguage(); UpdateGuide(); ResetResult(); Persist(); };
+        _pianoOrder.SelectedIndexChanged += (_, _) => { if (_initializing) return; _planAnchorMidi = _targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi; Persist(); };
         _view.SelectedIndexChanged += (_, _) => { if (_initializing) return; ApplyViewUI(); Persist(); };
         _showOctave.CheckedChanged += (_, _) => { if (_initializing) return; ApplyViewUI(); Persist(); };
         _octave.SelectedIndexChanged += (_, _) => { if (_initializing || _changingOctave || _octave.SelectedIndex < 0) return; int selected = _targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi; int midi = Math.Clamp((_octave.SelectedIndex + 1) * 12 + selected % 12, NoteCatalog.LowestMidi, NoteCatalog.HighestMidi); if (NoteCatalog.Octave(midi) != _octave.SelectedIndex) midi = _octave.SelectedIndex == 0 ? NoteCatalog.LowestMidi : NoteCatalog.HighestMidi; SelectTarget(midi); Persist(); };
-        _target.SelectedIndexChanged += (_, _) => { if (_initializing || _target.SelectedItem is not Choice choice) return; _targetMidi = choice.Id; SyncOctave(); Persist(); };
+        _target.SelectedIndexChanged += (_, _) => { if (_initializing || _target.SelectedItem is not Choice choice) return; lock (_navigationLock) _strikeNavigator.Reset(); _targetMidi = choice.Id; if (!_advancingTarget && _instrumentKind == InstrumentKind.Piano && _targetMidi >= 0) _planAnchorMidi = _targetMidi; SyncOctave(); UpdateGuide(); Persist(); };
         _target.KeyPress += (_, e) => { if (!InstrumentCatalog.HasStrings(_instrumentKind) && char.ToLowerInvariant(e.KeyChar) is 'i' or 's') { SelectTarget(NoteCatalog.NextSharp(_targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi)); e.Handled = true; } };
         _concertA.ValueChanged += (_, _) => { _reference = (double)_concertA.Value; Persist(); };
         _tolerance.ValueChanged += (_, _) => { _toleranceCents = (double)_tolerance.Value; Persist(); };
@@ -130,8 +164,11 @@ internal sealed class TunerForm : Form
         _dark.CheckedChanged += (_, _) => { ApplyTheme(); Persist(); };
         _autoStrike.CheckedChanged += (_, _) => { UpdateStrikeTimer(); Persist(); };
         _interval.ValueChanged += (_, _) => { UpdateStrikeTimer(); Persist(); };
+        _doubleStrike.CheckedChanged += (_, _) => { _doubleStrikeEnabled = _doubleStrike.Checked; Persist(); };
+        _visualMode.CheckedChanged += (_, _) => { _visualEnabled = _visualMode.Checked; ApplyViewUI(); Persist(); };
+        _calibration.ValueChanged += (_, _) => { Volatile.Write(ref _correctionFactor, Math.Pow(2, (double)_calibration.Value / 1200)); ResetResult(); Persist(); };
         _strikeTimer.Tick += (_, _) => Strike();
-        KeyDown += (_, e) => { if (e.Control && e.KeyCode == Keys.S) { SaveProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.O) { LoadProfile(); e.SuppressKeyPress = true; } };
+        KeyDown += (_, e) => { if (e.Control && e.KeyCode == Keys.S) { SaveProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.O) { LoadProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.N) { AdvanceTarget(_targetMidi < 0 ? _lastResolvedTarget : _targetMidi); e.SuppressKeyPress = true; } };
         Shown += async (_, _) => await CheckUpdatesAsync(true);
         FormClosing += (_, _) => { StopMicrophone(false); _strikeTimer.Stop(); _fork.Dispose(); };
         AcceptButton = _method.SelectedIndex == 0 ? _strike : _start;
@@ -165,6 +202,16 @@ internal sealed class TunerForm : Form
         _instrument.Items.AddRange([T("Pianino / fortepian", "Piano"), T("Gitara", "Guitar"), "Ukulele", T("Skrzypce", "Violin"), T("Gitara basowa", "Bass guitar"), T("Chromatyczny", "Chromatic")]);
         _instrument.SelectedIndex = (int)settings.Instrument;
         _instrumentKind = settings.Instrument;
+        _ukuleleTuning.Items.Clear();
+        _ukuleleTuning.Items.AddRange([T("Standardowy: od podłogi A–E–C–G", "Standard: floor to ceiling A–E–C–G"),
+            T("Zamienione A/G: od podłogi G–E–C–A", "Swapped A/G: floor to ceiling G–E–C–A")]);
+        _ukuleleTuning.SelectedIndex = (int)settings.UkuleleTuning;
+        _ukuleleKind = settings.UkuleleTuning;
+        _pianoOrder.Items.Clear();
+        _pianoOrder.Items.AddRange([T("Rosnąco od wybranego dźwięku", "Ascending from selected note"),
+            T("Od środka: po 5 półtonów w prawo i lewo", "From center: 5 semitones right, then left"),
+            T("Od środka: po 5 całych tonów w prawo i lewo", "From center: 5 whole tones right, then left")]);
+        _pianoOrder.SelectedIndex = (int)settings.PianoOrder;
         _octave.Items.Clear();
         for (int i = 0; i <= 8; i++) _octave.Items.Add(NoteCatalog.OctaveLabel(i, _english));
         _octave.SelectedIndex = settings.StartOctave;
@@ -189,9 +236,13 @@ internal sealed class TunerForm : Form
             : T("Automatycznie: najbliższy dźwięk (stroik elektroniczny)", "Automatic: nearest note (electronic tuner)")));
         if (InstrumentCatalog.HasStrings(kind))
         {
-            foreach (OpenString open in InstrumentCatalog.Strings(kind))
+            foreach (OpenString open in InstrumentCatalog.Strings(kind, _ukuleleKind))
                 _target.Items.Add(new Choice(open.Midi, 0,
-                    T($"Struna {open.Number}: ", $"String {open.Number}: ") + NoteCatalog.Label(open.Midi, _english)));
+                    T($"Struna {open.Number}", $"String {open.Number}") +
+                    (kind is InstrumentKind.Guitar or InstrumentKind.Ukulele
+                        ? open.Number == 1 ? T(" (przy podłodze): ", " (floor side): ")
+                                           : open.Number == InstrumentCatalog.Strings(kind, _ukuleleKind).Count ? T(" (przy suficie): ", " (ceiling side): ") : ": "
+                        : ": ") + NoteCatalog.Label(open.Midi, _english)));
         }
         else
         {
@@ -224,10 +275,11 @@ internal sealed class TunerForm : Form
         if (fork) StopMicrophone(false);
         else { _strikeTimer.Stop(); _fork.Stop(); }
         foreach (Control control in new Control[] { _strike, _autoStrike, _intervalTitle, _interval, _forkHelp }) control.Visible = fork;
-        foreach (Control control in new Control[] { _start, _stop, _repeat, _test, _resultTitle, _result, _details, _status, _sensitivityTitle, _sensitivity, _toleranceTitle, _tolerance }) control.Visible = !fork;
+        foreach (Control control in new Control[] { _start, _stop, _repeat, _test, _resultTitle, _result, _details, _status, _sensitivityTitle, _sensitivity, _toleranceTitle, _tolerance, _doubleStrike, _strikeHelp }) control.Visible = !fork;
         _status.Text = _microphone is null ? T("Mikrofon jest wyłączony.", "Microphone is off.") : T("Mikrofon włączony.", "Microphone is on.");
         AcceptButton = fork ? _strike : _start;
         UpdateStrikeTimer();
+        ApplyViewUI();
     }
     private void ApplyViewUI()
     {
@@ -238,6 +290,11 @@ internal sealed class TunerForm : Form
         _octaveTitle.Visible = fullRange && (beginner || _showOctave.Checked);
         _octave.Visible = _octaveTitle.Visible;
         _concertHelp.Visible = _instrumentKind == InstrumentKind.Piano;
+        _ukuleleTitle.Visible = _ukuleleTuning.Visible = _instrumentKind == InstrumentKind.Ukulele;
+        _orderTitle.Visible = _pianoOrder.Visible = _orderHelp.Visible = _instrumentKind == InstrumentKind.Piano;
+        _guideText.Visible = _instrumentKind == InstrumentKind.Piano;
+        _keyboard.Visible = _instrumentKind == InstrumentKind.Piano && _visualMode.Checked;
+        _meter.Visible = _visualMode.Checked && _method.SelectedIndex == 1;
     }
     private void UpdateStrikeTimer()
     {
@@ -250,7 +307,7 @@ internal sealed class TunerForm : Form
     {
         try
         {
-            int midi = _targetMidi < 0 ? InstrumentCatalog.DefaultMidi(_instrumentKind) : _targetMidi;
+            int midi = _targetMidi < 0 ? InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind) : _targetMidi;
             double frequency = PitchDetector.NoteFromMidi(midi, _reference).Frequency;
             _fork.Strike(frequency);
         }
@@ -262,14 +319,14 @@ internal sealed class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.03 — dostępny stroiciel", "Stroik 1.03 — accessible tuner");
-        _heading.Text = "Stroik 1.03";
+        Text = T("Stroik 1.04 — dostępny stroiciel", "Stroik 1.04 — accessible tuner");
+        _heading.Text = "Stroik 1.04";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tabs.AccessibleName = T("Zakładki Stroika", "Stroik tabs");
         _tunerTab.AccessibleName = _tunerTab.Text;
         _settingsTab.AccessibleName = _settingsTab.Text;
-        _preferencesIntro.Text = T("Język, wygląd i aktualizacje programu.", "Language, appearance and program updates.");
+        _preferencesIntro.Text = T("Język, wygląd, korekta mikrofonu i aktualizacje programu.", "Language, appearance, microphone correction and program updates.");
         _tabs.Invalidate();
         _intro.Text = T("Wybierz instrument, metodę strojenia i dźwięk. Domyślnie: pianino i g w oktawie razkreślnej.",
             "Choose an instrument, tuning method and note. Defaults: piano and G in the one-line octave.");
@@ -281,19 +338,27 @@ internal sealed class TunerForm : Form
             InstrumentKind.Piano => T(
                 "Wskazówka dla początkujących: przy starych pianinach i fortepianach zwykle zaczyna się od środka i pracuje równomiernie w obie strony, np. kwintami. Klucz ustaw możliwie pionowo (godzina 12). Po wytłumieniu bocznych strun najpierw stroi się środkową, potem boczne, aż ustanie dudnienie. Praca przy napiętych strunach może uszkodzić instrument lub zranić; stan zabytkowego instrumentu powinien ocenić technik. Program nie oblicza indywidualnego stroju rozszerzonego oktaw.",
                 "Beginner guidance: on older pianos, work from the middle evenly toward both ends, for example in fifths. Keep the tuning lever as upright as practical (12 o'clock). Mute the outer strings, tune the middle string first, then the outer strings until beating stops. High-tension strings can damage the instrument or cause injury; ask a technician to assess a historic piano. This app does not calculate an individual stretched-octave tuning."),
-            InstrumentKind.Guitar => T("Gitara: wybierz jedną pustą strunę i graj tylko ją. Lista idzie od struny 6 (najniższe E) do struny 1 (najwyższe E). Po strojeniu sprawdź struny ponownie.", "Guitar: select one open string and play only that string. The list runs from string 6 (low E) to string 1 (high E). Recheck the strings after tuning."),
-            InstrumentKind.Ukulele => T("Ukulele: graj po jednej pustej strunie. Standardowa lista G–C–E–A ma wysokie G na strunie 4, powyżej C na strunie 3. Ukulele z niskim G wymaga innego stroju.", "Ukulele: play one open string at a time. Standard G–C–E–A has a high G on string 4, above the C on string 3. A low-G ukulele needs a different preset."),
+            InstrumentKind.Guitar => T("Gitara: od podłogi struny to E razkreślne, H małe, G małe, D małe, A wielkie, E wielkie. G jest struną 3. Graj jedną pustą strunę naraz i po strojeniu sprawdź je ponownie.", "Guitar: from the floor, the strings are high E, B, G, D, A, low E. G is string 3. Play one open string at a time and recheck after tuning."),
+            InstrumentKind.Ukulele => _ukuleleKind == UkuleleTuning.Standard
+                ? T("Ukulele standardowe: od podłogi A–E–C–G, wszystkie w oktawie razkreślnej. G jest struną 4 przy suficie. Graj jedną pustą strunę naraz.", "Standard ukulele: floor to ceiling A–E–C–G, all in the one-line octave. G is string 4 on the ceiling side. Play one open string at a time.")
+                : T("Twoje ukulele: od podłogi G–E–C–A, wszystkie w oktawie razkreślnej. G jest struną 1 przy podłodze, A struną 4 przy suficie.", "Swapped ukulele: floor to ceiling G–E–C–A, all in the one-line octave. G is string 1 on the floor side, A string 4 on the ceiling side."),
             InstrumentKind.Violin => T("Skrzypce: strój po jednej pustej strunie G–D–A–E. Kręć kołkami ostrożnie; zbyt duży naciąg może zerwać strunę.", "Violin: tune one open G–D–A–E string at a time. Turn pegs carefully; excessive tension can break a string."),
             InstrumentKind.Bass => T("Gitara basowa: graj po jednej pustej strunie, od niskiego E przez A i D do G. Jeśli mikrofon myli oktawę, spróbuj czystszego sygnału lub dźwięku harmonicznego.", "Bass guitar: play one open string at a time, from low E through A and D to G. If the microphone confuses octaves, try a cleaner signal or a harmonic."),
             _ => T("Tryb chromatyczny: dostępne są wszystkie dźwięki od A subkontra do c pięciokreślnego. Graj jeden dźwięk naraz.", "Chromatic mode: all notes from A0 to C8 are available. Play one note at a time.")
         };
+        _ukuleleTitle.Text = T("Strój ukulele:", "Ukulele tuning:");
+        _orderTitle.Text = T("Kolejność strojenia pianina:", "Piano tuning order:");
+        _orderHelp.Text = T("Plan prowadzi tylko po dźwiękach. Wariant całotonowy pomija co drugi półton; pozostałe nuty trzeba później nastroić osobno. Kolejność nie gwarantuje bezpiecznego rozkładu naprężeń — przy starym pianinie skonsultuj technika.", "The plan only guides note selection. Whole-tone mode skips alternate semitones; tune the remaining notes separately. The order does not guarantee safe tension distribution; consult a technician for an old piano.");
         _start.Text = T("&Włącz mikrofon", "&Start microphone");
         _stop.Text = T("W&yłącz mikrofon", "S&top microphone");
         _strike.Text = T("&Uderz kamerton", "&Strike tuning fork");
+        _next.Text = T("&Następny dźwięk (Ctrl+N)", "&Next note (Ctrl+N)");
         _repeat.Text = T("&Powtórz wynik", "&Repeat result");
         _test.Text = T("Sprawdź komunikat &NVDA", "&Test screen reader announcement");
         _updates.Text = T("Sprawdź &aktualizacje", "Check for &updates");
         _autoStrike.Text = T("Uderzaj kamerton automatycznie", "Strike tuning fork automatically");
+        _doubleStrike.Text = T("Po dobrym wyniku dwa szybkie uderzenia przechodzą do następnego dźwięku", "After an in-tune result, two quick strikes advance to the next note");
+        _strikeHelp.Text = T("Dwa oddzielne uderzenia tego samego dźwięku w ciągu 0,9 sekundy. Każde musi mieć rozpoznaną wysokość; najpierw poczekaj na komunikat i jego wyciszenie. Ctrl+N przechodzi ręcznie.", "Two distinct strikes of the same pitch within 0.9 seconds. Each must have a recognized pitch; wait for the result announcement and its pause first. Ctrl+N advances manually.");
         _intervalTitle.Text = T("Odstęp między uderzeniami w sekundach:", "Seconds between strikes:");
         _forkHelp.Text = T("Kamerton wydaje krótki, gasnący ton. Jeśli nie masz pewności co do strojenia ze słuchu, najpierw ćwicz na niedrogim, łatwym do obsługi instrumencie, np. ukulele lub gitarze. Zerwanie struny nadal może zranić.",
             "The tuning fork plays a short, decaying tone. If unsure about tuning by ear, first practise on a modest, easy-to-handle instrument such as a ukulele or guitar. A broken string can still cause injury.");
@@ -310,30 +375,44 @@ internal sealed class TunerForm : Form
             ? T("Struna / dźwięk docelowy:", "String / target note:")
             : T("Dźwięk docelowy:", "Target note:");
         _noteHelp.Text = InstrumentCatalog.HasStrings(_instrumentKind)
-            ? T("Strzałkami wybierz pustą strunę. Tryb automatyczny porównuje dźwięk z najbliższą struną tego instrumentu. Inne stroje wybierz w trybie chromatycznym.",
-                "Use the arrow keys to select an open string. Automatic mode compares pitch with this instrument's nearest open string. For alternate tunings, use chromatic mode.")
+            ? T("Strzałkami wybierz pustą strunę. Tryb automatyczny porównuje dźwięk z najbliższą struną. Ukulele ma dwa układy G/A; dla innych strojów użyj trybu chromatycznego.",
+                "Use the arrow keys to select an open string. Automatic mode compares pitch with the nearest open string. Ukulele has two G/A layouts; use chromatic mode for other tunings.")
             : T("Strzałki przechodzą płynnie między oktawami. W liście dźwięków naciśnij I lub S, aby przejść do następnego dźwięku z krzyżykiem (cis, dis, fis, gis). Zakres listy: A subkontra – c pięciokreślne.",
                 "Arrow keys move through octave boundaries. In the note list, press I or S for the next sharp note. The list covers the full 88-key piano range, A0–C8.");
         _saveProfile.Text = T("Zapisz plik ustawień (Ctrl+S)", "Save settings file (Ctrl+S)");
         _loadProfile.Text = T("Wczytaj plik ustawień (Ctrl+O)", "Open settings file (Ctrl+O)");
         _languageTitle.Text = T("Język:", "Language:");
+        _visualMode.Text = T("Pokazuj wskaźnik na żywo i klawiaturę", "Show live meter and keyboard");
+        _visualHelp.Text = T("Przy wykrytym czytniku ekranu grafika jest domyślnie wyłączona. Wykrywanie nie jest pewne; tę opcję można zawsze zmienić ręcznie.", "Graphics default to off when a screen reader is detected. Detection is not certain; this option can always be changed manually.");
+        _calibrationTitle.Text = T("Ręczna korekta pomiaru mikrofonu w centach (−100 do +100):", "Manual microphone pitch correction in cents (−100 to +100):");
+        _calibrationHelp.Text = T("Użyj tylko po porównaniu ze znanym wzorcem. Dodatnia wartość podwyższa odczyt, ujemna obniża. Błędnie nastrojony instrument nie oznacza błędu mikrofonu.", "Use only after comparing with a known reference. A positive value raises the reading; a negative value lowers it. An out-of-tune instrument does not imply a microphone error.");
         _dark.Text = T("Ciemny motyw", "Dark theme");
-        foreach (Button button in new[] { _start, _stop, _repeat, _test, _updates, _strike, _saveProfile, _loadProfile }) button.AccessibleName = button.Text.Replace("&", "");
+        foreach (Button button in new[] { _start, _stop, _repeat, _test, _updates, _strike, _next, _saveProfile, _loadProfile }) button.AccessibleName = button.Text.Replace("&", "");
         _result.AccessibleName = T("Ostatni wynik strojenia", "Last tuning result");
         _details.AccessibleName = T("Szczegóły pomiaru", "Measurement details");
         _method.AccessibleName = _methodTitle.Text; _instrument.AccessibleName = _instrumentTitle.Text; _view.AccessibleName = _viewTitle.Text;
+        _ukuleleTuning.AccessibleName = _ukuleleTitle.Text; _pianoOrder.AccessibleName = _orderTitle.Text;
         _octave.AccessibleName = _octaveTitle.Text; _target.AccessibleName = _targetTitle.Text;
         _concertA.AccessibleName = _concertTitle.Text; _tolerance.AccessibleName = _toleranceTitle.Text;
         _sensitivity.AccessibleName = _sensitivityTitle.Text; _language.AccessibleName = _languageTitle.Text;
         _interval.AccessibleName = _intervalTitle.Text; _showOctave.AccessibleName = _showOctave.Text;
         _autoStrike.AccessibleName = _autoStrike.Text; _dark.AccessibleName = _dark.Text;
-        if (_hasResult) ShowResult(_lastMeasured, _lastReference, _lastTarget, _lastTolerance, _lastInstrument, false);
+        _doubleStrike.AccessibleName = _doubleStrike.Text; _visualMode.AccessibleName = _visualMode.Text;
+        _calibration.AccessibleName = _calibrationTitle.Text;
+        _meter.AccessibleName = T("Wizualny wskaźnik odchyłki stroju", "Visual tuning deviation meter");
+        _keyboard.AccessibleName = T("Wirtualna klawiatura z zaznaczonym dźwiękiem", "Virtual keyboard with selected note");
+        _meter.SetLanguage(_english);
+        UpdateGuide();
+        if (_hasResult) ShowResult(_lastMeasured, _lastReference, _lastTarget, _lastTolerance, _lastInstrument, _lastUkulele, false);
         else _result.Text = T("Wynik pojawi się po ucichnięciu dźwięku.", "The result appears when the note stops.");
     }
     private Preferences ReadSettings() => new()
     {
         English = _english, DarkTheme = _dark.Checked, Method = (TuningMethod)Math.Max(0, _method.SelectedIndex),
         View = (TunerView)Math.Max(0, _view.SelectedIndex), Instrument = _instrumentKind, ConcertA = (double)_concertA.Value,
+        UkuleleTuning = _ukuleleKind, PianoOrder = (PianoOrder)Math.Max(0, _pianoOrder.SelectedIndex),
+        PlanAnchorMidi = _planAnchorMidi, DoubleStrikeAdvance = _doubleStrike.Checked,
+        MicrophoneCorrectionCents = _calibration.Value, VisualMode = _visualMode.Checked,
         SensitivityIndex = Math.Max(0, _sensitivity.SelectedIndex), ToleranceCents = (int)_tolerance.Value,
         TargetMidi = _targetMidi, StartOctave = Math.Max(0, _octave.SelectedIndex),
         ShowOctaveInClassic = _showOctave.Checked, AutoStrike = _autoStrike.Checked, StrikeIntervalSeconds = (int)_interval.Value
@@ -345,6 +424,13 @@ internal sealed class TunerForm : Form
         _english = settings.English;
         _language.SelectedIndex = settings.English ? 1 : 0;
         _dark.Checked = settings.DarkTheme;
+        _visualMode.Checked = settings.VisualMode ?? !ScreenReaderDetector.IsActive();
+        _visualEnabled = _visualMode.Checked;
+        _doubleStrike.Checked = settings.DoubleStrikeAdvance;
+        _doubleStrikeEnabled = settings.DoubleStrikeAdvance;
+        _calibration.Value = settings.MicrophoneCorrectionCents;
+        Volatile.Write(ref _correctionFactor, Math.Pow(2, (double)_calibration.Value / 1200));
+        _planAnchorMidi = settings.PlanAnchorMidi;
         _concertA.Value = (decimal)settings.ConcertA;
         _tolerance.Value = settings.ToleranceCents;
         _interval.Value = settings.StrikeIntervalSeconds;
@@ -354,7 +440,7 @@ internal sealed class TunerForm : Form
         _reference = (double)_concertA.Value;
         _toleranceCents = (double)_tolerance.Value;
         _initializing = false;
-        ApplyLanguage(); ApplyViewUI(); ApplyMethodUI(); ApplyTheme(); Persist();
+        ApplyLanguage(); ApplyViewUI(); ApplyMethodUI(); ApplyTheme(); UpdateGuide(); ResetResult(); Persist();
     }
     private void SetContextMenu()
     {
@@ -416,6 +502,7 @@ internal sealed class TunerForm : Form
             if (control is Button button) button.UseVisualStyleBackColor = !_dark.Checked;
         }
         _tabs.Invalidate();
+        _meter.Invalidate(); _keyboard.Invalidate();
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))
         {
             int enabled = _dark.Checked ? 1 : 0;
@@ -423,13 +510,56 @@ internal sealed class TunerForm : Form
                 DwmSetWindowAttribute(Handle, 19, ref enabled, sizeof(int));
         }
     }
+    private void UpdateGuide()
+    {
+        if (_instrumentKind != InstrumentKind.Piano) return;
+        int midi = _targetMidi >= 0 ? _targetMidi : _lastResolvedTarget;
+        if (midi is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi) midi = NoteCatalog.DefaultMidi;
+        _guideText.Text = KeyboardGuide.Describe(midi, _english);
+        _keyboard.SelectNote(midi);
+    }
+    private void AdvanceTarget(int current)
+    {
+        if (current is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi)
+            current = InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind);
+        int? next;
+        if (_instrumentKind == InstrumentKind.Piano)
+        {
+            PianoOrder order = (PianoOrder)Math.Max(0, _pianoOrder.SelectedIndex);
+            if (!TuningPlan.Build(_planAnchorMidi, order).Contains(current)) _planAnchorMidi = current;
+            next = TuningPlan.Next(_planAnchorMidi, current, order);
+        }
+        else if (InstrumentCatalog.HasStrings(_instrumentKind))
+        {
+            IReadOnlyList<OpenString> strings = InstrumentCatalog.Strings(_instrumentKind, _ukuleleKind);
+            int index = -1;
+            for (int i = 0; i < strings.Count; i++) if (strings[i].Midi == current) { index = i; break; }
+            next = index >= 0 && index + 1 < strings.Count ? strings[index + 1].Midi : null;
+        }
+        else next = current < NoteCatalog.HighestMidi ? current + 1 : null;
+        if (next is null)
+        {
+            Announce(T("To koniec wybranej kolejności strojenia.", "End of the selected tuning order."));
+            return;
+        }
+        _advancingTarget = true;
+        try { SelectTarget(next.Value); }
+        finally { _advancingTarget = false; }
+        UpdateGuide();
+        ResetResult();
+        Persist();
+        Announce(T($"Następny dźwięk: {NoteCatalog.Label(next.Value, false)}.",
+            $"Next note: {NoteCatalog.Label(next.Value, true)}."));
+    }
+
     private void StartMicrophone()
     {
         if (_microphone is not null) return;
         var microphone = new Microphone();
         try
         {
-            _session.Reset(); _windowCount = 0; _analysisFrame = 0; _ignoreUntil = DateTime.MinValue;
+            _session.Reset(); lock (_navigationLock) _strikeNavigator.Reset();
+            _windowCount = 0; _analysisFrame = 0; _ignoreUntil = DateTime.MinValue;
             microphone.FrameReady += ProcessFrame;
             microphone.Start(); _microphone = microphone;
             _start.Enabled = false; _stop.Enabled = true;
@@ -447,17 +577,19 @@ internal sealed class TunerForm : Form
         if (_microphone is null) return;
         Microphone microphone = _microphone; _microphone = null;
         microphone.FrameReady -= ProcessFrame; microphone.Dispose();
-        _session.Reset(); _windowCount = 0;
+        _session.Reset(); lock (_navigationLock) _strikeNavigator.Reset();
+        _windowCount = 0; _meter.SetReading(null);
         _start.Enabled = true; _stop.Enabled = false;
         _status.Text = T("Mikrofon jest wyłączony.", "Microphone is off.");
         if (announce && !IsDisposed && !Disposing) { _start.Focus(); Announce(_status.Text); }
     }
-    // Runs on the audio capture thread. Only final results reach the UI thread.
+    // The audio thread emits final spoken results and throttled, silent visual readings.
     private void ProcessFrame(short[] samples)
     {
         DateTime now = DateTime.UtcNow;
         if (now < _ignoreUntil) { _windowCount = 0; return; }
-        bool sound = PitchDetector.Rms(samples) >= _minimumRms;
+        double rms = PitchDetector.Rms(samples);
+        bool sound = rms >= _minimumRms;
         double? frequency = null;
         if (sound)
         {
@@ -473,24 +605,86 @@ internal sealed class TunerForm : Form
             }
         }
         else _windowCount = 0;
-        double? completed = _session.Observe(sound, frequency, now);
-        if (completed is > 0)
+        double correction = Volatile.Read(ref _correctionFactor);
+        if (frequency is > 0) frequency *= correction;
+        int? advance = null;
+        bool needsQuickPitch = false;
+        if (_doubleStrikeEnabled)
+        {
+            lock (_navigationLock)
+            {
+                advance = _strikeNavigator.Observe(rms, _minimumRms, frequency, now);
+                needsQuickPitch = advance is null && _strikeNavigator.IsAwaitingPitch && frequency is null && _windowCount >= 4096;
+            }
+            if (needsQuickPitch)
+            {
+                var quick = PitchDetector.Estimate(_window.AsSpan(0, 4096), _microphone?.SampleRate ?? 48000);
+                if (quick is { Confidence: >= 0.75 })
+                {
+                    lock (_navigationLock)
+                        advance = _strikeNavigator.Observe(rms, _minimumRms, quick.Value.Frequency * correction, now);
+                }
+            }
+        }
+        else lock (_navigationLock) _strikeNavigator.Reset();
+        if (advance is int midi)
         {
             _ignoreUntil = now.AddMilliseconds(1500);
-            double measured = completed.Value, reference = _reference, tolerance = _toleranceCents;
-            int target = _targetMidi;
-            InstrumentKind instrument = _instrumentKind;
-            try { BeginInvoke((Action)(() => ShowResult(measured, reference, target, tolerance, instrument))); }
+            _session.Reset(); _windowCount = 0;
+            try { BeginInvoke((Action)(() => AdvanceTarget(midi))); }
+            catch (InvalidOperationException) { }
+            return;
+        }
+        if (_visualEnabled && frequency is > 0 && now - _lastVisualAt >= TimeSpan.FromMilliseconds(120))
+        {
+            _lastVisualAt = now;
+            double measured = frequency.Value;
+            try { BeginInvoke((Action)(() => UpdateMeter(measured))); }
             catch (InvalidOperationException) { }
         }
+        double? completed = _session.Observe(sound, frequency, now);
+        if (completed is not > 0) return;
+        double result = completed.Value, reference = _reference, tolerance = _toleranceCents;
+        int target = _targetMidi;
+        InstrumentKind instrument = _instrumentKind;
+        UkuleleTuning ukulele = _ukuleleKind;
+        int resolved = ResolveTarget(target, instrument, ukulele, result, reference);
+        double targetFrequency = PitchDetector.NoteFromMidi(resolved, reference).Frequency;
+        bool inTune = Math.Abs(1200 * Math.Log2(result / targetFrequency)) <= tolerance;
+        bool counting;
+        lock (_navigationLock)
+        {
+            counting = _strikeNavigator.IsCounting;
+            if (!counting)
+            {
+                if (_doubleStrikeEnabled && inTune) _strikeNavigator.Arm(resolved, targetFrequency, now);
+                else _strikeNavigator.Reset();
+            }
+        }
+        if (counting) return;
+        _ignoreUntil = now.AddMilliseconds(1500);
+        try { BeginInvoke((Action)(() => ShowResult(result, reference, target, tolerance, instrument, ukulele))); }
+        catch (InvalidOperationException) { }
     }
-    private void ShowResult(double measured, double reference, int targetMidi, double tolerance, InstrumentKind instrument, bool announce = true)
+    private static int ResolveTarget(int target, InstrumentKind instrument, UkuleleTuning ukulele,
+        double measured, double reference) => target >= 0 ? target :
+        InstrumentCatalog.HasStrings(instrument)
+            ? InstrumentCatalog.NearestOpenString(instrument, measured, reference, ukulele)
+            : PitchDetector.Nearest(measured, reference).Midi;
+    private void UpdateMeter(double measured)
+    {
+        if (!_visualMode.Checked || _method.SelectedIndex != 1) return;
+        int target = ResolveTarget(_targetMidi, _instrumentKind, _ukuleleKind, measured, _reference);
+        double expected = PitchDetector.NoteFromMidi(target, _reference).Frequency;
+        _meter.SetReading(1200 * Math.Log2(measured / expected));
+    }
+    private void ShowResult(double measured, double reference, int targetMidi, double tolerance, InstrumentKind instrument, UkuleleTuning ukulele, bool announce = true)
     {
         if (IsDisposed) return;
-        _hasResult = true; _lastMeasured = measured; _lastReference = reference; _lastTarget = targetMidi; _lastTolerance = tolerance; _lastInstrument = instrument;
-        int resolved = targetMidi < 0 && InstrumentCatalog.HasStrings(instrument)
-            ? InstrumentCatalog.NearestOpenString(instrument, measured, reference) : targetMidi;
-        Note note = resolved < 0 ? PitchDetector.Nearest(measured, reference) : PitchDetector.NoteFromMidi(resolved, reference);
+        _hasResult = true; _lastMeasured = measured; _lastReference = reference; _lastTarget = targetMidi; _lastTolerance = tolerance; _lastInstrument = instrument; _lastUkulele = ukulele;
+        int resolved = ResolveTarget(targetMidi, instrument, ukulele, measured, reference);
+        _lastResolvedTarget = resolved;
+        Note note = PitchDetector.NoteFromMidi(resolved, reference);
         double hertz = measured - note.Frequency;
         double cents = 1200 * Math.Log2(measured / note.Frequency);
         CultureInfo culture = CultureInfo.GetCultureInfo(_english ? "en-US" : "pl-PL");
@@ -498,7 +692,7 @@ internal sealed class TunerForm : Form
             ? NoteCatalog.Label(note.Midi, _english) : note.Name;
         if (InstrumentCatalog.HasStrings(instrument))
         {
-            OpenString open = InstrumentCatalog.Strings(instrument).FirstOrDefault(s => s.Midi == note.Midi);
+            OpenString open = InstrumentCatalog.Strings(instrument, ukulele).FirstOrDefault(s => s.Midi == note.Midi);
             if (open.Number > 0) name = T($"struna {open.Number}: ", $"string {open.Number}: ") + name;
         }
         string hz = Math.Abs(hertz).ToString("0.0", culture);
@@ -509,6 +703,8 @@ internal sealed class TunerForm : Form
         _details.Text = T($"Zmierzono: {measured.ToString("0.0", culture)} Hz. Cel: {note.Frequency.ToString("0.0", culture)} Hz. Odchyłka: {cents.ToString("+0.0;-0.0;0.0", culture)} centów.",
             $"Measured: {measured.ToString("0.0", culture)} Hz. Target: {note.Frequency.ToString("0.0", culture)} Hz. Difference: {cents.ToString("+0.0;-0.0;0.0", culture)} cents.");
         _lastAnnouncement = announcement; _repeat.Enabled = true;
+        if (instrument == InstrumentKind.Piano && targetMidi < 0) UpdateGuide();
+        _meter.SetReading(cents);
         if (announce) Announce(announcement);
     }
     private void ResetResult()
@@ -517,6 +713,7 @@ internal sealed class TunerForm : Form
         _lastAnnouncement = null;
         _repeat.Enabled = false;
         _details.Text = "";
+        _meter.SetReading(null);
         _result.Text = T("Wynik pojawi się po ucichnięciu dźwięku.", "The result appears when the note stops.");
     }
     private void Announce(string message) => _result.AccessibilityObject.RaiseAutomationNotification(
