@@ -1,4 +1,4 @@
-# Stroik 1.05
+# Stroik 1.06
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -46,9 +46,14 @@ Microphone sensitivity has descriptions for quiet instruments, normal conditions
 **Ctrl+S** or **Save settings file** in the context menu exports a JSON profile. **Ctrl+O** or **Open settings file** imports one. You can keep profiles for home, a café or a historic instrument. Profiles include the tuning method and no recordings. The **Settings** tab contains language, dark theme and the manual update check. The **Tuner** tab contains the tuning controls and profiles. Both tabs are keyboard accessible and have localized accessibility names.
 
 
+## Tuning fork in 1.06
+
+When **Strike tuning fork automatically** is unchecked, **Alt+U** plays one immediate strike. The **Strike tuning fork** button does the same.
+
+When checked, the fork strikes repeatedly at the selected interval. **Alt+U** pauses or resumes the cycle without unchecking the option. A label below the option reports whether automatic strikes are running, paused, or in manual mode; screen readers can access this status too. A checked automatic mode starts running again when the app is relaunched.
 ## Fixes in 1.05
 
-**Alt+U** toggles automatic strikes in tuning fork mode. Pressing it again stops the timer and immediately silences the playing tone. The choice is saved in settings and profiles.
+Version 1.05 introduced Alt+U for the tuning fork. Its current behavior is described in the 1.06 section above. The automatic-mode choice is saved in settings and profiles.
 
 The updater retries transient network errors and interrupted EXE downloads. The startup check result or error is shown in **Settings**; **Check for updates** retries manually. Before closing the app, it checks write access to the EXE folder. After a successful replacement, the new version retries removing the old copy if it was briefly locked. SHA-256 verification remains mandatory.
 ## New in 1.04

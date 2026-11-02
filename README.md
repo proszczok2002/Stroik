@@ -1,4 +1,4 @@
-# Stroik 1.05
+# Stroik 1.06
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -46,9 +46,14 @@ Czułość jest opisana według warunków (cichy instrument, normalna, hałas w 
 **Ctrl+S** lub **Zapisz plik ustawień** w menu kontekstowym zapisuje profil JSON. **Ctrl+O** lub **Wczytaj plik ustawień** przywraca profil. Możesz utworzyć profile dla domu, kawiarni i instrumentu historycznego. Plik zawiera ustawienia, w tym metodę strojenia; nie zawiera nagrań. Zakładka **Ustawienia** zawiera wybór języka, ciemny motyw i przycisk ręcznego sprawdzenia aktualizacji. Zakładka **Stroik** zawiera pozostałe parametry strojenia oraz profile. Między zakładkami można przechodzić klawiaturą; kontrolki mają polskie i angielskie nazwy dostępności.
 
 
+## Kamerton w 1.06
+
+Gdy **Uderzaj kamerton automatycznie** jest odznaczone, **Alt+U** odtwarza jedno natychmiastowe uderzenie. Tak samo działa przycisk **Uderz kamerton**.
+
+Gdy pole jest zaznaczone, kamerton uderza cyklicznie w ustawionym odstępie. **Alt+U** wstrzymuje albo wznawia cykl bez odznaczania pola. Etykieta pod polem informuje, czy automat działa, jest wstrzymany, czy wybrano tryb ręczny; komunikat jest dostępny także dla czytnika ekranu. Po ponownym uruchomieniu zaznaczony automat znów działa.
 ## Poprawki w 1.05
 
-**Alt+U** w trybie kamertonu przełącza automatyczne uderzenia. Drugie naciśnięcie wyłącza timer i natychmiast ucisza grany ton. Stan opcji jest zapisywany w ustawieniach i profilach.
+W wersji 1.05 dodano skrót Alt+U do kamertonu. Jego obecne działanie opisuje sekcja 1.06 powyżej. Wybór trybu automatycznego jest zapisywany w ustawieniach i profilach.
 
 Aktualizator ponawia chwilowe błędy połączenia i pobieranie przerwane w trakcie przesyłania. Przy starcie wynik sprawdzenia lub błąd jest widoczny w zakładce **Ustawienia**; przycisk **Sprawdź aktualizacje** pozwala ponowić próbę. Przed zamknięciem programu sprawdza prawo zapisu w folderze EXE. Po udanej podmianie nowa wersja ponawia usunięcie starej kopii, jeśli plik był chwilowo zablokowany. Weryfikacja SHA-256 pozostaje obowiązkowa.
 ## Nowości w 1.04

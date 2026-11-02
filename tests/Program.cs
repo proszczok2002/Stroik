@@ -30,6 +30,11 @@ if (completed is null || Math.Abs(completed.Value - 439.5) > 0.01)
 if (session.Observe(false, null, start.AddMilliseconds(800)) is not null)
     throw new Exception("Wynik tej samej nuty ogłoszono drugi raz.");
 
+if (TunerForm.DecideForkShortcut(false, false) != ForkShortcutAction.SingleStrike ||
+    TunerForm.DecideForkShortcut(false, true) != ForkShortcutAction.SingleStrike ||
+    TunerForm.DecideForkShortcut(true, true) != ForkShortcutAction.Pause ||
+    TunerForm.DecideForkShortcut(true, false) != ForkShortcutAction.Resume)
+    throw new Exception("Alt+U ma rozróżniać ręczne uderzenie od pauzy i wznowienia automatu.");
 string hash = new string('a', 64);
 if (Updater.ParseChecksum($"{hash}  Stroik.exe\n") != hash)
     throw new Exception("Błędny odczyt sumy SHA-256.");
@@ -216,19 +221,24 @@ var uiThread = new Thread(() =>
             tabs.DrawMode != System.Windows.Forms.TabDrawMode.OwnerDrawFixed)
             throw new Exception($"Zakładki: count={tabs.TabPages.Count}, selected={tabs.SelectedIndex}, parent={language.Parent?.GetType().Name}, tabParent={language.Parent?.Parent?.GetType().Name}, lang={language.Parent?.Parent == settingsTab}, dark={dark.Parent == language.Parent}, updates={updates.Parent == language.Parent}, draw={tabs.DrawMode}");
         var autoStrike = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_autoStrike", flags)!.GetValue(form)!;
+        var automaticStatus = (System.Windows.Forms.Label)typeof(TunerForm).GetField("_automaticStatus", flags)!.GetValue(form)!;
         var strikeTimer = (System.Windows.Forms.Timer)typeof(TunerForm).GetField("_strikeTimer", flags)!.GetValue(form)!;
         var processCmdKey = typeof(TunerForm).GetMethod("ProcessCmdKey", flags)!;
         int originalMethod = method.SelectedIndex;
         bool originalAutoStrike = autoStrike.Checked;
         method.SelectedIndex = 0;
-        autoStrike.Checked = false;
+        autoStrike.Checked = true;
+        if (!strikeTimer.Enabled) throw new Exception("Zaznaczenie automatu nie uruchomiło timera.");
         var shortcutMessage = System.Windows.Forms.Message.Create(IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero);
         object?[] shortcutArgs = [shortcutMessage, System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.U];
-        if ((bool)processCmdKey.Invoke(form, shortcutArgs)! != true || !autoStrike.Checked || !strikeTimer.Enabled)
-            throw new Exception("Alt+U nie włączył automatycznego kamertonu.");
+        if ((bool)processCmdKey.Invoke(form, shortcutArgs)! != true || !autoStrike.Checked || strikeTimer.Enabled)
+            throw new Exception("Alt+U nie wstrzymał automatu bez odznaczenia pola.");
         shortcutArgs = [shortcutMessage, System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.U];
-        if ((bool)processCmdKey.Invoke(form, shortcutArgs)! != true || autoStrike.Checked || strikeTimer.Enabled)
-            throw new Exception("Alt+U nie zatrzymał automatycznego kamertonu.");
+        if ((bool)processCmdKey.Invoke(form, shortcutArgs)! != true || !autoStrike.Checked || !strikeTimer.Enabled)
+            throw new Exception("Alt+U nie wznowił automatu.");
+        autoStrike.Checked = false;
+        if (strikeTimer.Enabled || !automaticStatus.Text.Contains("Alt+U", StringComparison.Ordinal))
+            throw new Exception("Tryb ręczny nie zatrzymał automatu lub nie opisuje skrótu Alt+U.");
         autoStrike.Checked = originalAutoStrike;
         method.SelectedIndex = originalMethod;
         var englishField = typeof(TunerForm).GetField("_english", flags)!;
@@ -273,7 +283,9 @@ var uiThread = new Thread(() =>
                 settingsTab.AccessibleName != settingsTab.Text ||
                 string.IsNullOrWhiteSpace(language.AccessibleName) ||
                 string.IsNullOrWhiteSpace(instrument.AccessibleName) ||
-                string.IsNullOrWhiteSpace(updates.AccessibleName))
+                string.IsNullOrWhiteSpace(updates.AccessibleName) ||
+                automaticStatus.AccessibleName != (english ? "Tuning fork status" : "Stan kamertonu") ||
+                !automaticStatus.Text.Contains("Alt+U", StringComparison.Ordinal))
                 throw new Exception("Zakładki lub ich etykiety dostępności nie przełączają się PL/EN.");
         }
         englishField.SetValue(form, originalEnglish);

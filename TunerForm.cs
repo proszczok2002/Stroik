@@ -5,6 +5,8 @@ using System.Windows.Forms.Automation;
 
 namespace Stroik;
 
+internal enum ForkShortcutAction { SingleStrike, Pause, Resume }
+
 internal sealed class TunerForm : Form
 {
     private readonly TabControl _tabs = new() { Dock = DockStyle.Fill, DrawMode = TabDrawMode.OwnerDrawFixed };
@@ -17,7 +19,7 @@ internal sealed class TunerForm : Form
     private readonly Label _toleranceTitle = MakeLabel(), _octaveTitle = MakeLabel(), _targetTitle = MakeLabel();
     private readonly Label _noteHelp = MakeLabel(), _languageTitle = MakeLabel(), _intervalTitle = MakeLabel(), _forkHelp = MakeLabel();
     private readonly Label _ukuleleTitle = MakeLabel(), _orderTitle = MakeLabel(), _orderHelp = MakeLabel(), _guideText = MakeLabel();
-    private readonly Label _visualHelp = MakeLabel(), _calibrationTitle = MakeLabel(), _calibrationHelp = MakeLabel(), _strikeHelp = MakeLabel(), _updateStatus = MakeLabel();
+    private readonly Label _visualHelp = MakeLabel(), _calibrationTitle = MakeLabel(), _calibrationHelp = MakeLabel(), _strikeHelp = MakeLabel(), _updateStatus = MakeLabel(), _automaticStatus = MakeLabel();
     private readonly Button _start = new() { AutoSize = true }, _stop = new() { AutoSize = true, Enabled = false };
     private readonly Button _repeat = new() { AutoSize = true, Enabled = false }, _test = new() { AutoSize = true };
     private readonly Button _updates = new() { AutoSize = true }, _strike = new() { AutoSize = true };
@@ -52,6 +54,7 @@ internal sealed class TunerForm : Form
     private int _planAnchorMidi = NoteCatalog.DefaultMidi, _lastResolvedTarget = NoteCatalog.DefaultMidi;
     private volatile UkuleleTuning _ukuleleKind;
     private volatile bool _doubleStrikeEnabled, _visualEnabled;
+    private bool _automaticStrikesRunning;
     private double _correctionFactor = 1;
     private DateTime _lastVisualAt;
     private bool _advancingTarget;
@@ -94,7 +97,7 @@ internal sealed class TunerForm : Form
         var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
         buttons.Controls.AddRange([_start, _stop, _strike, _next, _repeat, _test]);
         Add(content, buttons);
-        Add(content, _autoStrike); Add(content, _intervalTitle); Add(content, _interval); Add(content, _forkHelp);
+        Add(content, _autoStrike); Add(content, _automaticStatus); Add(content, _intervalTitle); Add(content, _interval); Add(content, _forkHelp);
         Add(content, _resultTitle); Add(content, _result); Add(content, _details); Add(content, _meter);
         Add(content, _settingsTitle);
         Add(content, _concertTitle); Add(content, _concertA); Add(content, _concertHelp);
@@ -131,6 +134,7 @@ internal sealed class TunerForm : Form
         _interval.Value = settings.StrikeIntervalSeconds;
         _showOctave.Checked = settings.ShowOctaveInClassic;
         _autoStrike.Checked = settings.AutoStrike;
+        _automaticStrikesRunning = settings.AutoStrike;
         _reference = (double)_concertA.Value;
         _toleranceCents = (double)_tolerance.Value;
         _initializing = false;
@@ -163,7 +167,7 @@ internal sealed class TunerForm : Form
         _sensitivity.SelectedIndexChanged += (_, _) => { if (_sensitivity.SelectedItem is Choice choice) _minimumRms = choice.Value; Persist(); };
         _language.SelectedIndexChanged += (_, _) => { if (_initializing) return; _english = _language.SelectedIndex == 1; var current = ReadSettings(); PopulateChoices(current); ApplyLanguage(); ApplyViewUI(); ApplyMethodUI(); SetContextMenu(); Persist(); };
         _dark.CheckedChanged += (_, _) => { ApplyTheme(); Persist(); };
-        _autoStrike.CheckedChanged += (_, _) => { if (!_autoStrike.Checked) _fork.Stop(); UpdateStrikeTimer(); Persist(); };
+        _autoStrike.CheckedChanged += (_, _) => { _automaticStrikesRunning = _autoStrike.Checked; if (!_automaticStrikesRunning) _fork.Stop(); UpdateStrikeTimer(); UpdateAutomaticStatus(); Persist(); };
         _interval.ValueChanged += (_, _) => { UpdateStrikeTimer(); Persist(); };
         _doubleStrike.CheckedChanged += (_, _) => { _doubleStrikeEnabled = _doubleStrike.Checked; Persist(); };
         _visualMode.CheckedChanged += (_, _) => { _visualEnabled = _visualMode.Checked; ApplyViewUI(); Persist(); };
@@ -179,15 +183,24 @@ internal sealed class TunerForm : Form
     {
         if (keyData == (Keys.Alt | Keys.U) && _method.SelectedIndex == 0)
         {
-            _autoStrike.Checked = !_autoStrike.Checked;
-            Announce(_autoStrike.Checked
-                ? T("Automatyczne uderzenia kamertonu włączone.", "Automatic tuning fork strikes on.")
-                : T("Automatyczne uderzenia kamertonu wyłączone.", "Automatic tuning fork strikes off."));
+            ForkShortcutAction action = DecideForkShortcut(_autoStrike.Checked, _automaticStrikesRunning);
+            if (action == ForkShortcutAction.SingleStrike) Strike();
+            else
+            {
+                _automaticStrikesRunning = action == ForkShortcutAction.Resume;
+                if (!_automaticStrikesRunning) _fork.Stop();
+                UpdateStrikeTimer();
+                UpdateAutomaticStatus();
+                Announce(_automaticStatus.Text);
+            }
             return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);
     }
 
+    internal static ForkShortcutAction DecideForkShortcut(bool automaticSelected, bool running) =>
+        !automaticSelected ? ForkShortcutAction.SingleStrike :
+        running ? ForkShortcutAction.Pause : ForkShortcutAction.Resume;
     private string T(string pl, string en) => _english ? en : pl;
     private void SetUpdateStatus(string pl, string en)
     {
@@ -293,11 +306,12 @@ internal sealed class TunerForm : Form
         bool fork = _method.SelectedIndex == 0;
         if (fork) StopMicrophone(false);
         else { _strikeTimer.Stop(); _fork.Stop(); }
-        foreach (Control control in new Control[] { _strike, _autoStrike, _intervalTitle, _interval, _forkHelp }) control.Visible = fork;
+        foreach (Control control in new Control[] { _strike, _autoStrike, _automaticStatus, _intervalTitle, _interval, _forkHelp }) control.Visible = fork;
         foreach (Control control in new Control[] { _start, _stop, _repeat, _test, _resultTitle, _result, _details, _status, _sensitivityTitle, _sensitivity, _toleranceTitle, _tolerance, _doubleStrike, _strikeHelp }) control.Visible = !fork;
         _status.Text = _microphone is null ? T("Mikrofon jest wyłączony.", "Microphone is off.") : T("Mikrofon włączony.", "Microphone is on.");
         AcceptButton = fork ? _strike : _start;
         UpdateStrikeTimer();
+        UpdateAutomaticStatus();
         ApplyViewUI();
     }
     private void ApplyViewUI()
@@ -318,9 +332,18 @@ internal sealed class TunerForm : Form
     private void UpdateStrikeTimer()
     {
         _strikeTimer.Stop();
-        if (_method.SelectedIndex != 0 || !_autoStrike.Checked || IsDisposed) return;
+        if (_method.SelectedIndex != 0 || !_autoStrike.Checked || !_automaticStrikesRunning || IsDisposed) return;
         _strikeTimer.Interval = (int)_interval.Value * 1000;
         _strikeTimer.Start();
+    }
+    private void UpdateAutomaticStatus()
+    {
+        _automaticStatus.Text = !_autoStrike.Checked
+            ? T("Tryb ręczny. Alt+U: pojedyncze uderzenie.", "Manual mode. Alt+U: one strike.")
+            : _automaticStrikesRunning
+                ? T("Automatyczne uderzenia działają. Alt+U: pauza.", "Automatic strikes are running. Alt+U: pause.")
+                : T("Automatyczne uderzenia wstrzymane. Alt+U: wznowienie.", "Automatic strikes are paused. Alt+U: resume.");
+        _autoStrike.AccessibleDescription = _automaticStatus.Text;
     }
     private void Strike()
     {
@@ -333,13 +356,15 @@ internal sealed class TunerForm : Form
         catch (Exception error)
         {
             _strikeTimer.Stop();
+            _automaticStrikesRunning = false;
+            UpdateAutomaticStatus();
             MessageBox.Show(this, error.Message, T("Błąd kamertonu", "Tuning fork error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.05 — dostępny stroiciel", "Stroik 1.05 — accessible tuner");
-        _heading.Text = "Stroik 1.05";
+        Text = T("Stroik 1.06 — dostępny stroiciel", "Stroik 1.06 — accessible tuner");
+        _heading.Text = "Stroik 1.06";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tabs.AccessibleName = T("Zakładki Stroika", "Stroik tabs");
@@ -377,7 +402,7 @@ internal sealed class TunerForm : Form
         _updates.Text = T("Sprawdź &aktualizacje", "Check for &updates");
         _updateStatus.Text = T(_updateStatusPl, _updateStatusEn);
         _updateStatus.AccessibleName = T("Stan aktualizacji", "Update status");
-        _autoStrike.Text = T("Uderzaj kamerton automatycznie (Alt+U)", "Strike tuning fork automatically (Alt+U)");
+        _autoStrike.Text = T("Uderzaj kamerton automatycznie", "Strike tuning fork automatically");
         _doubleStrike.Text = T("Po dobrym wyniku dwa szybkie uderzenia przechodzą do następnego dźwięku", "After an in-tune result, two quick strikes advance to the next note");
         _strikeHelp.Text = T("Dwa oddzielne uderzenia tego samego dźwięku w ciągu 0,9 sekundy. Każde musi mieć rozpoznaną wysokość; najpierw poczekaj na komunikat i jego wyciszenie. Ctrl+N przechodzi ręcznie.", "Two distinct strikes of the same pitch within 0.9 seconds. Each must have a recognized pitch; wait for the result announcement and its pause first. Ctrl+N advances manually.");
         _intervalTitle.Text = T("Odstęp między uderzeniami w sekundach:", "Seconds between strikes:");
@@ -418,6 +443,8 @@ internal sealed class TunerForm : Form
         _sensitivity.AccessibleName = _sensitivityTitle.Text; _language.AccessibleName = _languageTitle.Text;
         _interval.AccessibleName = _intervalTitle.Text; _showOctave.AccessibleName = _showOctave.Text;
         _autoStrike.AccessibleName = _autoStrike.Text; _dark.AccessibleName = _dark.Text;
+        _automaticStatus.AccessibleName = T("Stan kamertonu", "Tuning fork status");
+        UpdateAutomaticStatus();
         _doubleStrike.AccessibleName = _doubleStrike.Text; _visualMode.AccessibleName = _visualMode.Text;
         _calibration.AccessibleName = _calibrationTitle.Text;
         _meter.AccessibleName = T("Wizualny wskaźnik odchyłki stroju", "Visual tuning deviation meter");
@@ -457,6 +484,7 @@ internal sealed class TunerForm : Form
         _interval.Value = settings.StrikeIntervalSeconds;
         _showOctave.Checked = settings.ShowOctaveInClassic;
         _autoStrike.Checked = settings.AutoStrike;
+        _automaticStrikesRunning = settings.AutoStrike;
         PopulateChoices(settings);
         _reference = (double)_concertA.Value;
         _toleranceCents = (double)_tolerance.Value;

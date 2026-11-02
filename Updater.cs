@@ -21,7 +21,7 @@ internal static class Updater
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Stroik-Updater/1.0.5");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Stroik-Updater/1.0.6");
         client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
         client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
         return client;

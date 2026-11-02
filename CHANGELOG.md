@@ -1,5 +1,11 @@
 # Changelog / Historia zmian
 
+## 1.0.6 (Stroik 1.06) — 2026-11-02
+
+- Corrected Alt+U: one immediate fork strike in manual mode; pause/resume cyclic strikes when automatic mode is selected, without changing the checkbox.
+- Added a bilingual, screen-reader-accessible running/paused/manual status beneath the automatic-strike control.
+- Added tests for all three shortcut actions, automatic timer state and both language labels.
+- Recorded the release housekeeping rule in AGENTS.md: archive old binaries/builds in dist/niepotrzebne, keep the latest release and editable source.
 ## 1.0.5 (Stroik 1.05) — 2026-11-01
 
 - Added Alt+U to toggle automatic tuning fork strikes; switching off stops the timer and current tone.
