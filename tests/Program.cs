@@ -107,14 +107,16 @@ try
     var original = new Preferences { Method = TuningMethod.Electronic, ConcertA = 435,
         TargetMidi = 69, Instrument = InstrumentKind.Ukulele, UkuleleTuning = UkuleleTuning.SwappedAG,
         PianoOrder = PianoOrder.AlternateFiveSemitones, PlanAnchorMidi = 67,
-        DoubleStrikeAdvance = false, MicrophoneCorrectionCents = 12.5M, VisualMode = false,
+        DoubleStrikeAdvance = false, DoubleStrikeWindowMilliseconds = 1900,
+        MicrophoneCorrectionCents = 12.5M, VisualMode = false,
         View = TunerView.Classic, DarkTheme = true, AutoStrike = true };
     Preferences.SaveToFile(profile, original);
     var loaded = Preferences.ReadFile(profile);
     if (loaded.Method != original.Method || loaded.ConcertA != 435 ||
         loaded.View != original.View || loaded.Instrument != InstrumentKind.Ukulele ||
         loaded.UkuleleTuning != UkuleleTuning.SwappedAG || loaded.PianoOrder != PianoOrder.AlternateFiveSemitones ||
-        loaded.PlanAnchorMidi != 67 || loaded.DoubleStrikeAdvance || loaded.MicrophoneCorrectionCents != 12.5M ||
+        loaded.PlanAnchorMidi != 67 || loaded.DoubleStrikeAdvance || loaded.DoubleStrikeWindowMilliseconds != 1900 ||
+        loaded.MicrophoneCorrectionCents != 12.5M ||
         loaded.VisualMode != false || !loaded.DarkTheme || !loaded.AutoStrike)
         throw new Exception("Profil nie zachował ustawień.");
     File.WriteAllText(profile, "{\"ConcertA\":999}");
@@ -143,7 +145,7 @@ foreach ((InstrumentKind kind, int[] expected) in new (InstrumentKind, int[])[]
 if (InstrumentCatalog.HasStrings(InstrumentKind.Piano) || InstrumentCatalog.HasStrings(InstrumentKind.Chromatic))
     throw new Exception("Tryby pełnozakresowe nie powinny ograniczać dźwięków.");
 var oldProfile = System.Text.Json.JsonSerializer.Deserialize<Preferences>("{\"ProfileVersion\":1,\"TargetMidi\":67}");
-if (oldProfile?.Instrument != InstrumentKind.Piano)
+if (oldProfile?.Instrument != InstrumentKind.Piano || oldProfile.DoubleStrikeWindowMilliseconds != 1200)
     throw new Exception("Stary profil bez wyboru instrumentu nie zachował pianina.");
 try
 {
@@ -177,6 +179,26 @@ navigator.Observe(0.02, 0.008, 466, strikes.AddMilliseconds(100));
 navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(220));
 if (navigator.Observe(0.025, 0.008, 466, strikes.AddMilliseconds(420)) is not null)
     throw new Exception("Dwa uderzenia o złej wysokości przesunęły cel.");
+navigator.Arm(69, 440, strikes);
+navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(100), 1200);
+navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(300), 1200);
+if (navigator.Observe(0.009, 0.008, 440, strikes.AddMilliseconds(1100), 1200) != 69)
+    throw new Exception("Cichsze drugie uderzenie nie zostało rozpoznane w ustawionym czasie.");
+navigator.Arm(69, 440, strikes);
+navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(100), 500);
+navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(300), 500);
+if (navigator.Observe(0.02, 0.008, 440, strikes.AddMilliseconds(1100), 500) is not null)
+    throw new Exception("Zbyt odległe uderzenia zostały uznane za parę.");
+navigator.Arm(69, 440, strikes);
+navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(100), 1800);
+navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(300), 1800);
+if (navigator.Observe(0.02, 0.008, 440, strikes.AddMilliseconds(1600), 1800) != 69)
+    throw new Exception("Dłuższy ustawiony czas nie pozwala na spokojniejsze dwa uderzenia.");
+navigator.Arm(69, 440, strikes);
+navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(100), 1800);
+if (navigator.Observe(0.018, 0.008, 440, strikes.AddMilliseconds(400), 1800) is not null ||
+    navigator.Observe(0.015, 0.008, 440, strikes.AddMilliseconds(700), 1800) is not null)
+    throw new Exception("Jedno wybrzmiewające uderzenie przesunęło dźwięk.");
 using (var wave = TuningFork.BuildWave(440))
 {
     if (wave.Length != 44 + 44100 * 3 * 2)
@@ -199,6 +221,7 @@ var uiThread = new Thread(() =>
         var pianoOrder = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_pianoOrder", flags)!.GetValue(form)!;
         var visualMode = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_visualMode", flags)!.GetValue(form)!;
         var calibration = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_calibration", flags)!.GetValue(form)!;
+        var doubleStrikeWindow = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_doubleStrikeWindow", flags)!.GetValue(form)!;
         var target = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_target", flags)!.GetValue(form)!;
         var octave = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_octave", flags)!.GetValue(form)!;
         var view = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_view", flags)!.GetValue(form)!;
@@ -210,6 +233,9 @@ var uiThread = new Thread(() =>
         if (method.Items.Count != 2 || instrument.Items.Count != 6 ||
             ukuleleTuning.Items.Count != 2 || pianoOrder.Items.Count != 3 ||
             visualMode.Parent != language.Parent || calibration.Parent != language.Parent ||
+            doubleStrikeWindow.Minimum != 0.5M || doubleStrikeWindow.Maximum != 2.5M ||
+            doubleStrikeWindow.Value < 0.5M || doubleStrikeWindow.Value > 2.5M ||
+            string.IsNullOrWhiteSpace(doubleStrikeWindow.AccessibleName) ||
             target.Items.Count != (InstrumentCatalog.HasStrings((InstrumentKind)instrument.SelectedIndex)
                 ? InstrumentCatalog.Strings((InstrumentKind)instrument.SelectedIndex).Count + 1
                 : NoteCatalog.HighestMidi - NoteCatalog.LowestMidi + 2) ||

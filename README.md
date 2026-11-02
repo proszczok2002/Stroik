@@ -1,4 +1,4 @@
-# Stroik 1.06
+# Stroik 1.07
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -46,6 +46,12 @@ Czułość jest opisana według warunków (cichy instrument, normalna, hałas w 
 **Ctrl+S** lub **Zapisz plik ustawień** w menu kontekstowym zapisuje profil JSON. **Ctrl+O** lub **Wczytaj plik ustawień** przywraca profil. Możesz utworzyć profile dla domu, kawiarni i instrumentu historycznego. Plik zawiera ustawienia, w tym metodę strojenia; nie zawiera nagrań. Zakładka **Ustawienia** zawiera wybór języka, ciemny motyw i przycisk ręcznego sprawdzenia aktualizacji. Zakładka **Stroik** zawiera pozostałe parametry strojenia oraz profile. Między zakładkami można przechodzić klawiaturą; kontrolki mają polskie i angielskie nazwy dostępności.
 
 
+## Dwa uderzenia w 1.07
+
+W stroiku elektronicznym po wyniku „dobrze” dwa osobne uderzenia w ten sam dźwięk mogą wybrać następny cel. Pole **Maksymalny odstęp między dwoma uderzeniami** pozwala ustawić od **0,5 do 2,5 sekundy**; nowa wartość domyślna to **1,2 sekundy**. Dłuższy odstęp daje więcej czasu na drugie uderzenie, ale może zwiększyć ryzyko przypadkowego przejścia. Możesz wyłączyć tę funkcję albo przejść ręcznie przez **Ctrl+N**.
+
+Detektor dopuszcza różną głośność uderzeń, lecz oba muszą przekroczyć próg mikrofonu i zostać rozpoznane jako właściwy dźwięk. Jeśli ciche ukulele nadal bywa pomijane, spróbuj ustawienia czułości dla cichego instrumentu. Odczekaj koniec komunikatu o wyniku przed uderzeniami. Ustawiony czas zapisuje się lokalnie i w profilach JSON. Zachowanie z konkretnym mikrofonem, ukulele lub pianinem wymaga próby na sprzęcie.
+
 ## Kamerton w 1.06
 
 Gdy **Uderzaj kamerton automatycznie** jest odznaczone, **Alt+U** odtwarza jedno natychmiastowe uderzenie. Tak samo działa przycisk **Uderz kamerton**.
@@ -58,7 +64,7 @@ W wersji 1.05 dodano skrót Alt+U do kamertonu. Jego obecne działanie opisuje s
 Aktualizator ponawia chwilowe błędy połączenia i pobieranie przerwane w trakcie przesyłania. Przy starcie wynik sprawdzenia lub błąd jest widoczny w zakładce **Ustawienia**; przycisk **Sprawdź aktualizacje** pozwala ponowić próbę. Przed zamknięciem programu sprawdza prawo zapisu w folderze EXE. Po udanej podmianie nowa wersja ponawia usunięcie starej kopii, jeśli plik był chwilowo zablokowany. Weryfikacja SHA-256 pozostaje obowiązkowa.
 ## Nowości w 1.04
 
-**Sterowanie bez dotykania komputera.** W stroiku elektronicznym, po uzyskaniu wyniku „dobrze”, odczekaj aż komunikat się skończy. Dwa osobne szybkie uderzenia w tę samą strunę lub klawisz (w ciągu 0,9 s, rozpoznane jako ten sam dźwięk) wybierają następny dźwięk. Opcję można wyłączyć. **Ctrl+N** lub przycisk **Następny dźwięk** działa ręcznie. Rozpoznawanie zależy od mikrofonu, głośności i charakteru instrumentu; nie przestawiaj klucza stroikowego bez sprawdzenia wybranej nuty.
+**Sterowanie bez dotykania komputera.** W stroiku elektronicznym, po uzyskaniu wyniku „dobrze”, odczekaj aż komunikat się skończy. Dwa osobne uderzenia w tę samą strunę lub klawisz, rozpoznane jako ten sam dźwięk, wybierają następny cel. Czas pomiędzy nimi można ustawić zgodnie z opisem wersji 1.07 powyżej. **Ctrl+N** lub przycisk **Następny dźwięk** działa ręcznie. Rozpoznawanie zależy od mikrofonu, głośności i charakteru instrumentu; nie przestawiaj klucza stroikowego bez sprawdzenia wybranej nuty.
 
 **Kolejność pianina.** Do wyboru jest przechodzenie w górę od wybranej nuty albo naprzemienne bloki po pięć półtonów w prawo i w lewo od nuty początkowej. Wariant całotonowy przechodzi co dwa półtony i pomija połowę nut; trzeba je później nastroić osobno. Plan pomaga w nawigacji, ale nie gwarantuje bezpiecznego rozkładu naprężeń ani nie zastępuje [oceny technika i procedury podnoszenia stroju](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising).
 

@@ -17,6 +17,7 @@ internal sealed class Preferences
     public PianoOrder PianoOrder { get; set; } = PianoOrder.Ascending;
     public int PlanAnchorMidi { get; set; } = NoteCatalog.DefaultMidi;
     public bool DoubleStrikeAdvance { get; set; } = true;
+    public int DoubleStrikeWindowMilliseconds { get; set; } = 1200;
     public decimal MicrophoneCorrectionCents { get; set; }
     public bool? VisualMode { get; set; }
     public double ConcertA { get; set; } = 440;
@@ -52,6 +53,7 @@ internal sealed class Preferences
         if (ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) || !Enum.IsDefined(UkuleleTuning) || !Enum.IsDefined(PianoOrder) ||
             PlanAnchorMidi is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi ||
             MicrophoneCorrectionCents is < -100 or > 100 ||
+            DoubleStrikeWindowMilliseconds is < 500 or > 2500 ||
             !double.IsFinite(ConcertA) || ConcertA is < 390 or > 466 ||
             SensitivityIndex is < 0 or > 2 || ToleranceCents is < 1 or > 20 ||
             TargetMidi is < -1 or > NoteCatalog.HighestMidi ||

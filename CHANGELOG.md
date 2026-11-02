@@ -1,5 +1,12 @@
 # Changelog / Historia zmian
 
+## 1.0.7 (Stroik 1.07) — 2026-11-02
+
+- Added a bilingual, keyboard-accessible setting for the maximum gap between two pitch-confirmed strikes: 0.5–2.5 seconds, default 1.2 seconds.
+- Made onset detection less dependent on the second strike matching the first strike's loudness.
+- Saved the gap in JSON profiles while retaining the 1.2-second default for older profiles.
+- Added checks for a quiet second strike, shorter and longer configured gaps, sustained-note rejection and PL/EN control labeling.
+
 ## 1.0.6 (Stroik 1.06) — 2026-11-02
 
 - Corrected Alt+U: one immediate fork strike in manual mode; pause/resume cyclic strikes when automatic mode is selected, without changing the checkbox.

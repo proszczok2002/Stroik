@@ -1,4 +1,4 @@
-# Stroik 1.06
+# Stroik 1.07
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -46,6 +46,12 @@ Microphone sensitivity has descriptions for quiet instruments, normal conditions
 **Ctrl+S** or **Save settings file** in the context menu exports a JSON profile. **Ctrl+O** or **Open settings file** imports one. You can keep profiles for home, a café or a historic instrument. Profiles include the tuning method and no recordings. The **Settings** tab contains language, dark theme and the manual update check. The **Tuner** tab contains the tuning controls and profiles. Both tabs are keyboard accessible and have localized accessibility names.
 
 
+## Double strikes in 1.07
+
+In electronic mode, after an in-tune result, two distinct strikes at the target pitch can select the next note. **Maximum gap between two strikes** can be set from **0.5 to 2.5 seconds**; the new default is **1.2 seconds**. A longer gap gives more time for the second strike, but may increase accidental advancement. You can turn this feature off or use **Ctrl+N** to advance manually.
+
+The detector allows strikes of different volumes, but both must exceed the microphone threshold and be recognized at the target pitch. If a quiet ukulele is still missed, try the microphone sensitivity for a quiet instrument. Wait for the result announcement to finish before striking. The chosen time is saved locally and in JSON profiles. Behavior with a particular microphone, ukulele or piano still needs a hardware test.
+
 ## Tuning fork in 1.06
 
 When **Strike tuning fork automatically** is unchecked, **Alt+U** plays one immediate strike. The **Strike tuning fork** button does the same.
@@ -58,7 +64,7 @@ Version 1.05 introduced Alt+U for the tuning fork. Its current behavior is descr
 The updater retries transient network errors and interrupted EXE downloads. The startup check result or error is shown in **Settings**; **Check for updates** retries manually. Before closing the app, it checks write access to the EXE folder. After a successful replacement, the new version retries removing the old copy if it was briefly locked. SHA-256 verification remains mandatory.
 ## New in 1.04
 
-**Hands-free navigation.** In electronic mode, after an in-tune result, wait for the announcement to finish. Two distinct quick strikes of the same string or key (within 0.9 seconds, each recognized at the target pitch) select the next note. This option can be turned off. **Ctrl+N** or **Next note** advances manually. Detection depends on the microphone, playing level and instrument; check the selected note before moving a tuning lever.
+**Hands-free navigation.** In electronic mode, after an in-tune result, wait for the announcement to finish. Two distinct strikes of the same string or key, each recognized at the target pitch, select the next note. Their allowed time can be changed as described in the 1.07 section above. **Ctrl+N** or **Next note** advances manually. Detection depends on the microphone, playing level and instrument; check the selected note before moving a tuning lever.
 
 **Piano order.** Move upward from the selected note or alternate blocks of five semitones to the right and left of the starting note. The whole-tone variant moves in two-semitone steps and skips half the notes; tune those separately afterwards. The plan guides navigation but cannot ensure safe tension distribution or replace a [technician's assessment and pitch-raising procedure](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising).
 

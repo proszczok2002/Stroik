@@ -20,6 +20,7 @@ internal sealed class TunerForm : Form
     private readonly Label _noteHelp = MakeLabel(), _languageTitle = MakeLabel(), _intervalTitle = MakeLabel(), _forkHelp = MakeLabel();
     private readonly Label _ukuleleTitle = MakeLabel(), _orderTitle = MakeLabel(), _orderHelp = MakeLabel(), _guideText = MakeLabel();
     private readonly Label _visualHelp = MakeLabel(), _calibrationTitle = MakeLabel(), _calibrationHelp = MakeLabel(), _strikeHelp = MakeLabel(), _updateStatus = MakeLabel(), _automaticStatus = MakeLabel();
+    private readonly Label _doubleStrikeWindowTitle = MakeLabel();
     private readonly Button _start = new() { AutoSize = true }, _stop = new() { AutoSize = true, Enabled = false };
     private readonly Button _repeat = new() { AutoSize = true, Enabled = false }, _test = new() { AutoSize = true };
     private readonly Button _updates = new() { AutoSize = true }, _strike = new() { AutoSize = true };
@@ -42,6 +43,7 @@ internal sealed class TunerForm : Form
     private readonly NumericUpDown _concertA = new() { Minimum = 390, Maximum = 466, DecimalPlaces = 1, Increment = 0.1M, Value = 440 };
     private readonly NumericUpDown _tolerance = new() { Minimum = 1, Maximum = 20, Value = 5 };
     private readonly NumericUpDown _interval = new() { Minimum = 1, Maximum = 10, Value = 3 };
+    private readonly NumericUpDown _doubleStrikeWindow = new() { Minimum = 0.5M, Maximum = 2.5M, DecimalPlaces = 1, Increment = 0.1M, Value = 1.2M };
     private readonly NumericUpDown _calibration = new() { Minimum = -100, Maximum = 100, DecimalPlaces = 1, Increment = 0.1M };
     private readonly System.Windows.Forms.Timer _strikeTimer = new();
     private readonly TuningFork _fork = new();
@@ -54,6 +56,7 @@ internal sealed class TunerForm : Form
     private int _planAnchorMidi = NoteCatalog.DefaultMidi, _lastResolvedTarget = NoteCatalog.DefaultMidi;
     private volatile UkuleleTuning _ukuleleKind;
     private volatile bool _doubleStrikeEnabled, _visualEnabled;
+    private int _doubleStrikeWindowMilliseconds = 1200;
     private bool _automaticStrikesRunning;
     private double _correctionFactor = 1;
     private DateTime _lastVisualAt;
@@ -106,7 +109,7 @@ internal sealed class TunerForm : Form
         Add(content, _showOctave); Add(content, _octaveTitle); Add(content, _octave);
         Add(content, _targetTitle); Add(content, _target); Add(content, _noteHelp);
         Add(content, _orderTitle); Add(content, _pianoOrder); Add(content, _orderHelp);
-        Add(content, _doubleStrike); Add(content, _strikeHelp);
+        Add(content, _doubleStrike); Add(content, _doubleStrikeWindowTitle); Add(content, _doubleStrikeWindow); Add(content, _strikeHelp);
         Add(content, _guideText); Add(content, _keyboard);
         var profileButtons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
         profileButtons.Controls.AddRange([_saveProfile, _loadProfile]);
@@ -125,6 +128,8 @@ internal sealed class TunerForm : Form
         _visualEnabled = _visualMode.Checked;
         _doubleStrike.Checked = settings.DoubleStrikeAdvance;
         _doubleStrikeEnabled = settings.DoubleStrikeAdvance;
+        _doubleStrikeWindow.Value = settings.DoubleStrikeWindowMilliseconds / 1000M;
+        _doubleStrikeWindowMilliseconds = settings.DoubleStrikeWindowMilliseconds;
         _calibration.Value = settings.MicrophoneCorrectionCents;
         _correctionFactor = Math.Pow(2, (double)_calibration.Value / 1200);
         _planAnchorMidi = settings.PlanAnchorMidi;
@@ -169,7 +174,8 @@ internal sealed class TunerForm : Form
         _dark.CheckedChanged += (_, _) => { ApplyTheme(); Persist(); };
         _autoStrike.CheckedChanged += (_, _) => { _automaticStrikesRunning = _autoStrike.Checked; if (!_automaticStrikesRunning) _fork.Stop(); UpdateStrikeTimer(); UpdateAutomaticStatus(); Persist(); };
         _interval.ValueChanged += (_, _) => { UpdateStrikeTimer(); Persist(); };
-        _doubleStrike.CheckedChanged += (_, _) => { _doubleStrikeEnabled = _doubleStrike.Checked; Persist(); };
+        _doubleStrike.CheckedChanged += (_, _) => { _doubleStrikeEnabled = _doubleStrike.Checked; _doubleStrikeWindow.Enabled = _doubleStrike.Checked; Persist(); };
+        _doubleStrikeWindow.ValueChanged += (_, _) => { Volatile.Write(ref _doubleStrikeWindowMilliseconds, (int)(_doubleStrikeWindow.Value * 1000)); Persist(); };
         _visualMode.CheckedChanged += (_, _) => { _visualEnabled = _visualMode.Checked; ApplyViewUI(); Persist(); };
         _calibration.ValueChanged += (_, _) => { Volatile.Write(ref _correctionFactor, Math.Pow(2, (double)_calibration.Value / 1200)); ResetResult(); Persist(); };
         _strikeTimer.Tick += (_, _) => Strike();
@@ -307,7 +313,8 @@ internal sealed class TunerForm : Form
         if (fork) StopMicrophone(false);
         else { _strikeTimer.Stop(); _fork.Stop(); }
         foreach (Control control in new Control[] { _strike, _autoStrike, _automaticStatus, _intervalTitle, _interval, _forkHelp }) control.Visible = fork;
-        foreach (Control control in new Control[] { _start, _stop, _repeat, _test, _resultTitle, _result, _details, _status, _sensitivityTitle, _sensitivity, _toleranceTitle, _tolerance, _doubleStrike, _strikeHelp }) control.Visible = !fork;
+        foreach (Control control in new Control[] { _start, _stop, _repeat, _test, _resultTitle, _result, _details, _status, _sensitivityTitle, _sensitivity, _toleranceTitle, _tolerance, _doubleStrike, _doubleStrikeWindowTitle, _doubleStrikeWindow, _strikeHelp }) control.Visible = !fork;
+        _doubleStrikeWindow.Enabled = !fork && _doubleStrike.Checked;
         _status.Text = _microphone is null ? T("Mikrofon jest wyłączony.", "Microphone is off.") : T("Mikrofon włączony.", "Microphone is on.");
         AcceptButton = fork ? _strike : _start;
         UpdateStrikeTimer();
@@ -363,8 +370,8 @@ internal sealed class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.06 — dostępny stroiciel", "Stroik 1.06 — accessible tuner");
-        _heading.Text = "Stroik 1.06";
+        Text = T("Stroik 1.07 — dostępny stroiciel", "Stroik 1.07 — accessible tuner");
+        _heading.Text = "Stroik 1.07";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tabs.AccessibleName = T("Zakładki Stroika", "Stroik tabs");
@@ -404,7 +411,9 @@ internal sealed class TunerForm : Form
         _updateStatus.AccessibleName = T("Stan aktualizacji", "Update status");
         _autoStrike.Text = T("Uderzaj kamerton automatycznie", "Strike tuning fork automatically");
         _doubleStrike.Text = T("Po dobrym wyniku dwa szybkie uderzenia przechodzą do następnego dźwięku", "After an in-tune result, two quick strikes advance to the next note");
-        _strikeHelp.Text = T("Dwa oddzielne uderzenia tego samego dźwięku w ciągu 0,9 sekundy. Każde musi mieć rozpoznaną wysokość; najpierw poczekaj na komunikat i jego wyciszenie. Ctrl+N przechodzi ręcznie.", "Two distinct strikes of the same pitch within 0.9 seconds. Each must have a recognized pitch; wait for the result announcement and its pause first. Ctrl+N advances manually.");
+        _doubleStrikeWindowTitle.Text = T("Maksymalny odstęp między uderzeniami (0,5–2,5 s; domyślnie 1,2):", "Maximum gap between strikes (0.5–2.5 s; default 1.2):");
+        _strikeHelp.Text = T("Po wyniku „dobrze” poczekaj na koniec komunikatu, a następnie dwukrotnie uderz tę samą nutę w ustawionym czasie. Uderzenia mogą mieć różną głośność, ale oba muszą być rozpoznane jako właściwy dźwięk. Dłuższy czas jest wygodniejszy, lecz zwiększa ryzyko przypadkowego przejścia. Ctrl+N przechodzi ręcznie.",
+            "After an in-tune result, wait for the announcement to finish, then strike the same note twice within the selected time. Strikes may differ in volume, but both must be recognized at the target pitch. A longer time is easier to use but raises the chance of accidental advancement. Ctrl+N advances manually.");
         _intervalTitle.Text = T("Odstęp między uderzeniami w sekundach:", "Seconds between strikes:");
         _forkHelp.Text = T("Kamerton wydaje krótki, gasnący ton. Jeśli nie masz pewności co do strojenia ze słuchu, najpierw ćwicz na niedrogim, łatwym do obsługi instrumencie, np. ukulele lub gitarze. Zerwanie struny nadal może zranić.",
             "The tuning fork plays a short, decaying tone. If unsure about tuning by ear, first practise on a modest, easy-to-handle instrument such as a ukulele or guitar. A broken string can still cause injury.");
@@ -446,6 +455,7 @@ internal sealed class TunerForm : Form
         _automaticStatus.AccessibleName = T("Stan kamertonu", "Tuning fork status");
         UpdateAutomaticStatus();
         _doubleStrike.AccessibleName = _doubleStrike.Text; _visualMode.AccessibleName = _visualMode.Text;
+        _doubleStrikeWindow.AccessibleName = _doubleStrikeWindowTitle.Text;
         _calibration.AccessibleName = _calibrationTitle.Text;
         _meter.AccessibleName = T("Wizualny wskaźnik odchyłki stroju", "Visual tuning deviation meter");
         _keyboard.AccessibleName = T("Wirtualna klawiatura z zaznaczonym dźwiękiem", "Virtual keyboard with selected note");
@@ -460,6 +470,7 @@ internal sealed class TunerForm : Form
         View = (TunerView)Math.Max(0, _view.SelectedIndex), Instrument = _instrumentKind, ConcertA = (double)_concertA.Value,
         UkuleleTuning = _ukuleleKind, PianoOrder = (PianoOrder)Math.Max(0, _pianoOrder.SelectedIndex),
         PlanAnchorMidi = _planAnchorMidi, DoubleStrikeAdvance = _doubleStrike.Checked,
+        DoubleStrikeWindowMilliseconds = (int)(_doubleStrikeWindow.Value * 1000),
         MicrophoneCorrectionCents = _calibration.Value, VisualMode = _visualMode.Checked,
         SensitivityIndex = Math.Max(0, _sensitivity.SelectedIndex), ToleranceCents = (int)_tolerance.Value,
         TargetMidi = _targetMidi, StartOctave = Math.Max(0, _octave.SelectedIndex),
@@ -476,6 +487,8 @@ internal sealed class TunerForm : Form
         _visualEnabled = _visualMode.Checked;
         _doubleStrike.Checked = settings.DoubleStrikeAdvance;
         _doubleStrikeEnabled = settings.DoubleStrikeAdvance;
+        _doubleStrikeWindow.Value = settings.DoubleStrikeWindowMilliseconds / 1000M;
+        Volatile.Write(ref _doubleStrikeWindowMilliseconds, settings.DoubleStrikeWindowMilliseconds);
         _calibration.Value = settings.MicrophoneCorrectionCents;
         Volatile.Write(ref _correctionFactor, Math.Pow(2, (double)_calibration.Value / 1200));
         _planAnchorMidi = settings.PlanAnchorMidi;
@@ -662,7 +675,8 @@ internal sealed class TunerForm : Form
         {
             lock (_navigationLock)
             {
-                advance = _strikeNavigator.Observe(rms, _minimumRms, frequency, now);
+                advance = _strikeNavigator.Observe(rms, _minimumRms, frequency, now,
+                    Volatile.Read(ref _doubleStrikeWindowMilliseconds));
                 needsQuickPitch = advance is null && _strikeNavigator.IsAwaitingPitch && frequency is null && _windowCount >= 4096;
             }
             if (needsQuickPitch)
@@ -671,7 +685,8 @@ internal sealed class TunerForm : Form
                 if (quick is { Confidence: >= 0.75 })
                 {
                     lock (_navigationLock)
-                        advance = _strikeNavigator.Observe(rms, _minimumRms, quick.Value.Frequency * correction, now);
+                        advance = _strikeNavigator.Observe(rms, _minimumRms, quick.Value.Frequency * correction, now,
+                            Volatile.Read(ref _doubleStrikeWindowMilliseconds));
                 }
             }
         }

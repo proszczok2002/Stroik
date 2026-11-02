@@ -33,16 +33,18 @@ internal sealed class DoubleStrikeNavigator
     internal bool IsCounting => _confirmed > 0;
     internal bool IsAwaitingPitch => _candidate;
 
-    internal int? Observe(double rms, double threshold, double? frequency, DateTime now)
+    internal int? Observe(double rms, double threshold, double? frequency, DateTime now,
+        int maxGapMilliseconds = 1200)
     {
+        if (maxGapMilliseconds is < 500 or > 2500) throw new ArgumentOutOfRangeException(nameof(maxGapMilliseconds));
         if (_targetMidi < 0) return null;
         if (now - _armedAt > TimeSpan.FromSeconds(20)) { Reset(); return null; }
 
         bool sound = rms >= threshold;
-        bool onset = sound && rms >= threshold * 1.5 &&
-            ((!_sound && now - _quietSince >= TimeSpan.FromMilliseconds(50)) ||
-             (_sound && _envelope > 0 && rms > _envelope * 1.8 &&
-              now - _lastAttack >= TimeSpan.FromMilliseconds(130)));
+        bool onset = sound && rms >= threshold * 1.1 &&
+            ((!_sound && now - _quietSince >= TimeSpan.FromMilliseconds(60)) ||
+             (_sound && _envelope > 0 && rms > _envelope * 1.35 &&
+              now - _lastAttack >= TimeSpan.FromMilliseconds(180)));
         if (onset)
         {
             _lastAttack = now;
@@ -56,7 +58,7 @@ internal sealed class DoubleStrikeNavigator
             : _envelope * 0.96 + rms * 0.04;
 
         if (_candidate && now - _candidateAt > TimeSpan.FromMilliseconds(420)) _candidate = false;
-        if (_confirmed == 1 && now - _firstConfirmed > TimeSpan.FromMilliseconds(900)) _confirmed = 0;
+        if (_confirmed == 1 && now - _firstConfirmed > TimeSpan.FromMilliseconds(maxGapMilliseconds)) _confirmed = 0;
         if (!_candidate || frequency is not > 0) return null;
         double cents = 1200 * Math.Log2(frequency.Value / _targetFrequency);
         if (Math.Abs(cents) > 35) return null;
