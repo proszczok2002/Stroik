@@ -1,6 +1,20 @@
 using Stroik;
 using System.Net;
 
+if (args.Length == 3 && args[0] == "--verify-public-changelog")
+{
+    using var client = new HttpClient();
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("Stroik-Changelog-Check/1.0");
+    string publicJson = await client.GetStringAsync("https://api.github.com/repos/proszczok2002/Stroik/releases/latest");
+    ReleaseInfo? publicRelease = Updater.ParseRelease(publicJson, Version.Parse(args[1]));
+    if (publicRelease?.Version != Version.Parse(args[2]) || string.IsNullOrWhiteSpace(publicRelease.Notes) ||
+        ReleaseNotes.ForLanguage(publicRelease.Notes, false) == "Opis zmian tej wersji nie jest dostępny." ||
+        ReleaseNotes.ForLanguage(publicRelease.Notes, true) == "No release notes are available for this version.")
+        throw new Exception("Publiczny changelog nie jest dostępny dla starej wersji w obu językach.");
+    Console.WriteLine($"Publiczny changelog {publicRelease.Version}: PL i EN dostępne dla {args[1]}.");
+    return;
+}
+
 foreach (double expected in new[] { 65.406, 110.0, 261.626, 440.0, 523.251, 880.0, 1174.659 })
 {
     short[] samples = Tone(expected, 48000, 8192);
@@ -232,6 +246,8 @@ var uiThread = new Thread(() =>
         var ukuleleTuning = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_ukuleleTuning", flags)!.GetValue(form)!;
         var pianoOrder = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_pianoOrder", flags)!.GetValue(form)!;
         var visualMode = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_visualMode", flags)!.GetValue(form)!;
+        var showOctave = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_showOctave", flags)!.GetValue(form)!;
+        var doubleStrike = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_doubleStrike", flags)!.GetValue(form)!;
         var calibration = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_calibration", flags)!.GetValue(form)!;
         var doubleStrikeWindow = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_doubleStrikeWindow", flags)!.GetValue(form)!;
         var target = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_target", flags)!.GetValue(form)!;
@@ -274,6 +290,9 @@ var uiThread = new Thread(() =>
             throw new Exception("Zmiana zakładki ma podać nazwę strony bez dodatkowej nazwy całej listy.");
         tabs.SelectedIndex = 0;
         var autoStrike = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_autoStrike", flags)!.GetValue(form)!;
+        if (new[] { autoStrike, doubleStrike, showOctave, visualMode, dark }
+            .Any(checkBox => string.IsNullOrWhiteSpace(checkBox.AccessibleName)))
+            throw new Exception("Pole wyboru nie ma dostępnej nazwy.");
         var automaticStatus = (System.Windows.Forms.Label)typeof(TunerForm).GetField("_automaticStatus", flags)!.GetValue(form)!;
         var strikeTimer = (System.Windows.Forms.Timer)typeof(TunerForm).GetField("_strikeTimer", flags)!.GetValue(form)!;
         var processCmdKey = typeof(TunerForm).GetMethod("ProcessCmdKey", flags)!;
@@ -346,11 +365,20 @@ var uiThread = new Thread(() =>
                 automaticStatus.AccessibleName != (english ? "Tuning fork status" : "Stan kamertonu") ||
                 !automaticStatus.Text.Contains("Alt+U", StringComparison.Ordinal))
                 throw new Exception("Zakładki lub ich etykiety dostępności nie przełączają się PL/EN.");
-            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 9), ReleaseNotes.Current(english), english, false, false);
+            foreach (System.Windows.Forms.CheckBox checkBox in new[] { autoStrike, doubleStrike, showOctave, visualMode, dark })
+            {
+                string label = checkBox.AccessibleName!;
+                if (TunerForm.CheckBoxAnnouncement(label, true, english) !=
+                    $"{label}: {(english ? "checked" : "zaznaczone")}." ||
+                    TunerForm.CheckBoxAnnouncement(label, false, english) !=
+                    $"{label}: {(english ? "unchecked" : "odznaczone")}.")
+                    throw new Exception("Komunikat pola wyboru nie podaje nowego stanu po polsku lub angielsku.");
+            }
+            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 10), ReleaseNotes.Current(english), english, false, false);
             var changesLayout = (System.Windows.Forms.TableLayoutPanel)changesDialog.Controls[0];
             var changesText = changesLayout.Controls.OfType<System.Windows.Forms.TextBox>().Single();
             if (string.IsNullOrWhiteSpace(changesText.Text) ||
-                changesText.AccessibleName != (english ? "Changes in version 1.0.9" : "Zmiany w wersji 1.0.9"))
+                changesText.AccessibleName != (english ? "Changes in version 1.0.10" : "Zmiany w wersji 1.0.10"))
                 throw new Exception("Okno zmian nie udostępnia opisu czytnikowi ekranu.");
             using var updateDialog = new ReleaseNotesDialog(new Version(1, 1, 0), "Sample change", english, false, true);
             var updateLayout = (System.Windows.Forms.TableLayoutPanel)updateDialog.Controls[0];

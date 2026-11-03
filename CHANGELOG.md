@@ -1,5 +1,11 @@
 # Changelog / Historia zmian
 
+## 1.0.10 (Stroik 1.10) — 2026-11-03
+
+- Announce the new checked or unchecked state in Polish or English immediately after user activation of each checkbox.
+- Queue the notification after the native WinForms click, using the checkbox's own UI Automation object; do not announce programmatic settings changes.
+- Keep the 1.09 update dialog and embedded latest changes so an installed 1.09 can show the 1.10 changelog before download.
+
 ## 1.0.9 (Stroik 1.09) — 2026-11-03
 
 - Show localized GitHub release notes in a scrollable, screen-reader-accessible update confirmation dialog.

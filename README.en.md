@@ -1,4 +1,4 @@
-# Stroik 1.09
+# Stroik 1.10
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -78,6 +78,8 @@ The updater retries transient network errors and interrupted EXE downloads. The 
 On launch, Stroik checks the latest stable GitHub release. If a newer version is available, it shows the Polish or English release changes in a scrollable confirmation dialog. Choosing **Yes, download and install** downloads the EXE and SHA-256 file, checks the hash, closes the old process, replaces the EXE, launches the new one and deletes the old backup. It attempts rollback on replacement failure. **Check for updates** and **Latest changes** are available in the **Settings** tab. Latest changes shows the installed version's notes even offline. Automatic replacement requires a writable folder and the filename `Stroik.exe`. Recordings and results are never uploaded.
 
 Settings also includes **About Stroik**, **Proszczok website**, **Support via PayPal** and **Support via Revolut**. About explains the app's purpose and credits its creator, Proszczok with Codex, and the original idea by Witold. The other buttons open [proszczok.pl](https://proszczok.pl/), [PayPal](https://paypal.me/proszczok) and [Revolut](https://revolut.me/r_rosiejka) in a browser. Support is voluntary; Stroik does not process payments.
+
+After a checkbox is activated with the mouse or Space, the app announces its name and “checked” or “unchecked” to a screen reader. This applies to dark theme, graphics, automatic tuning fork strikes, double-strike navigation and the octave selector. Loading settings does not produce these announcements. Actual NVDA speech still needs testing on the user's computer.
 
 ## Limits and building
 

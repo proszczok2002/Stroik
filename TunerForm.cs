@@ -195,6 +195,8 @@ internal sealed class TunerForm : Form
         _doubleStrike.CheckedChanged += (_, _) => { _doubleStrikeEnabled = _doubleStrike.Checked; _doubleStrikeWindow.Enabled = _doubleStrike.Checked; Persist(); };
         _doubleStrikeWindow.ValueChanged += (_, _) => { Volatile.Write(ref _doubleStrikeWindowMilliseconds, (int)(_doubleStrikeWindow.Value * 1000)); Persist(); };
         _visualMode.CheckedChanged += (_, _) => { _visualEnabled = _visualMode.Checked; ApplyViewUI(); Persist(); };
+        foreach (CheckBox checkBox in new[] { _autoStrike, _doubleStrike, _showOctave, _visualMode, _dark })
+            checkBox.Click += (_, _) => AnnounceCheckBoxState(checkBox);
         _calibration.ValueChanged += (_, _) => { Volatile.Write(ref _correctionFactor, Math.Pow(2, (double)_calibration.Value / 1200)); ResetResult(); Persist(); };
         _strikeTimer.Tick += (_, _) => Strike();
         KeyDown += (_, e) => { if (e.Control && e.KeyCode == Keys.S) { SaveProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.O) { LoadProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.N) { AdvanceTarget(_targetMidi < 0 ? _lastResolvedTarget : _targetMidi); e.SuppressKeyPress = true; } };
@@ -388,8 +390,8 @@ internal sealed class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.09 — dostępny stroiciel", "Stroik 1.09 — accessible tuner");
-        _heading.Text = "Stroik 1.09";
+        Text = T("Stroik 1.10 — dostępny stroiciel", "Stroik 1.10 — accessible tuner");
+        _heading.Text = "Stroik 1.10";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tunerTab.AccessibleName = _tunerTab.Text;
@@ -805,6 +807,21 @@ internal sealed class TunerForm : Form
     }
     private void Announce(string message) => _result.AccessibilityObject.RaiseAutomationNotification(
         AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.ImportantMostRecent, message);
+    internal static string CheckBoxAnnouncement(string label, bool isChecked, bool english) =>
+        english ? $"{label}: {(isChecked ? "checked" : "unchecked")}."
+            : $"{label}: {(isChecked ? "zaznaczone" : "odznaczone")}.";
+    private void AnnounceCheckBoxState(CheckBox checkBox)
+    {
+        if (!IsHandleCreated || IsDisposed || Disposing) return;
+        string label = checkBox.AccessibleName ?? checkBox.Text.Replace("&", "");
+        string message = CheckBoxAnnouncement(label, checkBox.Checked, _english);
+        BeginInvoke((Action)(() =>
+        {
+            if (!IsDisposed && !checkBox.IsDisposed && checkBox.IsHandleCreated)
+                checkBox.AccessibilityObject.RaiseAutomationNotification(
+                    AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.ImportantMostRecent, message);
+        }));
+    }
     private void ShowRecentChanges()
     {
         try
@@ -824,8 +841,8 @@ internal sealed class TunerForm : Form
         MessageBox.Show(this, AboutText(_english), T("O programie", "About Stroik"), MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
     internal static string AboutText(bool english) => english
-        ? "Stroik 1.09 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
-        : "Stroik 1.09 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
+        ? "Stroik 1.10 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
+        : "Stroik 1.10 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
     private void OpenExternal(string url)
     {
         try

@@ -1,4 +1,4 @@
-# Stroik 1.09
+# Stroik 1.10
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -78,6 +78,8 @@ Aktualizator ponawia chwilowe błędy połączenia i pobieranie przerwane w trak
 Program sprawdza najnowsze stabilne wydanie GitHub przy uruchomieniu. Po znalezieniu nowszej wersji pokazuje zmiany z opisu wydania po polsku lub angielsku i pyta o zgodę w przewijalnym oknie. Po wybraniu **Tak, pobierz i zainstaluj** pobiera EXE i plik SHA-256, sprawdza sumę, zamyka stary proces, podmienia EXE, uruchamia nowy i usuwa starą kopię. W razie niepowodzenia podmiany próbuje przywrócić poprzedni plik. Przyciski **Sprawdź aktualizacje** i **Ostatnie zmiany** znajdują się w zakładce **Ustawienia**. „Ostatnie zmiany” pokazują opis zainstalowanej wersji także bez internetu. Automatyczna podmiana wymaga nazwy `Stroik.exe` i prawa zapisu w jego folderze. Program nie wysyła nagrań ani wyników do internetu.
 
 W Ustawieniach są też przyciski **O programie**, **Strona Proszczoka**, **Wesprzyj przez PayPal** i **Wesprzyj przez Revolut**. „O programie” wyjaśnia przeznaczenie aplikacji i podaje twórców: wykonawca Proszczok z Codex, pomysłodawca Witold. Pozostałe przyciski otwierają w przeglądarce odpowiednio [proszczok.pl](https://proszczok.pl/), [PayPal](https://paypal.me/proszczok) i [Revolut](https://revolut.me/r_rosiejka). Wsparcie jest dobrowolne, a Stroik nie obsługuje płatności.
+
+Po zmianie pola wyboru myszą lub spacją program zgłasza czytnikowi jego nazwę oraz „zaznaczone” albo „odznaczone”. Działa to dla ciemnego motywu, widoku graficznego, automatycznych uderzeń kamertonu, przejścia po dwóch uderzeniach i wyboru oktawy. Wczytanie ustawień nie powoduje takich komunikatów. Rzeczywistą wypowiedź NVDA trzeba sprawdzić na komputerze użytkownika.
 
 ## Ograniczenia i budowanie
 
