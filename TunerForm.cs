@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -9,6 +11,9 @@ internal enum ForkShortcutAction { SingleStrike, Pause, Resume }
 
 internal sealed class TunerForm : Form
 {
+    internal const string PayPalUrl = "https://paypal.me/proszczok";
+    internal const string RevolutUrl = "https://revolut.me/r_rosiejka";
+    internal const string WebsiteUrl = "https://proszczok.pl/";
     private readonly TabControl _tabs = new() { Dock = DockStyle.Fill, DrawMode = TabDrawMode.OwnerDrawFixed };
     private readonly TabPage _tunerTab = new(), _settingsTab = new();
     private readonly Label _preferencesIntro = MakeLabel();
@@ -20,10 +25,13 @@ internal sealed class TunerForm : Form
     private readonly Label _noteHelp = MakeLabel(), _languageTitle = MakeLabel(), _intervalTitle = MakeLabel(), _forkHelp = MakeLabel();
     private readonly Label _ukuleleTitle = MakeLabel(), _orderTitle = MakeLabel(), _orderHelp = MakeLabel(), _guideText = MakeLabel();
     private readonly Label _visualHelp = MakeLabel(), _calibrationTitle = MakeLabel(), _calibrationHelp = MakeLabel(), _strikeHelp = MakeLabel(), _updateStatus = MakeLabel(), _automaticStatus = MakeLabel();
+    private readonly Label _supportTitle = MakeLabel(14);
     private readonly Label _doubleStrikeWindowTitle = MakeLabel();
     private readonly Button _start = new() { AutoSize = true }, _stop = new() { AutoSize = true, Enabled = false };
     private readonly Button _repeat = new() { AutoSize = true, Enabled = false }, _test = new() { AutoSize = true };
     private readonly Button _updates = new() { AutoSize = true }, _strike = new() { AutoSize = true };
+    private readonly Button _recentChanges = new() { AutoSize = true }, _about = new() { AutoSize = true };
+    private readonly Button _paypal = new() { AutoSize = true }, _revolut = new() { AutoSize = true }, _website = new() { AutoSize = true };
     private readonly Button _next = new() { AutoSize = true };
     private readonly Button _saveProfile = new() { AutoSize = true }, _loadProfile = new() { AutoSize = true };
     private readonly TextBox _result = new() { ReadOnly = true, Multiline = true, Height = 64, TabStop = true };
@@ -119,6 +127,11 @@ internal sealed class TunerForm : Form
         Add(settingsContent, _dark); Add(settingsContent, _visualMode); Add(settingsContent, _visualHelp);
         Add(settingsContent, _calibrationTitle); Add(settingsContent, _calibration); Add(settingsContent, _calibrationHelp);
         Add(settingsContent, _updates); Add(settingsContent, _updateStatus);
+        Add(settingsContent, _recentChanges); Add(settingsContent, _about); Add(settingsContent, _website);
+        Add(settingsContent, _supportTitle);
+        var supportButtons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
+        supportButtons.Controls.AddRange([_paypal, _revolut]);
+        Add(settingsContent, supportButtons);
 
         _initializing = true;
         _language.Items.AddRange(["Polski", "English"]);
@@ -156,6 +169,11 @@ internal sealed class TunerForm : Form
         _repeat.Click += (_, _) => { if (_lastAnnouncement is not null) Announce(_lastAnnouncement); };
         _test.Click += (_, _) => Announce(T("Stroik. Komunikaty dla czytnika ekranu działają.", "Stroik. Screen reader announcements work."));
         _updates.Click += async (_, _) => await CheckUpdatesAsync(false);
+        _recentChanges.Click += (_, _) => ShowRecentChanges();
+        _about.Click += (_, _) => ShowAbout();
+        _paypal.Click += (_, _) => OpenExternal(PayPalUrl);
+        _revolut.Click += (_, _) => OpenExternal(RevolutUrl);
+        _website.Click += (_, _) => OpenExternal(WebsiteUrl);
         _saveProfile.Click += (_, _) => SaveProfile();
         _loadProfile.Click += (_, _) => LoadProfile();
         _method.SelectedIndexChanged += (_, _) => { if (_initializing) return; if (_method.SelectedIndex == 0 && _targetMidi < 0) SelectTarget(InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind)); ApplyMethodUI(); Persist(); };
@@ -370,13 +388,13 @@ internal sealed class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.08 — dostępny stroiciel", "Stroik 1.08 — accessible tuner");
-        _heading.Text = "Stroik 1.08";
+        Text = T("Stroik 1.09 — dostępny stroiciel", "Stroik 1.09 — accessible tuner");
+        _heading.Text = "Stroik 1.09";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tunerTab.AccessibleName = _tunerTab.Text;
         _settingsTab.AccessibleName = _settingsTab.Text;
-        _preferencesIntro.Text = T("Język, wygląd, korekta mikrofonu i aktualizacje programu.", "Language, appearance, microphone correction and program updates.");
+        _preferencesIntro.Text = T("Język, wygląd, korekta mikrofonu, aktualizacje i informacje o programie.", "Language, appearance, microphone correction, updates and program information.");
         _tabs.Invalidate();
         _intro.Text = T("Wybierz instrument, metodę strojenia i dźwięk. Domyślnie: pianino i g w oktawie razkreślnej.",
             "Choose an instrument, tuning method and note. Defaults: piano and G in the one-line octave.");
@@ -406,6 +424,12 @@ internal sealed class TunerForm : Form
         _repeat.Text = T("&Powtórz wynik", "&Repeat result");
         _test.Text = T("Sprawdź komunikat &NVDA", "&Test screen reader announcement");
         _updates.Text = T("Sprawdź &aktualizacje", "Check for &updates");
+        _recentChanges.Text = T("Ostatnie zmiany", "Latest changes");
+        _about.Text = T("O programie", "About Stroik");
+        _website.Text = T("Strona Proszczoka", "Proszczok website");
+        _supportTitle.Text = T("Wsparcie projektu", "Support the project");
+        _paypal.Text = T("Wesprzyj przez PayPal", "Support via PayPal");
+        _revolut.Text = T("Wesprzyj przez Revolut", "Support via Revolut");
         _updateStatus.Text = T(_updateStatusPl, _updateStatusEn);
         _updateStatus.AccessibleName = T("Stan aktualizacji", "Update status");
         _autoStrike.Text = T("Uderzaj kamerton automatycznie", "Strike tuning fork automatically");
@@ -441,7 +465,7 @@ internal sealed class TunerForm : Form
         _calibrationTitle.Text = T("Ręczna korekta pomiaru mikrofonu w centach (−100 do +100):", "Manual microphone pitch correction in cents (−100 to +100):");
         _calibrationHelp.Text = T("Użyj tylko po porównaniu ze znanym wzorcem. Dodatnia wartość podwyższa odczyt, ujemna obniża. Błędnie nastrojony instrument nie oznacza błędu mikrofonu.", "Use only after comparing with a known reference. A positive value raises the reading; a negative value lowers it. An out-of-tune instrument does not imply a microphone error.");
         _dark.Text = T("Ciemny motyw", "Dark theme");
-        foreach (Button button in new[] { _start, _stop, _repeat, _test, _updates, _strike, _next, _saveProfile, _loadProfile }) button.AccessibleName = button.Text.Replace("&", "");
+        foreach (Button button in new[] { _start, _stop, _repeat, _test, _updates, _recentChanges, _about, _website, _paypal, _revolut, _strike, _next, _saveProfile, _loadProfile }) button.AccessibleName = button.Text.Replace("&", "");
         _result.AccessibleName = T("Ostatni wynik strojenia", "Last tuning result");
         _details.AccessibleName = T("Szczegóły pomiaru", "Measurement details");
         _method.AccessibleName = _methodTitle.Text; _instrument.AccessibleName = _instrumentTitle.Text; _view.AccessibleName = _viewTitle.Text;
@@ -781,6 +805,39 @@ internal sealed class TunerForm : Form
     }
     private void Announce(string message) => _result.AccessibilityObject.RaiseAutomationNotification(
         AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.ImportantMostRecent, message);
+    private void ShowRecentChanges()
+    {
+        try
+        {
+            Version assemblyVersion = typeof(TunerForm).Assembly.GetName().Version ?? new Version(1, 0, 9);
+            Version version = new(assemblyVersion.Major, assemblyVersion.Minor, Math.Max(0, assemblyVersion.Build));
+            using var dialog = new ReleaseNotesDialog(version, ReleaseNotes.Current(_english), _english, _dark.Checked, false);
+            dialog.ShowDialog(this);
+        }
+        catch (InvalidDataException error)
+        {
+            MessageBox.Show(this, error.Message, T("Nie można pokazać zmian", "Cannot show changes"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+    private void ShowAbout()
+    {
+        MessageBox.Show(this, AboutText(_english), T("O programie", "About Stroik"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+    internal static string AboutText(bool english) => english
+        ? "Stroik 1.09 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
+        : "Stroik 1.09 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
+    private void OpenExternal(string url)
+    {
+        try
+        {
+            _ = Process.Start(new ProcessStartInfo(url) { UseShellExecute = true })
+                ?? throw new InvalidOperationException("Cannot open the web browser.");
+        }
+        catch (Exception error) when (error is Win32Exception or InvalidOperationException)
+        {
+            MessageBox.Show(this, error.Message, T("Nie można otworzyć strony", "Cannot open page"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
     private async Task CheckUpdatesAsync(bool quiet)
     {
         bool prompted = false;
@@ -797,10 +854,11 @@ internal sealed class TunerForm : Form
             }
             prompted = true;
             SetUpdateStatus($"Dostępna wersja {release.Version}.", $"Version {release.Version} is available.");
-            if (MessageBox.Show(this,
-                T($"Dostępna jest wersja {release.Version}. Pobrać ją, zamknąć program i podmienić plik EXE?",
-                  $"Version {release.Version} is available. Download it, close the app, and replace the EXE file?"),
-                T("Nowa wersja Stroika", "New Stroik version"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            using (var dialog = new ReleaseNotesDialog(release.Version,
+                ReleaseNotes.ForLanguage(release.Notes, _english), _english, _dark.Checked, true))
+            {
+                if (dialog.ShowDialog(this) != DialogResult.Yes) return;
+            }
             UseWaitCursor = true;
             SetUpdateStatus("Pobieranie i weryfikacja aktualizacji…", "Downloading and verifying the update…");
             string downloaded = await Updater.DownloadVerifiedAsync(release);

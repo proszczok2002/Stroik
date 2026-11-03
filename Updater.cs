@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace Stroik;
 
-internal sealed record ReleaseInfo(Version Version, Uri Executable, Uri Checksum);
+internal sealed record ReleaseInfo(Version Version, Uri Executable, Uri Checksum, string? Notes);
 
 internal static class Updater
 {
@@ -21,7 +21,7 @@ internal static class Updater
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Stroik-Updater/1.0.8");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Stroik-Updater/1.0.9");
         client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
         client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
         return client;
@@ -101,7 +101,9 @@ internal static class Updater
         }
         if (executable is null || checksum is null)
             throw new InvalidDataException("The GitHub release is missing Stroik.exe or Stroik.exe.sha256.");
-        return new ReleaseInfo(version, executable, checksum);
+        string? notes = root.TryGetProperty("body", out JsonElement body) && body.ValueKind == JsonValueKind.String
+            ? body.GetString() : null;
+        return new ReleaseInfo(version, executable, checksum, notes);
     }
 
     internal static async Task<string> DownloadVerifiedAsync(ReleaseInfo release)

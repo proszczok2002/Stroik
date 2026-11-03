@@ -50,14 +50,26 @@ string releaseJson = System.Text.Json.JsonSerializer.Serialize(new
     tag_name = "v1.1.0",
     draft = false,
     prerelease = false,
+    body = "## Polski\n- **Nowa opcja**\n\n## English\n- **New option**",
     assets = new[]
     {
         new { name = "Stroik.exe", browser_download_url = "https://github.com/proszczok2002/Stroik/releases/download/v1.1.0/Stroik.exe" },
         new { name = "Stroik.exe.sha256", browser_download_url = "https://github.com/proszczok2002/Stroik/releases/download/v1.1.0/Stroik.exe.sha256" }
     }
 });
-if (Updater.ParseRelease(releaseJson, new Version(1, 0, 0, 0))?.Version != new Version(1, 1, 0))
+ReleaseInfo? parsedRelease = Updater.ParseRelease(releaseJson, new Version(1, 0, 0, 0));
+if (parsedRelease?.Version != new Version(1, 1, 0) ||
+    ReleaseNotes.ForLanguage(parsedRelease.Notes, false) != "• Nowa opcja" ||
+    ReleaseNotes.ForLanguage(parsedRelease.Notes, true) != "• New option")
     throw new Exception("Nie wykryto nowszego wydania.");
+if (!ReleaseNotes.Current(false).Contains("Ostatnie zmiany", StringComparison.Ordinal) ||
+    !ReleaseNotes.Current(true).Contains("Latest changes", StringComparison.Ordinal) ||
+    ReleaseNotes.ForLanguage("## English\nOnly English", false) != "Opis zmian tej wersji nie jest dostępny.")
+    throw new Exception("Opis zmian nie działa po polsku, angielsku lub bez internetu.");
+if (TunerForm.PayPalUrl != "https://paypal.me/proszczok" ||
+    TunerForm.RevolutUrl != "https://revolut.me/r_rosiejka" ||
+    TunerForm.WebsiteUrl != "https://proszczok.pl/")
+    throw new Exception("Linki wsparcia lub strony są błędne.");
 if (Updater.ParseRelease(releaseJson, new Version(1, 1, 0, 0)) is not null)
     throw new Exception("Zaproponowano tę samą wersję jako aktualizację.");
 try
@@ -230,6 +242,11 @@ var uiThread = new Thread(() =>
         var language = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_language", flags)!.GetValue(form)!;
         var dark = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_dark", flags)!.GetValue(form)!;
         var updates = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_updates", flags)!.GetValue(form)!;
+        var recentChanges = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_recentChanges", flags)!.GetValue(form)!;
+        var about = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_about", flags)!.GetValue(form)!;
+        var website = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_website", flags)!.GetValue(form)!;
+        var paypal = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_paypal", flags)!.GetValue(form)!;
+        var revolut = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_revolut", flags)!.GetValue(form)!;
         if (method.Items.Count != 2 || instrument.Items.Count != 6 ||
             ukuleleTuning.Items.Count != 2 || pianoOrder.Items.Count != 3 ||
             visualMode.Parent != language.Parent || calibration.Parent != language.Parent ||
@@ -246,6 +263,9 @@ var uiThread = new Thread(() =>
             tabs.AccessibilityObject.Role != System.Windows.Forms.AccessibleRole.PageTabList ||
             language.Parent is null || language.Parent.Parent != settingsTab ||
             dark.Parent != language.Parent || updates.Parent != language.Parent ||
+            recentChanges.Parent != language.Parent || about.Parent != language.Parent ||
+            website.Parent != language.Parent || paypal.Parent?.Parent != language.Parent ||
+            revolut.Parent != paypal.Parent ||
             tabs.DrawMode != System.Windows.Forms.TabDrawMode.OwnerDrawFixed)
             throw new Exception($"Zakładki: count={tabs.TabPages.Count}, selected={tabs.SelectedIndex}, parent={language.Parent?.GetType().Name}, tabParent={language.Parent?.Parent?.GetType().Name}, lang={language.Parent?.Parent == settingsTab}, dark={dark.Parent == language.Parent}, updates={updates.Parent == language.Parent}, draw={tabs.DrawMode}");
         tabs.SelectedIndex = 1;
@@ -317,9 +337,31 @@ var uiThread = new Thread(() =>
                 string.IsNullOrWhiteSpace(language.AccessibleName) ||
                 string.IsNullOrWhiteSpace(instrument.AccessibleName) ||
                 string.IsNullOrWhiteSpace(updates.AccessibleName) ||
+                recentChanges.AccessibleName != (english ? "Latest changes" : "Ostatnie zmiany") ||
+                about.AccessibleName != (english ? "About Stroik" : "O programie") ||
+                paypal.AccessibleName != (english ? "Support via PayPal" : "Wesprzyj przez PayPal") ||
+                revolut.AccessibleName != (english ? "Support via Revolut" : "Wesprzyj przez Revolut") ||
+                website.AccessibleName != (english ? "Proszczok website" : "Strona Proszczoka") ||
+                !TunerForm.AboutText(english).Contains(english ? "Original idea: Witold" : "Pomysłodawca: Witold", StringComparison.Ordinal) ||
                 automaticStatus.AccessibleName != (english ? "Tuning fork status" : "Stan kamertonu") ||
                 !automaticStatus.Text.Contains("Alt+U", StringComparison.Ordinal))
                 throw new Exception("Zakładki lub ich etykiety dostępności nie przełączają się PL/EN.");
+            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 9), ReleaseNotes.Current(english), english, false, false);
+            var changesLayout = (System.Windows.Forms.TableLayoutPanel)changesDialog.Controls[0];
+            var changesText = changesLayout.Controls.OfType<System.Windows.Forms.TextBox>().Single();
+            if (string.IsNullOrWhiteSpace(changesText.Text) ||
+                changesText.AccessibleName != (english ? "Changes in version 1.0.9" : "Zmiany w wersji 1.0.9"))
+                throw new Exception("Okno zmian nie udostępnia opisu czytnikowi ekranu.");
+            using var updateDialog = new ReleaseNotesDialog(new Version(1, 1, 0), "Sample change", english, false, true);
+            var updateLayout = (System.Windows.Forms.TableLayoutPanel)updateDialog.Controls[0];
+            var updateText = updateLayout.Controls.OfType<System.Windows.Forms.TextBox>().Single();
+            var updateActions = updateLayout.Controls.OfType<System.Windows.Forms.FlowLayoutPanel>().Single();
+            if (updateText.Text != "Sample change" ||
+                (updateDialog.AcceptButton as System.Windows.Forms.Button)?.DialogResult != System.Windows.Forms.DialogResult.No ||
+                !updateActions.Controls.OfType<System.Windows.Forms.Button>().Any(button =>
+                    button.DialogResult == System.Windows.Forms.DialogResult.Yes &&
+                    button.Text == (english ? "Yes, download and install" : "Tak, pobierz i zainstaluj")))
+                throw new Exception("Okno aktualizacji nie pokazuje zmian lub nie wybiera bezpiecznej opcji domyślnej.");
         }
         englishField.SetValue(form, originalEnglish);
         populateChoices.Invoke(form, [originalSettings]);

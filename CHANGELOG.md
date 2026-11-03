@@ -1,5 +1,13 @@
 # Changelog / Historia zmian
 
+## 1.0.9 (Stroik 1.09) — 2026-11-03
+
+- Show localized GitHub release notes in a scrollable, screen-reader-accessible update confirmation dialog.
+- Embed the current bilingual release notes in the EXE for the offline Latest changes button in Settings.
+- Add an About dialog with the app purpose and credits for Proszczok with Codex and idea author Witold.
+- Add website, PayPal and Revolut buttons in Settings with the owner-provided destinations.
+- Exclude the project-root `niepotrzebne` archive from compilation after moving old build files there.
+
 ## 1.0.8 (Stroik 1.08) — 2026-11-03
 
 - Removed the redundant accessible name of the tab list, so a screen reader can announce the selected tab without repeating the whole tab group name.
