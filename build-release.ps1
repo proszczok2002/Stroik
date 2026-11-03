@@ -15,7 +15,7 @@ $previousVersion = if (Test-Path -LiteralPath $marker) { (Get-Content -LiteralPa
 if ($previousVersion -eq $version -and (Test-Path -LiteralPath (Join-Path $output 'Stroik.exe')) -and -not $RebuildSameVersion) {
     throw "Version $version is already built. Increase the project version for a new release or explicitly pass -RebuildSameVersion before publication."
 }
-$archive = Join-Path $output ("niepotrzebne\v$previousVersion-" + (Get-Date -Format 'yyyyMMdd-HHmmss') + "-$PID")
+$archive = Join-Path $repoRoot ("niepotrzebne\v$previousVersion-" + (Get-Date -Format 'yyyyMMdd-HHmmss') + "-$PID")
 $stage = Join-Path $output ('.build-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 
