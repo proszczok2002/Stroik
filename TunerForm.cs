@@ -370,11 +370,10 @@ internal sealed class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.07 — dostępny stroiciel", "Stroik 1.07 — accessible tuner");
-        _heading.Text = "Stroik 1.07";
+        Text = T("Stroik 1.08 — dostępny stroiciel", "Stroik 1.08 — accessible tuner");
+        _heading.Text = "Stroik 1.08";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
-        _tabs.AccessibleName = T("Zakładki Stroika", "Stroik tabs");
         _tunerTab.AccessibleName = _tunerTab.Text;
         _settingsTab.AccessibleName = _settingsTab.Text;
         _preferencesIntro.Text = T("Język, wygląd, korekta mikrofonu i aktualizacje programu.", "Language, appearance, microphone correction and program updates.");

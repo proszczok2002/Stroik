@@ -1,5 +1,11 @@
 # Changelog / Historia zmian
 
+## 1.0.8 (Stroik 1.08) — 2026-11-03
+
+- Removed the redundant accessible name of the tab list, so a screen reader can announce the selected tab without repeating the whole tab group name.
+- Kept the native tab list role, keyboard navigation, and Polish/English names for the individual Tuner and Settings pages.
+- Added a regression check for tab switching and the accessible names and role.
+
 ## 1.0.7 (Stroik 1.07) — 2026-11-02
 
 - Added a bilingual, keyboard-accessible setting for the maximum gap between two pitch-confirmed strikes: 0.5–2.5 seconds, default 1.2 seconds.

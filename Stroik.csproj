@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Stroik</AssemblyName>
     <RootNamespace>Stroik</RootNamespace>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
     <Product>Stroik</Product>
     <Authors>Proszczok</Authors>
     <Description>Accessible instrument tuner for blind and visually impaired musicians / Dostępny stroiciel instrumentów dla osób niewidomych i słabowidzących.</Description>

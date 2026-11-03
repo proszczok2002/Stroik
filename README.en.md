@@ -1,4 +1,4 @@
-# Stroik 1.07
+# Stroik 1.08
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 

@@ -242,10 +242,17 @@ var uiThread = new Thread(() =>
             octave.Items.Count != 9 || view.Items.Count != 2 || string.IsNullOrWhiteSpace(target.AccessibleName))
             throw new Exception("Interfejs nie udostępnia wszystkich metod, oktaw lub opisów dostępności.");
         if (tabs.TabPages.Count != 2 || tabs.SelectedIndex != 0 ||
+            tabs.AccessibleName is not null ||
+            tabs.AccessibilityObject.Role != System.Windows.Forms.AccessibleRole.PageTabList ||
             language.Parent is null || language.Parent.Parent != settingsTab ||
             dark.Parent != language.Parent || updates.Parent != language.Parent ||
             tabs.DrawMode != System.Windows.Forms.TabDrawMode.OwnerDrawFixed)
             throw new Exception($"Zakładki: count={tabs.TabPages.Count}, selected={tabs.SelectedIndex}, parent={language.Parent?.GetType().Name}, tabParent={language.Parent?.Parent?.GetType().Name}, lang={language.Parent?.Parent == settingsTab}, dark={dark.Parent == language.Parent}, updates={updates.Parent == language.Parent}, draw={tabs.DrawMode}");
+        tabs.SelectedIndex = 1;
+        if (tabs.SelectedTab != settingsTab || settingsTab.AccessibilityObject.Name != settingsTab.Text ||
+            !string.IsNullOrEmpty(tabs.AccessibilityObject.Name))
+            throw new Exception("Zmiana zakładki ma podać nazwę strony bez dodatkowej nazwy całej listy.");
+        tabs.SelectedIndex = 0;
         var autoStrike = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_autoStrike", flags)!.GetValue(form)!;
         var automaticStatus = (System.Windows.Forms.Label)typeof(TunerForm).GetField("_automaticStatus", flags)!.GetValue(form)!;
         var strikeTimer = (System.Windows.Forms.Timer)typeof(TunerForm).GetField("_strikeTimer", flags)!.GetValue(form)!;

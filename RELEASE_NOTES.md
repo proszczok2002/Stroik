@@ -1,17 +1,17 @@
-# Stroik 1.07 / Stroik 1.07
+# Stroik 1.08 / Stroik 1.08
 
 ## Polski
 
-W stroiku elektronicznym można teraz ustawić maksymalny odstęp między dwoma uderzeniami od 0,5 do 2,5 sekundy. Domyślny czas wydłużono z 0,9 do 1,2 sekundy. Dwa uderzenia po wyniku „dobrze” nadal muszą zostać rozpoznane jako wybrany dźwięk. Detektor lepiej dopuszcza cichsze drugie uderzenie; ustawienie jest zapisywane także w profilach JSON.
+Uproszczono komunikaty czytnika ekranu przy przełączaniu między zakładkami „Stroik” i „Ustawienia”. Usunięto dodatkową nazwę całego zestawu zakładek; nazwy samych zakładek, ich rola i obsługa klawiaturą pozostają dostępne.
 
-Przy cichym instrumencie można wybrać większą czułość mikrofonu. Dłuższy odstęp ułatwia zagranie drugiego dźwięku, ale może zwiększyć ryzyko przypadkowego przejścia. Funkcję można wyłączyć, a Ctrl+N wybiera następny dźwięk ręcznie.
+Kamerton działa jak w wersji 1.07. Nie dodawano komunikatu z nazwą mikrofonu, aby włączenie go nie powodowało kolejnej, potencjalnie zbędnej wypowiedzi.
 
-Pobierz samodzielny, niepodpisany cyfrowo Stroik.exe dla Windows x64. Stroik.exe.sha256 służy do weryfikacji. ZIP zawiera EXE, sumę, instrukcje PL/EN i licencję. Rzeczywista praca z mikrofonem i instrumentem wymaga sprawdzenia na sprzęcie.
+Pobierz samodzielny plik Stroik.exe dla Windows x64. Plik Stroik.exe.sha256 pozwala sprawdzić sumę pobranego EXE. ZIP zawiera EXE, sumę, instrukcje po polsku i angielsku oraz licencję. Komunikat NVDA po zmianie zakładki wymaga sprawdzenia na komputerze użytkownika.
 
 ## English
 
-Electronic mode now lets you set the maximum gap between two strikes from 0.5 to 2.5 seconds. The default was increased from 0.9 to 1.2 seconds. After an in-tune result, both strikes must still be recognized at the target pitch. The detector better tolerates a quieter second strike, and JSON profiles save the chosen time.
+Screen reader announcements when switching between the Tuner and Settings tabs have been simplified. The extra name of the whole tab list was removed; the individual tab names, tab role, and keyboard navigation remain available.
 
-For a quiet instrument, try higher microphone sensitivity. A longer gap makes the second strike easier but may increase accidental advancement. The feature can be disabled, and Ctrl+N advances manually.
+The tuning fork works as in version 1.07. No microphone name announcement was added, to avoid potentially unnecessary speech when starting the microphone.
 
-Download the self-contained, unsigned Stroik.exe for Windows x64. Stroik.exe.sha256 verifies the download. The ZIP includes the EXE, checksum, Polish and English guides, and license. Real microphone and instrument behavior still needs hardware testing.
+Download the self-contained Stroik.exe for Windows x64. Stroik.exe.sha256 verifies the downloaded EXE. The ZIP includes the EXE, checksum, Polish and English guides, and license. The actual NVDA announcement when switching tabs still needs testing on the user's computer.
