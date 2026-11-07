@@ -20,6 +20,7 @@ internal sealed class Microphone : IDisposable
 
     internal int SampleRate { get; private set; }
     internal event Action<short[]>? FrameReady;
+    internal event Action<Exception>? Failed;
 
     internal void Start()
     {
@@ -75,6 +76,15 @@ internal sealed class Microphone : IDisposable
 
     private void Receive()
     {
+        try { ReceiveBuffers(); }
+        catch (Exception error)
+        {
+            _running = false;
+            Failed?.Invoke(error);
+        }
+    }
+    private void ReceiveBuffers()
+    {
         while (_running)
         {
             _ready.WaitOne(200);
@@ -84,18 +94,22 @@ internal sealed class Microphone : IDisposable
                 var header = Marshal.PtrToStructure<WaveHeader>(buffer.Header);
                 if ((header.Flags & HeaderDone) == 0) continue;
                 int count = Math.Min((int)header.BytesRecorded / sizeof(short), SamplesPerBuffer);
+                short[]? samples = null;
                 if (count > 0)
                 {
-                    short[] samples = new short[count];
+                    samples = new short[count];
                     Marshal.Copy(buffer.Data, samples, 0, count);
-                    try { FrameReady?.Invoke(samples); }
-                    catch { /* Keep the capture thread alive; UI handles its own errors. */ }
                 }
                 if (!_running) break;
                 header.BytesRecorded = 0;
                 header.Flags &= ~HeaderDone;
                 Marshal.StructureToPtr(header, buffer.Header, false);
-                if (waveInAddBuffer(_handle, buffer.Header, (uint)Marshal.SizeOf<WaveHeader>()) != 0) break;
+                Check(waveInAddBuffer(_handle, buffer.Header, (uint)Marshal.SizeOf<WaveHeader>()), "Ponowne kolejkowanie bufora mikrofonu / Requeue microphone buffer");
+                // Return the native buffer before running the pitch detector.
+                if (samples is not null)
+                {
+                    FrameReady?.Invoke(samples);
+                }
             }
         }
     }
@@ -109,7 +123,7 @@ internal sealed class Microphone : IDisposable
             waveInReset(_handle);
         }
         _ready.Set();
-        _worker?.Join(1500);
+        _worker?.Join();
         _worker = null;
         if (_handle != IntPtr.Zero)
         {

@@ -1,4 +1,4 @@
-# Stroik 1.10
+# Stroik 1.11
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -82,6 +82,8 @@ W Ustawieniach są też przyciski **O programie**, **Strona Proszczoka**, **Wesp
 Po zmianie pola wyboru myszą lub spacją program zgłasza czytnikowi jego nazwę oraz „zaznaczone” albo „odznaczone”. Działa to dla ciemnego motywu, widoku graficznego, automatycznych uderzeń kamertonu, przejścia po dwóch uderzeniach i wyboru oktawy. Wczytanie ustawień nie powoduje takich komunikatów. Rzeczywistą wypowiedź NVDA trzeba sprawdzić na komputerze użytkownika.
 
 ## Ograniczenia i budowanie
+
+W 1.11 poprawiono wykrywanie krótkich i cichnących nut oraz kończenie pomiaru w obecności szumu bez rozpoznanej wysokości. Zmiana celu, instrumentu, stroju odniesienia lub czułości rozpoczyna nowy pomiar bez restartowania mikrofonu. Błąd przechwytywania jest zgłaszany komunikatem z możliwością ponownego włączenia mikrofonu. Sprawdzono sygnały syntetyczne; nie zastępuje to próby w rzeczywistych warunkach.
 
 Pomiar mikrofonem działa w przybliżeniu w zakresie 27,5–4200 Hz i zakłada jeden stabilny dźwięk. Pokazywanie 0,1 Hz nie oznacza gwarantowanej dokładności. Pomiar wstrzymuje się na 1,5 sekundy po wyniku, aby głos czytnika ekranu nie został uznany za kolejną nutę. Działanie z konkretnym mikrofonem, instrumentem, NVDA i głośnikami wymaga sprawdzenia na sprzęcie.
 

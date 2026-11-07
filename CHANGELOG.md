@@ -1,5 +1,13 @@
 # Changelog / Historia zmian
 
+## 1.0.11 (Stroik 1.11) — 2026-11-07
+
+- Measure pitch in every full audio window to collect short and decaying notes consistently.
+- End a note after reliable pitch stops, even if unpitched noise remains above the sensitivity threshold; exclude DC offset from RMS.
+- Reset measurement on target/reference/sensitivity changes and discard queued results from an older measurement generation.
+- Requeue native microphone buffers before analysis, wait for the worker before freeing buffers, and report processing/requeue errors.
+- Add regression checks for short quiet tones, background noise, recovery, DC offset and target changes during a pending measurement.
+
 ## 1.0.10 (Stroik 1.10) — 2026-11-03
 
 - Announce the new checked or unchecked state in Polish or English immediately after user activation of each checkbox.

@@ -60,7 +60,8 @@ internal sealed class TunerForm : Form
     private readonly object _navigationLock = new();
     private readonly short[] _window = new short[8192];
     private Microphone? _microphone;
-    private int _windowCount, _analysisFrame, _targetMidi = NoteCatalog.DefaultMidi;
+    private int _windowCount, _targetMidi = NoteCatalog.DefaultMidi;
+    private int _measurementGeneration, _processedGeneration;
     private int _planAnchorMidi = NoteCatalog.DefaultMidi, _lastResolvedTarget = NoteCatalog.DefaultMidi;
     private volatile UkuleleTuning _ukuleleKind;
     private volatile bool _doubleStrikeEnabled, _visualEnabled;
@@ -183,11 +184,11 @@ internal sealed class TunerForm : Form
         _view.SelectedIndexChanged += (_, _) => { if (_initializing) return; ApplyViewUI(); Persist(); };
         _showOctave.CheckedChanged += (_, _) => { if (_initializing) return; ApplyViewUI(); Persist(); };
         _octave.SelectedIndexChanged += (_, _) => { if (_initializing || _changingOctave || _octave.SelectedIndex < 0) return; int selected = _targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi; int midi = Math.Clamp((_octave.SelectedIndex + 1) * 12 + selected % 12, NoteCatalog.LowestMidi, NoteCatalog.HighestMidi); if (NoteCatalog.Octave(midi) != _octave.SelectedIndex) midi = _octave.SelectedIndex == 0 ? NoteCatalog.LowestMidi : NoteCatalog.HighestMidi; SelectTarget(midi); Persist(); };
-        _target.SelectedIndexChanged += (_, _) => { if (_initializing || _target.SelectedItem is not Choice choice) return; lock (_navigationLock) _strikeNavigator.Reset(); _targetMidi = choice.Id; if (!_advancingTarget && _instrumentKind == InstrumentKind.Piano && _targetMidi >= 0) _planAnchorMidi = _targetMidi; SyncOctave(); UpdateGuide(); Persist(); };
+        _target.SelectedIndexChanged += (_, _) => { if (_initializing || _target.SelectedItem is not Choice choice) return; lock (_navigationLock) _strikeNavigator.Reset(); _targetMidi = choice.Id; if (!_advancingTarget && _instrumentKind == InstrumentKind.Piano && _targetMidi >= 0) _planAnchorMidi = _targetMidi; SyncOctave(); UpdateGuide(); ResetResult(); Persist(); };
         _target.KeyPress += (_, e) => { if (!InstrumentCatalog.HasStrings(_instrumentKind) && char.ToLowerInvariant(e.KeyChar) is 'i' or 's') { SelectTarget(NoteCatalog.NextSharp(_targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi)); e.Handled = true; } };
-        _concertA.ValueChanged += (_, _) => { _reference = (double)_concertA.Value; Persist(); };
+        _concertA.ValueChanged += (_, _) => { _reference = (double)_concertA.Value; ResetResult(); Persist(); };
         _tolerance.ValueChanged += (_, _) => { _toleranceCents = (double)_tolerance.Value; Persist(); };
-        _sensitivity.SelectedIndexChanged += (_, _) => { if (_sensitivity.SelectedItem is Choice choice) _minimumRms = choice.Value; Persist(); };
+        _sensitivity.SelectedIndexChanged += (_, _) => { if (_sensitivity.SelectedItem is Choice choice) _minimumRms = choice.Value; ResetResult(); Persist(); };
         _language.SelectedIndexChanged += (_, _) => { if (_initializing) return; _english = _language.SelectedIndex == 1; var current = ReadSettings(); PopulateChoices(current); ApplyLanguage(); ApplyViewUI(); ApplyMethodUI(); SetContextMenu(); Persist(); };
         _dark.CheckedChanged += (_, _) => { ApplyTheme(); Persist(); };
         _autoStrike.CheckedChanged += (_, _) => { _automaticStrikesRunning = _autoStrike.Checked; if (!_automaticStrikesRunning) _fork.Stop(); UpdateStrikeTimer(); UpdateAutomaticStatus(); Persist(); };
@@ -390,8 +391,8 @@ internal sealed class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.10 — dostępny stroiciel", "Stroik 1.10 — accessible tuner");
-        _heading.Text = "Stroik 1.10";
+        Text = T("Stroik 1.11 — dostępny stroiciel", "Stroik 1.11 — accessible tuner");
+        _heading.Text = "Stroik 1.11";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tunerTab.AccessibleName = _tunerTab.Text;
@@ -646,8 +647,24 @@ internal sealed class TunerForm : Form
         try
         {
             _session.Reset(); lock (_navigationLock) _strikeNavigator.Reset();
-            _windowCount = 0; _analysisFrame = 0; _ignoreUntil = DateTime.MinValue;
+            _windowCount = 0; _ignoreUntil = DateTime.MinValue;
+            _processedGeneration = Volatile.Read(ref _measurementGeneration);
             microphone.FrameReady += ProcessFrame;
+            microphone.Failed += error =>
+            {
+                try
+                {
+                    BeginInvoke((Action)(() =>
+                    {
+                        if (!ReferenceEquals(_microphone, microphone) || IsDisposed) return;
+                        StopMicrophone(false);
+                        _status.Text = T("Przechwytywanie przerwane. Włącz mikrofon ponownie. Szczegóły: ",
+                            "Capture interrupted. Start the microphone again. Details: ") + error.Message;
+                        Announce(_status.Text);
+                    }));
+                }
+                catch (InvalidOperationException) { }
+            };
             microphone.Start(); _microphone = microphone;
             _start.Enabled = false; _stop.Enabled = true;
             _status.Text = T("Mikrofon włączony. Zagraj dźwięk i go wycisz.", "Microphone is on. Play a note and let it stop.");
@@ -672,8 +689,20 @@ internal sealed class TunerForm : Form
     }
     // The audio thread emits final spoken results and throttled, silent visual readings.
     private void ProcessFrame(short[] samples)
+        => ProcessFrameAt(samples, DateTime.UtcNow);
+    private void ProcessFrameAt(short[] samples, DateTime now)
     {
-        DateTime now = DateTime.UtcNow;
+        int generation = Volatile.Read(ref _measurementGeneration);
+        if (_processedGeneration != generation)
+        {
+            _session.Reset(); _windowCount = 0; _ignoreUntil = DateTime.MinValue;
+            lock (_navigationLock) _strikeNavigator.Reset();
+            _processedGeneration = generation;
+        }
+        double reference = _reference, tolerance = _toleranceCents;
+        int target = _targetMidi;
+        InstrumentKind instrument = _instrumentKind;
+        UkuleleTuning ukulele = _ukuleleKind;
         if (now < _ignoreUntil) { _windowCount = 0; return; }
         double rms = PitchDetector.Rms(samples);
         bool sound = rms >= _minimumRms;
@@ -685,7 +714,7 @@ internal sealed class TunerForm : Form
             int count = Math.Min(samples.Length, _window.Length);
             Array.Copy(samples, samples.Length - count, _window, _windowCount, count);
             _windowCount += count;
-            if (_windowCount == _window.Length && ++_analysisFrame % 3 == 0)
+            if (_windowCount == _window.Length)
             {
                 var estimate = PitchDetector.Estimate(_window, _microphone?.SampleRate ?? 48000);
                 if (estimate is { Confidence: >= 0.75 }) frequency = estimate.Value.Frequency;
@@ -720,7 +749,7 @@ internal sealed class TunerForm : Form
         {
             _ignoreUntil = now.AddMilliseconds(1500);
             _session.Reset(); _windowCount = 0;
-            try { BeginInvoke((Action)(() => AdvanceTarget(midi))); }
+            try { BeginInvoke((Action)(() => { if (generation == Volatile.Read(ref _measurementGeneration)) AdvanceTarget(midi); })); }
             catch (InvalidOperationException) { }
             return;
         }
@@ -728,15 +757,12 @@ internal sealed class TunerForm : Form
         {
             _lastVisualAt = now;
             double measured = frequency.Value;
-            try { BeginInvoke((Action)(() => UpdateMeter(measured))); }
+            try { BeginInvoke((Action)(() => { if (generation == Volatile.Read(ref _measurementGeneration)) UpdateMeter(measured); })); }
             catch (InvalidOperationException) { }
         }
         double? completed = _session.Observe(sound, frequency, now);
-        if (completed is not > 0) return;
-        double result = completed.Value, reference = _reference, tolerance = _toleranceCents;
-        int target = _targetMidi;
-        InstrumentKind instrument = _instrumentKind;
-        UkuleleTuning ukulele = _ukuleleKind;
+        if (completed is not > 0 || generation != Volatile.Read(ref _measurementGeneration)) return;
+        double result = completed.Value;
         int resolved = ResolveTarget(target, instrument, ukulele, result, reference);
         double targetFrequency = PitchDetector.NoteFromMidi(resolved, reference).Frequency;
         bool inTune = Math.Abs(1200 * Math.Log2(result / targetFrequency)) <= tolerance;
@@ -752,7 +778,7 @@ internal sealed class TunerForm : Form
         }
         if (counting) return;
         _ignoreUntil = now.AddMilliseconds(1500);
-        try { BeginInvoke((Action)(() => ShowResult(result, reference, target, tolerance, instrument, ukulele))); }
+        try { BeginInvoke((Action)(() => { if (generation == Volatile.Read(ref _measurementGeneration)) ShowResult(result, reference, target, tolerance, instrument, ukulele); })); }
         catch (InvalidOperationException) { }
     }
     private static int ResolveTarget(int target, InstrumentKind instrument, UkuleleTuning ukulele,
@@ -798,6 +824,7 @@ internal sealed class TunerForm : Form
     }
     private void ResetResult()
     {
+        Interlocked.Increment(ref _measurementGeneration);
         _hasResult = false;
         _lastAnnouncement = null;
         _repeat.Enabled = false;
@@ -841,8 +868,8 @@ internal sealed class TunerForm : Form
         MessageBox.Show(this, AboutText(_english), T("O programie", "About Stroik"), MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
     internal static string AboutText(bool english) => english
-        ? "Stroik 1.10 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
-        : "Stroik 1.10 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
+        ? "Stroik 1.11 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
+        : "Stroik 1.11 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
     private void OpenExternal(string url)
     {
         try

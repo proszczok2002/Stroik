@@ -6,10 +6,14 @@ internal static class PitchDetector
 
     internal static double Rms(ReadOnlySpan<short> samples)
     {
+        if (samples.IsEmpty) return 0;
+        double mean = 0;
+        foreach (short sample in samples) mean += sample;
+        mean /= samples.Length;
         double sum = 0;
         foreach (short sample in samples)
         {
-            double value = sample / 32768.0;
+            double value = (sample - mean) / 32768.0;
             sum += value * value;
         }
         return Math.Sqrt(sum / samples.Length);
@@ -116,7 +120,8 @@ internal sealed class NoteSession
 
     internal double? Observe(bool soundPresent, double? frequency, DateTime now)
     {
-        if (soundPresent)
+        // Noise without a reliable pitch must not keep a note open indefinitely.
+        if (soundPresent && frequency is > 0)
         {
             if (_reported) Reset();
             _lastSoundAt = now;

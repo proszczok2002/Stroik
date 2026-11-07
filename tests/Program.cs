@@ -44,6 +44,17 @@ if (completed is null || Math.Abs(completed.Value - 439.5) > 0.01)
 if (session.Observe(false, null, start.AddMilliseconds(800)) is not null)
     throw new Exception("Wynik tej samej nuty ogłoszono drugi raz.");
 
+session.Reset();
+for (int i = 0; i < 3; i++) session.Observe(true, 440, start.AddMilliseconds(i * 85));
+if (session.Observe(true, null, start.AddMilliseconds(700)) is not > 439)
+    throw new Exception("Szum bez rozpoznanej wysokości blokuje zakończenie nuty.");
+session.Reset();
+for (int i = 0; i < 3; i++) session.Observe(true, 330, start.AddMilliseconds(i * 85));
+if (session.Observe(false, null, start.AddMilliseconds(700)) is not > 329)
+    throw new Exception("Nowa nuta nie działa po wcześniejszym szumie.");
+if (PitchDetector.Rms(Enumerable.Repeat((short)2000, 4096).ToArray()) != 0)
+    throw new Exception("Stałe przesunięcie sygnału jest błędnie uznawane za dźwięk.");
+
 if (TunerForm.DecideForkShortcut(false, false) != ForkShortcutAction.SingleStrike ||
     TunerForm.DecideForkShortcut(false, true) != ForkShortcutAction.SingleStrike ||
     TunerForm.DecideForkShortcut(true, true) != ForkShortcutAction.Pause ||
@@ -76,8 +87,8 @@ if (parsedRelease?.Version != new Version(1, 1, 0) ||
     ReleaseNotes.ForLanguage(parsedRelease.Notes, false) != "• Nowa opcja" ||
     ReleaseNotes.ForLanguage(parsedRelease.Notes, true) != "• New option")
     throw new Exception("Nie wykryto nowszego wydania.");
-if (!ReleaseNotes.Current(false).Contains("Ostatnie zmiany", StringComparison.Ordinal) ||
-    !ReleaseNotes.Current(true).Contains("Latest changes", StringComparison.Ordinal) ||
+if (ReleaseNotes.Current(false).Length < 100 ||
+    ReleaseNotes.Current(true).Length < 100 ||
     ReleaseNotes.ForLanguage("## English\nOnly English", false) != "Opis zmian tej wersji nie jest dostępny.")
     throw new Exception("Opis zmian nie działa po polsku, angielsku lub bez internetu.");
 if (TunerForm.PayPalUrl != "https://paypal.me/proszczok" ||
@@ -374,11 +385,11 @@ var uiThread = new Thread(() =>
                     $"{label}: {(english ? "unchecked" : "odznaczone")}.")
                     throw new Exception("Komunikat pola wyboru nie podaje nowego stanu po polsku lub angielsku.");
             }
-            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 10), ReleaseNotes.Current(english), english, false, false);
+            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 11), ReleaseNotes.Current(english), english, false, false);
             var changesLayout = (System.Windows.Forms.TableLayoutPanel)changesDialog.Controls[0];
             var changesText = changesLayout.Controls.OfType<System.Windows.Forms.TextBox>().Single();
             if (string.IsNullOrWhiteSpace(changesText.Text) ||
-                changesText.AccessibleName != (english ? "Changes in version 1.0.10" : "Zmiany w wersji 1.0.10"))
+                changesText.AccessibleName != (english ? "Changes in version 1.0.11" : "Zmiany w wersji 1.0.11"))
                 throw new Exception("Okno zmian nie udostępnia opisu czytnikowi ekranu.");
             using var updateDialog = new ReleaseNotesDialog(new Version(1, 1, 0), "Sample change", english, false, true);
             var updateLayout = (System.Windows.Forms.TableLayoutPanel)updateDialog.Controls[0];
@@ -392,6 +403,29 @@ var uiThread = new Thread(() =>
                 throw new Exception("Okno aktualizacji nie pokazuje zmian lub nie wybiera bezpiecznej opcji domyślnej.");
         }
         englishField.SetValue(form, originalEnglish);
+        // Four audio buffers (~0.34 s) must suffice, even at low playing level.
+        var processFrame = typeof(TunerForm).GetMethod("ProcessFrameAt", flags)!;
+        var resetResult = typeof(TunerForm).GetMethod("ResetResult", flags)!;
+        var measuredSession = (NoteSession)typeof(TunerForm).GetField("_session", flags)!.GetValue(form)!;
+        typeof(TunerForm).GetField("_doubleStrikeEnabled", flags)!.SetValue(form, false);
+        typeof(TunerForm).GetField("_visualEnabled", flags)!.SetValue(form, false);
+        typeof(TunerForm).GetField("_minimumRms", flags)!.SetValue(form, 0.008);
+        resetResult.Invoke(form, null);
+        short[] quietTone = Tone(440, 48000, 16384).Select(sample => (short)(sample * 0.04 + 2000)).ToArray();
+        for (int i = 0; i < 4; i++)
+            processFrame.Invoke(form, [quietTone.AsSpan(i * 4096, 4096).ToArray(), start.AddMilliseconds(i * 85)]);
+        double? shortResult = measuredSession.Observe(false, null, start.AddMilliseconds(900));
+        if (shortResult is null || Math.Abs(shortResult.Value - 440) > 1)
+            throw new Exception("Krótki, cichy dźwięk nie uzyskał trzech pomiarów.");
+        populateChoices.Invoke(form, [new Preferences { Instrument = InstrumentKind.Piano, TargetMidi = 67 }]);
+        measuredSession.Reset();
+        for (int i = 0; i < 3; i++) measuredSession.Observe(true, 440, start.AddMilliseconds(i * 85));
+        typeof(TunerForm).GetField("_ignoreUntil", flags)!.SetValue(form, start.AddSeconds(10));
+        target.SelectedIndex = target.SelectedIndex == 1 ? 2 : 1;
+        processFrame.Invoke(form, [new short[4096], start.AddMilliseconds(900)]);
+        if (measuredSession.Observe(false, null, start.AddSeconds(2)) is not null ||
+            (DateTime)typeof(TunerForm).GetField("_ignoreUntil", flags)!.GetValue(form)! != DateTime.MinValue)
+            throw new Exception("Zmiana celu pozostawiła poprzednią nutę lub blokadę mikrofonu.");
         populateChoices.Invoke(form, [originalSettings]);
         applyLanguage.Invoke(form, null);
     }

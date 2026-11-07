@@ -1,4 +1,4 @@
-# Stroik 1.10
+# Stroik 1.11
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -82,6 +82,8 @@ Settings also includes **About Stroik**, **Proszczok website**, **Support via Pa
 After a checkbox is activated with the mouse or Space, the app announces its name and “checked” or “unchecked” to a screen reader. This applies to dark theme, graphics, automatic tuning fork strikes, double-strike navigation and the octave selector. Loading settings does not produce these announcements. Actual NVDA speech still needs testing on the user's computer.
 
 ## Limits and building
+
+Version 1.11 improves short and decaying note detection and completes a measurement when unpitched background noise remains. Changing the target, instrument, reference pitch or sensitivity starts a fresh measurement without restarting the microphone. Capture errors are reported so the microphone can be restarted. Synthetic signal tests do not replace testing in actual playing conditions.
 
 The approximate microphone detection range is 27.5–4200 Hz for one steady note. Displaying 0.1 Hz does not imply guaranteed accuracy. Measurement pauses for 1.5 seconds after a result to avoid mistaking a screen reader's voice for another note. Real microphone, instrument, NVDA and speaker behavior requires hardware testing.
 
