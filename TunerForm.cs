@@ -212,6 +212,11 @@ internal sealed class TunerForm : Form
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
+        if (keyData == (Keys.Control | Keys.Q))
+        {
+            Close();
+            return true;
+        }
         if (keyData == (Keys.Alt | Keys.U) && _method.SelectedIndex == 0)
         {
             ForkShortcutAction action = DecideForkShortcut(_autoStrike.Checked, _automaticStrikesRunning);
@@ -540,6 +545,8 @@ internal sealed class TunerForm : Form
         var menu = new ContextMenuStrip();
         menu.Items.Add(T("Zapisz plik ustawień", "Save settings file"), null, (_, _) => SaveProfile());
         menu.Items.Add(T("Wczytaj plik ustawień", "Open settings file"), null, (_, _) => LoadProfile());
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(T("Zamknij program (Ctrl+Q)", "Quit (Ctrl+Q)"), null, (_, _) => Close());
         foreach (Control control in Walk(this)) control.ContextMenuStrip = menu;
         previous?.Dispose();
     }

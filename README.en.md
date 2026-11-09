@@ -39,6 +39,8 @@ In electronic mode, select an open string or **Automatic**. With a string instru
 
 ## Settings and profiles
 
+**Ctrl+Q** closes the app and stops microphone capture, tuning fork playback and update checks. **Quit (Ctrl+Q)** is also available in the context menu.
+
 After tuning method, choose instrument and view. The remaining controls are A reference frequency, microphone sensitivity, in-tune tolerance in cents, and target note or string. Octave selection is available for piano and chromatic modes. **A=440 Hz** is the standard. Some older instruments may need a lower pitch such as 430–435 Hz, but age alone does not determine a safe value. **Before raising an old piano to 440 Hz, ask a piano technician to assess its design, condition and appropriate pitch.** Do not assume every nineteenth-century instrument should use 430–435 Hz. [Piano Technicians Guild: pitch raising](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising) · [PTG: care for older pianos](https://my.ptg.org/ptgmain/piano/care/care-faqs)
 
 Microphone sensitivity has descriptions for quiet instruments, normal conditions and background noise. Tolerance uses cents; the reported difference also includes hertz. Settings are saved locally, including language, theme, method, instrument, view, note and fork interval.

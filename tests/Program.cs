@@ -450,6 +450,17 @@ var uiThread = new Thread(() =>
             throw new Exception("Zmiana celu pozostawiła poprzednią nutę lub blokadę mikrofonu.");
         populateChoices.Invoke(form, [originalSettings]);
         applyLanguage.Invoke(form, null);
+        _ = form.Handle;
+        updateTimer.Start();
+        bool wasClosed = false;
+        form.FormClosed += (_, _) => wasClosed = true;
+        object?[] quitArgs = [System.Windows.Forms.Message.Create(IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero),
+            System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q];
+        if ((bool)processCmdKey.Invoke(form, quitArgs)! != true || !wasClosed || !form.IsDisposed)
+            throw new Exception("Ctrl+Q nie zamknął programu normalną ścieżką.");
+        bool networkCalledAfterClose = false;
+        form.CheckUpdatesAsync(true, () => { networkCalledAfterClose = true; return Task.FromResult<ReleaseInfo?>(null); }).GetAwaiter().GetResult();
+        if (networkCalledAfterClose) throw new Exception("Sprawdzanie ruszyło po zamknięciu programu.");
     }
     catch (Exception error) { uiError = error; }
 });

@@ -6,6 +6,7 @@
 - Suppress status changes and error dialogs during background checks unless a new release is offered.
 - Prevent concurrent checks and repeated automatic prompts for the same version in one session; retain manual retry.
 - Stop the timer and ignore late network results after app closure.
+- Add Ctrl+Q and a context menu command to quit the app with normal audio and timer cleanup.
 
 ## 1.0.11 (Stroik 1.11) — 2026-11-07
 
