@@ -9,6 +9,7 @@
   <ItemGroup>
     <Compile Include="../PitchDetector.cs" Link="PitchDetector.cs" />
     <Compile Include="../Updater.cs" Link="Updater.cs" />
+    <Compile Include="../UpdateCheckState.cs" Link="UpdateCheckState.cs" />
     <Compile Include="../ReleaseNotes.cs" Link="ReleaseNotes.cs" />
     <Compile Include="../ReleaseNotesDialog.cs" Link="ReleaseNotesDialog.cs" />
     <Compile Include="../NoteCatalog.cs" Link="NoteCatalog.cs" />

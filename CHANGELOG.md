@@ -1,5 +1,12 @@
 # Changelog / Historia zmian
 
+## 1.0.12 (Stroik 1.12) — 2026-11-09
+
+- Check for updates silently at startup and every five minutes while the app runs.
+- Suppress status changes and error dialogs during background checks unless a new release is offered.
+- Prevent concurrent checks and repeated automatic prompts for the same version in one session; retain manual retry.
+- Stop the timer and ignore late network results after app closure.
+
 ## 1.0.11 (Stroik 1.11) — 2026-11-07
 
 - Measure pitch in every full audio window to collect short and decaying notes consistently.

@@ -1,4 +1,4 @@
-# Stroik 1.11
+# Stroik 1.12
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -74,6 +74,8 @@ Aktualizator ponawia chwilowe błędy połączenia i pobieranie przerwane w trak
 
 **Korekta mikrofonu.** W zakładce **Ustawienia** można ręcznie wprowadzić korektę od −100 do +100 centów, po porównaniu ze znanym wzorcem. Wartość dodatnia podwyższa odczyt. To stała korekta pomiaru, nie automatyczna kalibracja mikrofonu. Ustawienie zapisuje się w profilu JSON.
 ## Aktualizacje
+
+Od 1.12 sprawdzanie działa również co 5 minut podczas pracy. W tle nie pojawia się komunikat o braku aktualizacji ani o błędzie połączenia. Okno z opisem zmian pojawia się tylko po wykryciu nowej wersji, raz dla tej wersji na uruchomienie programu. Po odmowie można użyć przycisku „Sprawdź aktualizacje”, aby ponownie otworzyć propozycję. Sprawdzenia nie nakładają się, a timer kończy pracę po zamknięciu aplikacji.
 
 Program sprawdza najnowsze stabilne wydanie GitHub przy uruchomieniu. Po znalezieniu nowszej wersji pokazuje zmiany z opisu wydania po polsku lub angielsku i pyta o zgodę w przewijalnym oknie. Po wybraniu **Tak, pobierz i zainstaluj** pobiera EXE i plik SHA-256, sprawdza sumę, zamyka stary proces, podmienia EXE, uruchamia nowy i usuwa starą kopię. W razie niepowodzenia podmiany próbuje przywrócić poprzedni plik. Przyciski **Sprawdź aktualizacje** i **Ostatnie zmiany** znajdują się w zakładce **Ustawienia**. „Ostatnie zmiany” pokazują opis zainstalowanej wersji także bez internetu. Automatyczna podmiana wymaga nazwy `Stroik.exe` i prawa zapisu w jego folderze. Program nie wysyła nagrań ani wyników do internetu.
 

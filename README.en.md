@@ -1,4 +1,4 @@
-# Stroik 1.11
+# Stroik 1.12
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -74,6 +74,8 @@ The updater retries transient network errors and interrupted EXE downloads. The 
 
 **Microphone correction.** Enter a manual correction from −100 to +100 cents in **Settings**, after comparing with a known reference. Positive values raise the reading. This is a fixed measurement offset, not automatic microphone calibration. The value is included in JSON profiles.
 ## Updates
+
+Since 1.12, checks also run every 5 minutes while the app is open. Background checks do not announce that no update is available or that a connection failed. A release notes dialog appears only when a new version is detected, once per version per app session. After declining, use Check for updates to reopen the offer. Checks do not overlap, and the timer stops when the app closes.
 
 On launch, Stroik checks the latest stable GitHub release. If a newer version is available, it shows the Polish or English release changes in a scrollable confirmation dialog. Choosing **Yes, download and install** downloads the EXE and SHA-256 file, checks the hash, closes the old process, replaces the EXE, launches the new one and deletes the old backup. It attempts rollback on replacement failure. **Check for updates** and **Latest changes** are available in the **Settings** tab. Latest changes shows the installed version's notes even offline. Automatic replacement requires a writable folder and the filename `Stroik.exe`. Recordings and results are never uploaded.
 

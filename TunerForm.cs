@@ -54,6 +54,9 @@ internal sealed class TunerForm : Form
     private readonly NumericUpDown _doubleStrikeWindow = new() { Minimum = 0.5M, Maximum = 2.5M, DecimalPlaces = 1, Increment = 0.1M, Value = 1.2M };
     private readonly NumericUpDown _calibration = new() { Minimum = -100, Maximum = 100, DecimalPlaces = 1, Increment = 0.1M };
     private readonly System.Windows.Forms.Timer _strikeTimer = new();
+    private readonly System.Windows.Forms.Timer _updateTimer = new() { Interval = UpdateCheckState.IntervalMilliseconds };
+    private readonly UpdateCheckState _updateChecks = new();
+    private bool _closing;
     private readonly TuningFork _fork = new();
     private readonly NoteSession _session = new();
     private readonly DoubleStrikeNavigator _strikeNavigator = new();
@@ -201,8 +204,9 @@ internal sealed class TunerForm : Form
         _calibration.ValueChanged += (_, _) => { Volatile.Write(ref _correctionFactor, Math.Pow(2, (double)_calibration.Value / 1200)); ResetResult(); Persist(); };
         _strikeTimer.Tick += (_, _) => Strike();
         KeyDown += (_, e) => { if (e.Control && e.KeyCode == Keys.S) { SaveProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.O) { LoadProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.N) { AdvanceTarget(_targetMidi < 0 ? _lastResolvedTarget : _targetMidi); e.SuppressKeyPress = true; } };
-        Shown += async (_, _) => await CheckUpdatesAsync(true);
-        FormClosing += (_, _) => { StopMicrophone(false); _strikeTimer.Stop(); _fork.Dispose(); };
+        _updateTimer.Tick += async (_, _) => await CheckUpdatesAsync(true);
+        Shown += async (_, _) => { _updateTimer.Start(); await CheckUpdatesAsync(true); };
+        FormClosing += (_, _) => { _closing = true; _updateTimer.Stop(); StopMicrophone(false); _strikeTimer.Stop(); _fork.Dispose(); };
         AcceptButton = _method.SelectedIndex == 0 ? _strike : _start;
     }
 
@@ -391,8 +395,8 @@ internal sealed class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.11 — dostępny stroiciel", "Stroik 1.11 — accessible tuner");
-        _heading.Text = "Stroik 1.11";
+        Text = T("Stroik 1.12 — dostępny stroiciel", "Stroik 1.12 — accessible tuner");
+        _heading.Text = "Stroik 1.12";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tunerTab.AccessibleName = _tunerTab.Text;
@@ -868,8 +872,8 @@ internal sealed class TunerForm : Form
         MessageBox.Show(this, AboutText(_english), T("O programie", "About Stroik"), MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
     internal static string AboutText(bool english) => english
-        ? "Stroik 1.11 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
-        : "Stroik 1.11 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
+        ? "Stroik 1.12 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
+        : "Stroik 1.12 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
     private void OpenExternal(string url)
     {
         try
@@ -882,20 +886,30 @@ internal sealed class TunerForm : Form
             MessageBox.Show(this, error.Message, T("Nie można otworzyć strony", "Cannot open page"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
-    private async Task CheckUpdatesAsync(bool quiet)
+    internal async Task CheckUpdatesAsync(bool quiet, Func<Task<ReleaseInfo?>>? findRelease = null)
     {
+        if (_closing || IsDisposed || !_updateChecks.TryBegin()) return;
         bool prompted = false;
-        _updates.Enabled = false;
-        SetUpdateStatus("Sprawdzanie aktualizacji…", "Checking for updates…");
+        if (!quiet)
+        {
+            _updates.Enabled = false;
+            SetUpdateStatus("Sprawdzanie aktualizacji…", "Checking for updates…");
+        }
         try
         {
-            ReleaseInfo? release = await Updater.FindNewReleaseAsync();
+            ReleaseInfo? release = await (findRelease ?? Updater.FindNewReleaseAsync)();
+            if (_closing || IsDisposed) return;
             if (release is null)
             {
-                SetUpdateStatus("Masz najnowszą wersję.", "You have the latest version.");
-                if (!quiet) MessageBox.Show(this, T("Masz najnowszą wersję.", "You have the latest version."), T("Aktualizacje", "Updates"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (!quiet)
+                {
+                    SetUpdateStatus("Masz najnowszą wersję.", "You have the latest version.");
+                    MessageBox.Show(this, T("Masz najnowszą wersję.", "You have the latest version."), T("Aktualizacje", "Updates"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
                 return;
             }
+            if (!_updateChecks.ShouldPrompt(release.Version, quiet)) return;
+            _updateChecks.MarkPrompted(release.Version);
             prompted = true;
             SetUpdateStatus($"Dostępna wersja {release.Version}.", $"Version {release.Version} is available.");
             using (var dialog = new ReleaseNotesDialog(release.Version,
@@ -906,6 +920,7 @@ internal sealed class TunerForm : Form
             UseWaitCursor = true;
             SetUpdateStatus("Pobieranie i weryfikacja aktualizacji…", "Downloading and verifying the update…");
             string downloaded = await Updater.DownloadVerifiedAsync(release);
+            if (_closing || IsDisposed) return;
             UseWaitCursor = false;
             Updater.LaunchReplacement(downloaded);
             SetUpdateStatus("Instalowanie aktualizacji…", "Installing the update…");
@@ -913,12 +928,22 @@ internal sealed class TunerForm : Form
         }
         catch (Exception error)
         {
+            if (_closing || IsDisposed || (quiet && !prompted)) return;
             UseWaitCursor = false;
             SetUpdateStatus("Nie udało się sprawdzić lub zainstalować aktualizacji. Spróbuj ponownie przyciskiem Sprawdź aktualizacje. Szczegóły: " + error.Message,
                 "Could not check or install the update. Retry with Check for updates. Details: " + error.Message);
             if (!quiet || prompted) MessageBox.Show(this, error.Message, T("Błąd aktualizacji", "Update error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-        finally { _updates.Enabled = true; }
+        finally
+        {
+            _updateChecks.End();
+            if (!_closing && !IsDisposed) _updates.Enabled = true;
+        }
+    }
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing) { _closing = true; _updateTimer.Dispose(); }
+        base.Dispose(disposing);
     }
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr window, int attribute, ref int value, int valueSize);

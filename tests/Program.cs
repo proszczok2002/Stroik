@@ -1,6 +1,19 @@
 using Stroik;
 using System.Net;
 
+var checks = new UpdateCheckState();
+if (UpdateCheckState.IntervalMilliseconds != 300000 || !checks.TryBegin() || checks.TryBegin())
+    throw new Exception("Sprawdzenia aktualizacji nakładają się lub mają zły odstęp.");
+checks.End();
+if (!checks.TryBegin()) throw new Exception("Sprawdzanie nie wraca po zakończeniu poprzedniego.");
+checks.End();
+var offeredVersion = new Version(1, 0, 13);
+if (!checks.ShouldPrompt(offeredVersion, true)) throw new Exception("Nowa wersja nie wywołuje pytania.");
+checks.MarkPrompted(offeredVersion);
+if (checks.ShouldPrompt(offeredVersion, true) || !checks.ShouldPrompt(offeredVersion, false) ||
+    !checks.ShouldPrompt(new Version(1, 0, 14), true))
+    throw new Exception("Ponowne pytania w tle lub ręczne sprawdzanie działają błędnie.");
+
 if (args.Length == 3 && args[0] == "--verify-public-changelog")
 {
     using var client = new HttpClient();
@@ -269,6 +282,15 @@ var uiThread = new Thread(() =>
         var language = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_language", flags)!.GetValue(form)!;
         var dark = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_dark", flags)!.GetValue(form)!;
         var updates = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_updates", flags)!.GetValue(form)!;
+        var updateStatus = (System.Windows.Forms.Label)typeof(TunerForm).GetField("_updateStatus", flags)!.GetValue(form)!;
+        string unchangedStatus = updateStatus.Text;
+        form.CheckUpdatesAsync(true, () => Task.FromResult<ReleaseInfo?>(null)).GetAwaiter().GetResult();
+        form.CheckUpdatesAsync(true, () => Task.FromException<ReleaseInfo?>(new HttpRequestException("offline"))).GetAwaiter().GetResult();
+        if (updateStatus.Text != unchangedStatus || !updates.Enabled)
+            throw new Exception("Sprawdzenie w tle zmieniło widoczny status lub pozostawiło zablokowany przycisk.");
+        var updateTimer = (System.Windows.Forms.Timer)typeof(TunerForm).GetField("_updateTimer", flags)!.GetValue(form)!;
+        if (updateTimer.Interval != 300000 || updateTimer.Enabled)
+            throw new Exception("Timer ma zły odstęp lub uruchamia się przed pokazaniem okna.");
         var recentChanges = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_recentChanges", flags)!.GetValue(form)!;
         var about = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_about", flags)!.GetValue(form)!;
         var website = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_website", flags)!.GetValue(form)!;
@@ -385,11 +407,11 @@ var uiThread = new Thread(() =>
                     $"{label}: {(english ? "unchecked" : "odznaczone")}.")
                     throw new Exception("Komunikat pola wyboru nie podaje nowego stanu po polsku lub angielsku.");
             }
-            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 11), ReleaseNotes.Current(english), english, false, false);
+            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 12), ReleaseNotes.Current(english), english, false, false);
             var changesLayout = (System.Windows.Forms.TableLayoutPanel)changesDialog.Controls[0];
             var changesText = changesLayout.Controls.OfType<System.Windows.Forms.TextBox>().Single();
             if (string.IsNullOrWhiteSpace(changesText.Text) ||
-                changesText.AccessibleName != (english ? "Changes in version 1.0.11" : "Zmiany w wersji 1.0.11"))
+                changesText.AccessibleName != (english ? "Changes in version 1.0.12" : "Zmiany w wersji 1.0.12"))
                 throw new Exception("Okno zmian nie udostępnia opisu czytnikowi ekranu.");
             using var updateDialog = new ReleaseNotesDialog(new Version(1, 1, 0), "Sample change", english, false, true);
             var updateLayout = (System.Windows.Forms.TableLayoutPanel)updateDialog.Controls[0];
