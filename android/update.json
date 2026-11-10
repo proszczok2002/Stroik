@@ -1,0 +1,9 @@
+{
+    "packageName":  "pl.proszczok.stroik",
+    "versionCode":  100,
+    "versionName":  "1.0",
+    "apkUrl":  "https://github.com/proszczok2002/Stroik/releases/download/android-v1.0/Stroik-Android-1.0.apk",
+    "sha256":  "97e9169b68ecb012a6f9df63488890df473854f23a1360ced6f7df31939ce843",
+    "notesPl":  "Pierwsze wydanie Android. Kamerton, mikrofon, hybryda, instrumenty i oktawy, profile oraz systemowy instalator aktualizacji.",
+    "notesEn":  "Initial Android release: fork, microphone, hybrid practice, instruments/octaves, profiles and system update installation."
+}
