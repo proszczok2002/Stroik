@@ -1,4 +1,4 @@
-# Stroik 1.12
+# Stroik 1.13
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -14,7 +14,27 @@ Download `Stroik.exe` from GitHub Releases. It is self-contained and needs no .N
 
 **Electronic tuner** uses the default Windows microphone. Start the microphone, play one note, then let it stop. After about 0.45 seconds of silence, the result appears in a text field and is announced through UI Automation. Buttons repeat the last result and test a screen reader announcement without the microphone. The last selected method is remembered across launches.
 
+### Hybrid practice and fork navigation in 1.13
+
+Choose **Hybrid — speakers (alternating)** or **Hybrid — headphones**, then **Start microphone**. The speaker variant plays the reference for 3 seconds, ignores microphone samples for 3.4 seconds, then listens to your instrument. After the note stops, it announces the reading, allows about 5 seconds for speech and plays the reference again. Long NVDA speech or reverberation may require a manual repeat. Changing the target plays the new reference. **Stop microphone** ends the cycle.
+
+The headphone variant listens while the tuning fork plays. Optional **Monitor microphone in headphones** is off by default. Put headphones on first: routing the microphone through speakers can cause feedback. Monitoring uses the default Windows devices, changes no system settings and has hardware and driver dependent latency.
+
+**Two strikes advance to the next note in the selected order** works with the fork and hybrid methods. Enabling it in the open app starts the microphone; after restarting the app, press **Start microphone**. Two distinct attacks within the selected time advance according to the tuning plan and play the new reference. This is an acoustic gesture without pitch validation: two incidental noises may also trigger it. Listening waits for the app's own fork tone to decay. Automatic fork strikes are at least 6.5 seconds apart with tap navigation enabled. **Ctrl+N** still advances manually.
+
+### Fifths and octaves
+
+Select the lower note, then choose **Fifths** or the next item **Octaves** under **Check consonance**. C4 pairs with G4 or C5, always upward. **Off** restores normal tuning. Fork mode plays the two equal-tempered notes together. Choose a lower target if the upper note would exceed the 88-key range.
+
+For microphone measurement, the default is **Separate notes: lower, then upper**. Play lower, mute, wait for confirmation, then play upper and mute. A wrong note is not accepted as a correct interval. Results give deviation from 700 or 1200 cents and estimated ideal-harmonic beats: |2×upper − 3×lower| Hz for fifths and |upper − 2×lower| Hz for octaves.
+
+**Together — experimental** analyses about 1.4–1.5 seconds of audio; play the pair for about 2 seconds near the selected target (search range ±60 cents). It measures two spectral components, which need not be two separate strings. Especially for octaves, a lower note's harmonic can mimic the upper note. Confirm with separate measurement. It cannot certify that the whole instrument has no audible beats.
+
+An equal-tempered fifth may correctly have slow beats. Piano partials are inharmonic and stretched octaves may be needed. Beat estimates from fundamentals do not measure the actual beating of every partial. [UNSW acoustics explanation](https://newt.phys.unsw.edu.au/jw/musFAQ.html).
+
 ## Views and notes
+
+**Strikes that are too weak or too strong can cause inaccurate readings.** Play evenly and avoid microphone clipping. Beginner view also includes this advice. Since 1.13 the octave list is always visible in piano and chromatic modes, in both views. Open-string presets retain their instrument note lists; switch to chromatic mode for other octaves.
 
 **Beginner view** provides guidance for the selected instrument. **Classic view** uses a compact layout. Tab and Shift+Tab move between controls. Piano and chromatic modes have an octave selector and the full note list: arrows cross octave boundaries, and **I** or **S** selects the next sharp note. For string instruments, arrows move through open strings and the octave selector is hidden.
 
@@ -77,7 +97,9 @@ The updater retries transient network errors and interrupted EXE downloads. The 
 **Microphone correction.** Enter a manual correction from −100 to +100 cents in **Settings**, after comparing with a known reference. Positive values raise the reading. This is a fixed measurement offset, not automatic microphone calibration. The value is included in JSON profiles.
 ## Updates
 
-Since 1.12, checks also run every 5 minutes while the app is open. Background checks do not announce that no update is available or that a connection failed. A release notes dialog appears only when a new version is detected, once per version per app session. After declining, use Check for updates to reopen the offer. Checks do not overlap, and the timer stops when the app closes.
+In Settings, disable **Automatically check for updates** or choose an interval from **1 to 1440 minutes** (default 5). Disabling it stops both startup and periodic checks; **Check for updates** still works manually. Choices are saved locally and in JSON profiles.
+
+Since 1.12, checks also run periodically while the app is open (every 5 minutes by default). Background checks do not announce that no update is available or that a connection failed. A release notes dialog appears only when a new version is detected, once per version per app session. After declining, use Check for updates to reopen the offer. Checks do not overlap, and the timer stops when the app closes.
 
 On launch, Stroik checks the latest stable GitHub release. If a newer version is available, it shows the Polish or English release changes in a scrollable confirmation dialog. Choosing **Yes, download and install** downloads the EXE and SHA-256 file, checks the hash, closes the old process, replaces the EXE, launches the new one and deletes the old backup. It attempts rollback on replacement failure. **Check for updates** and **Latest changes** are available in the **Settings** tab. Latest changes shows the installed version's notes even offline. Automatic replacement requires a writable folder and the filename `Stroik.exe`. Recordings and results are never uploaded.
 

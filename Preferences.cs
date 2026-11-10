@@ -2,7 +2,8 @@ using System.Text.Json;
 
 namespace Stroik;
 
-internal enum TuningMethod { TuningFork, Electronic }
+internal enum TuningMethod { TuningFork, Electronic, HybridSpeakers, HybridHeadphones }
+internal enum Consonance { Off, Fifth, Octave }
 internal enum TunerView { Classic, Beginner }
 
 internal sealed class Preferences
@@ -27,6 +28,12 @@ internal sealed class Preferences
     public int StartOctave { get; set; } = 4;
     public bool ShowOctaveInClassic { get; set; }
     public bool AutoStrike { get; set; }
+    public bool AutomaticUpdates { get; set; } = true;
+    public int UpdateMinutes { get; set; } = 5;
+    public Consonance Consonance { get; set; }
+    public bool SimultaneousInterval { get; set; }
+    public bool ForkTapAdvance { get; set; }
+    public bool MicrophoneMonitor { get; set; }
     public int StrikeIntervalSeconds { get; set; } = 3;
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
@@ -50,7 +57,7 @@ internal sealed class Preferences
 
     internal void Validate()
     {
-        if (ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) || !Enum.IsDefined(UkuleleTuning) || !Enum.IsDefined(PianoOrder) ||
+        if (ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) || !Enum.IsDefined(UkuleleTuning) || !Enum.IsDefined(PianoOrder) || !Enum.IsDefined(Consonance) || UpdateMinutes is < 1 or > 1440 ||
             PlanAnchorMidi is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi ||
             MicrophoneCorrectionCents is < -100 or > 100 ||
             DoubleStrikeWindowMilliseconds is < 500 or > 2500 ||

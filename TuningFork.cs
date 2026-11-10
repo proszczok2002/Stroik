@@ -9,10 +9,10 @@ internal sealed class TuningFork : IDisposable
     private SoundPlayer? _player;
     private MemoryStream? _wave;
 
-    internal void Strike(double frequency)
+    internal void Strike(double frequency, double? upper = null)
     {
         Stop();
-        _wave = BuildWave(frequency);
+        _wave = BuildWave(frequency, upper);
         _player = new SoundPlayer(_wave);
         _player.Play();
     }
@@ -26,10 +26,12 @@ internal sealed class TuningFork : IDisposable
         _wave = null;
     }
 
-    internal static MemoryStream BuildWave(double frequency)
+    internal static MemoryStream BuildWave(double frequency, double? upper = null)
     {
         if (!double.IsFinite(frequency) || frequency is < 20 or > 10000)
             throw new ArgumentOutOfRangeException(nameof(frequency));
+        if (upper is double high && (!double.IsFinite(high) || high is < 20 or > 10000))
+            throw new ArgumentOutOfRangeException(nameof(upper));
         const int rate = 44100, seconds = 3, count = rate * seconds;
         var stream = new MemoryStream(44 + count * 2);
         using (var writer = new BinaryWriter(stream, Encoding.ASCII, true))
@@ -53,6 +55,7 @@ internal sealed class TuningFork : IDisposable
                 double envelope = attack * Math.Exp(-1.6 * time);
                 double phase = 2 * Math.PI * frequency * time;
                 double sample = 0.24 * envelope * (Math.Sin(phase) + 0.015 * Math.Sin(2 * phase));
+                if (upper is double second) sample = (sample + 0.24 * envelope * Math.Sin(2 * Math.PI * second * time)) / 2;
                 writer.Write((short)Math.Round(Math.Clamp(sample, -1, 1) * short.MaxValue));
             }
         }

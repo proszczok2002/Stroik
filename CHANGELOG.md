@@ -1,5 +1,14 @@
 # Changelog / Historia zmian
 
+## 1.0.13 (Stroik 1.13) — 2026-11-10
+
+- Restore the octave selector for both piano/chromatic views, independently of the legacy visibility preference.
+- Add ascending fifth/octave fork pairs, sequential interval readings and an explicitly experimental targeted FFT mode for simultaneous components.
+- Add separate acoustic tap navigation for fork/hybrid practice, using the existing note order and gap setting.
+- Add alternating speaker practice, concurrent headphone practice and opt-in bounded microphone monitoring through WinMM.
+- Add persisted automatic update enable/disable and a 1–1440 minute interval.
+- Add bilingual beginner advice about weak/strong strikes and detailed limits for intervals, beat estimates and monitoring.
+
 ## 1.0.12 (Stroik 1.12) — 2026-11-09
 
 - Check for updates silently at startup and every five minutes while the app runs.

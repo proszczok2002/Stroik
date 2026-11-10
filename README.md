@@ -1,4 +1,4 @@
-# Stroik 1.12
+# Stroik 1.13
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -14,7 +14,27 @@ Przy pierwszym uruchomieniu wybrany jest **Kamerton**. Przycisk **Uderz kamerton
 
 **Stroik elektroniczny** korzysta z domyślnego mikrofonu Windows. Włącz mikrofon, zagraj jedną nutę i pozwól jej ucichnąć. Po około 0,45 sekundy ciszy wynik pojawi się w polu tekstowym i zostanie zgłoszony przez UI Automation. Dostępne są przyciski powtórzenia wyniku i sprawdzenia komunikatu NVDA bez użycia mikrofonu. Ostatnia metoda jest zapamiętywana przy ponownym uruchomieniu.
 
+### Hybryda i sterowanie kamertonem w 1.13
+
+Lista metod zawiera również **Hybrydowy — głośniki (naprzemiennie)** oraz **Hybrydowy — słuchawki**. Naciśnij **Włącz mikrofon**, aby rozpocząć ćwiczenie. W pierwszym wariancie wzorzec gra przez 3 sekundy; mikrofon jest pomijany przez 3,4 sekundy, potem słucha instrumentu. Po wyciszeniu nuty program ogłasza wynik, pozostawia około 5 sekund na wypowiedź i wraca do wzorca. Długi komunikat NVDA lub pogłos mogą wymagać ręcznego powtórzenia. Zmiana celu uruchamia nowy wzorzec. **Wyłącz mikrofon** kończy cykl.
+
+W wariancie słuchawkowym mikrofon działa równocześnie z kamertonem. **Odsłuch mikrofonu w słuchawkach** jest opcjonalny, domyślnie wyłączony. Najpierw załóż słuchawki: odtwarzanie mikrofonu przez głośniki może spowodować sprzężenie. Odsłuch korzysta z domyślnych urządzeń Windows, nie zmienia ustawień systemowych; opóźnienie zależy od sprzętu i sterowników.
+
+Pole **Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną kolejnością** działa przy kamertonie i hybrydzie. Jego włączenie podczas pracy otwartego okna uruchamia mikrofon; po ponownym uruchomieniu programu użyj **Włącz mikrofon**. Dwa oddzielne ataki w ustawionym czasie wybierają następny cel według planu i odtwarzają jego wzorzec. To gest akustyczny bez sprawdzania wysokości: dwa przypadkowe hałasy też mogą go wywołać. Po własnym tonie kamertonu nasłuch czeka na wybrzmienie. Przy automatycznych uderzeniach i tym polu odstęp wynosi co najmniej 6,5 sekundy, żeby pozostawić czas na gest. **Ctrl+N** pozostaje dostępną metodą ręczną.
+
+### Kwinty i oktawy
+
+Wybierz dolną nutę, następnie w liście **Sprawdź współbrzmienie** wybierz **Kwinty** albo strzałką w dół **Oktawy**. Przykład: c razkreślne → g razkreślne albo c dwukreślne. Opcja **Wyłączone** przywraca zwykły pomiar. Kamerton gra wybraną parę jednocześnie w stroju równomiernym. Gdy górna nuta wykracza poza zakres 88 klawiszy, wybierz niższą nutę.
+
+W pomiarze mikrofonowym domyślnie graj **osobno: dolny, wyciszenie, górny, wyciszenie**. Komunikat potwierdza zapamiętanie dolnego dźwięku. Pomyłka w kolejności nie jest oceniana jako poprawny interwał. Wynik podaje odchyłkę w centach od 700 lub 1200 centów i szacowane dudnienia idealnych harmonicznych: dla kwinty |2×górny − 3×dolny|, dla oktawy |górny − 2×dolny| Hz.
+
+**Dźwięki razem — eksperymentalnie** analizuje około 1,4–1,5 sekundy sygnału; zagraj parę przez około 2 sekundy blisko wybranego celu (zakres poszukiwania ±60 centów). To pomiar dwóch składowych widma, bez gwarancji, że pochodzą z dwóch osobnych strun. Szczególnie przy oktawie harmoniczna dolnej nuty może udawać górną. Potwierdź wynik pomiarem osobnym. Program nie stwierdza na tej podstawie, że cały instrument na pewno nie dudni.
+
+Kwinta równomiernie temperowana może prawidłowo dawać wolne dudnienia; pianino ma nieharmoniczne składowe i może wymagać rozciągniętych oktaw. Szacowane dudnienia z częstotliwości podstawowych nie są pomiarem rzeczywistych dudnień wszystkich składowych. [Wyjaśnienie akustyczne UNSW](https://newt.phys.unsw.edu.au/jw/musFAQ.html).
+
 ## Widoki i dźwięki
+
+**Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty.** Graj równomiernie i unikaj przesterowania mikrofonu. Ta wskazówka jest również w widoku dla początkujących. Od 1.13 lista oktaw jest stale widoczna w pianinie i trybie chromatycznym, zarówno w widoku klasycznym, jak i dla początkujących. Dla pustych strun użyj gotowej listy instrumentu; do innych oktaw przełącz na tryb chromatyczny.
 
 **Widok dla początkujących** pokazuje wskazówki właściwe dla wybranego instrumentu. **Widok klasyczny** zachowuje zwięzły układ. Tab przechodzi do następnej kontrolki, Shift+Tab wraca do poprzedniej. Przy pianinie i w trybie chromatycznym dostępny jest wybór oktawy oraz pełna lista dźwięków; strzałki przechodzą przez granice oktaw, a **I** lub **S** wybiera kolejny dźwięk z krzyżykiem. Przy instrumentach strunowych strzałki przechodzą po pustych strunach, a wybór oktawy jest ukryty.
 
@@ -76,6 +96,8 @@ Aktualizator ponawia chwilowe błędy połączenia i pobieranie przerwane w trak
 
 **Korekta mikrofonu.** W zakładce **Ustawienia** można ręcznie wprowadzić korektę od −100 do +100 centów, po porównaniu ze znanym wzorcem. Wartość dodatnia podwyższa odczyt. To stała korekta pomiaru, nie automatyczna kalibracja mikrofonu. Ustawienie zapisuje się w profilu JSON.
 ## Aktualizacje
+
+W Ustawieniach można odznaczyć **Automatycznie sprawdzaj aktualizacje** oraz ustawić czas od **1 do 1440 minut** (domyślnie 5). Wyłączenie obejmuje sprawdzenie startowe i okresowe. Przycisk **Sprawdź aktualizacje** działa także po wyłączeniu automatu. Wybory zapisują się lokalnie i w profilach JSON.
 
 Od 1.12 sprawdzanie działa również co 5 minut podczas pracy. W tle nie pojawia się komunikat o braku aktualizacji ani o błędzie połączenia. Okno z opisem zmian pojawia się tylko po wykryciu nowej wersji, raz dla tej wersji na uruchomienie programu. Po odmowie można użyć przycisku „Sprawdź aktualizacje”, aby ponownie otworzyć propozycję. Sprawdzenia nie nakładają się, a timer kończy pracę po zamknięciu aplikacji.
 

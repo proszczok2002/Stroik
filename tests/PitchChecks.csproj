@@ -8,6 +8,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../PitchDetector.cs" Link="PitchDetector.cs" />
+    <Compile Include="../TapNavigator.cs" Link="TapNavigator.cs" />
+    <Compile Include="../PracticeCycle.cs" Link="PracticeCycle.cs" />
+    <Compile Include="../IntervalAnalysis.cs" Link="IntervalAnalysis.cs" />
+    <Compile Include="../AudioMonitor.cs" Link="AudioMonitor.cs" />
+    <Compile Include="../TunerForm.Practice.cs" Link="TunerForm.Practice.cs" />
     <Compile Include="../Updater.cs" Link="Updater.cs" />
     <Compile Include="../UpdateCheckState.cs" Link="UpdateCheckState.cs" />
     <Compile Include="../ReleaseNotes.cs" Link="ReleaseNotes.cs" />

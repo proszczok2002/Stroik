@@ -2,6 +2,54 @@ using Stroik;
 using System.Net;
 
 var checks = new UpdateCheckState();
+var cycle = new PracticeCycle();
+DateTime cycleStart = DateTime.UtcNow;
+cycle.Fork(cycleStart);
+if (cycle.Listening(cycleStart.AddSeconds(3)) || !cycle.Listening(cycleStart.AddSeconds(3.5)))
+    throw new Exception("Hybryda słucha własnego kamertonu lub nie otwiera nasłuchu.");
+cycle.Result(cycleStart.AddSeconds(4));
+if (cycle.Listening(cycleStart.AddSeconds(6)) || cycle.NeedsFork(cycleStart.AddSeconds(8)) || !cycle.NeedsFork(cycleStart.AddSeconds(10)))
+    throw new Exception("Hybryda nie oddziela wyniku od kolejnego kamertonu.");
+cycle.Stop();
+if (cycle.NeedsFork(cycleStart.AddSeconds(20))) throw new Exception("Zatrzymany cykl odtwarza kamerton.");
+foreach (Consonance kind in new[] { Consonance.Fifth, Consonance.Octave })
+{
+    double upper = 261.625565 * Math.Pow(2, IntervalAnalysis.Semitones(kind) / 12.0);
+    var comparison = IntervalAnalysis.Compare(261.625565, upper, kind);
+    if (Math.Abs(comparison.Cents) > 0.001 || (kind == Consonance.Fifth && comparison.Beats < 0.5))
+        throw new Exception("Błędna odchyłka interwału lub dudnienia kwinty temperowanej.");
+    foreach (int rate in new[] { 44100, 48000 })
+    {
+        short[] pair = Enumerable.Range(0, 65536).Select(i => (short)(7000 * Math.Sin(2 * Math.PI * 261.625565 * i / rate) + 4000 * Math.Sin(2 * Math.PI * (upper + 2) * i / rate))).ToArray();
+        var detected = IntervalAnalysis.Together(pair, rate, 261.625565, kind);
+        if (detected is null || Math.Abs(detected.Value.Upper - upper - 2) > 0.15 || Math.Abs(detected.Value.Lower - 261.625565) > 0.15)
+            throw new Exception($"Analiza współbrzmienia {kind} nie mierzy dwóch tonów ({rate} Hz).");
+    }
+}
+if (IntervalAnalysis.Together(new short[65536], 48000, 261.625565, Consonance.Octave) is not null)
+    throw new Exception("Cisza została uznana za współbrzmienie.");
+using (var pairWave = TuningFork.BuildWave(261.625565, 391.995436))
+{
+    pairWave.Position = 44;
+    using var reader = new BinaryReader(pairWave);
+    short[] pairSamples = Enumerable.Range(0, 65536).Select(_ => reader.ReadInt16()).ToArray();
+    var forkPair = IntervalAnalysis.Together(pairSamples, 44100, 261.625565, Consonance.Fifth);
+    if (forkPair is null || Math.Abs(forkPair.Value.Upper - 391.995436) > 0.15)
+        throw new Exception("Wzorzec kamertonu nie zawiera obu dźwięków kwinty.");
+}
+foreach (int badInterval in new[] { 0, 1441 })
+{
+    try { new Preferences { UpdateMinutes = badInterval }.Validate(); throw new Exception("Błędny odstęp aktualizacji został przyjęty."); }
+    catch (InvalidDataException) { }
+}
+var tap = new TapNavigator();
+if (tap.Observe(0.03, 0.008, cycleStart, 1200)) throw new Exception("Jeden stuk przesuwa cel.");
+tap.Observe(0, 0.008, cycleStart.AddMilliseconds(200), 1200);
+if (!tap.Observe(0.018, 0.008, cycleStart.AddMilliseconds(800), 1200)) throw new Exception("Dwa stuki nie przesuwają celu.");
+tap.Reset();
+tap.Observe(0.03, 0.008, cycleStart, 500);
+tap.Observe(0, 0.008, cycleStart.AddMilliseconds(200), 500);
+if (tap.Observe(0.03, 0.008, cycleStart.AddMilliseconds(800), 500)) throw new Exception("Przekroczono czas dwóch stuków.");
 if (UpdateCheckState.IntervalMilliseconds != 300000 || !checks.TryBegin() || checks.TryBegin())
     throw new Exception("Sprawdzenia aktualizacji nakładają się lub mają zły odstęp.");
 checks.End();
@@ -159,9 +207,14 @@ try
         PianoOrder = PianoOrder.AlternateFiveSemitones, PlanAnchorMidi = 67,
         DoubleStrikeAdvance = false, DoubleStrikeWindowMilliseconds = 1900,
         MicrophoneCorrectionCents = 12.5M, VisualMode = false,
-        View = TunerView.Classic, DarkTheme = true, AutoStrike = true };
+        View = TunerView.Classic, DarkTheme = true, AutoStrike = true,
+        AutomaticUpdates = false, UpdateMinutes = 37, Consonance = Consonance.Octave,
+        ForkTapAdvance = true, SimultaneousInterval = true, MicrophoneMonitor = true };
     Preferences.SaveToFile(profile, original);
     var loaded = Preferences.ReadFile(profile);
+    if (loaded.AutomaticUpdates || loaded.UpdateMinutes != 37 || loaded.Consonance != Consonance.Octave ||
+        !loaded.ForkTapAdvance || !loaded.SimultaneousInterval || !loaded.MicrophoneMonitor)
+        throw new Exception("Nowe ustawienia nie zostały zapisane w profilu.");
     if (loaded.Method != original.Method || loaded.ConcertA != 435 ||
         loaded.View != original.View || loaded.Instrument != InstrumentKind.Ukulele ||
         loaded.UkuleleTuning != UkuleleTuning.SwappedAG || loaded.PianoOrder != PianoOrder.AlternateFiveSemitones ||
@@ -296,7 +349,7 @@ var uiThread = new Thread(() =>
         var website = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_website", flags)!.GetValue(form)!;
         var paypal = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_paypal", flags)!.GetValue(form)!;
         var revolut = (System.Windows.Forms.Button)typeof(TunerForm).GetField("_revolut", flags)!.GetValue(form)!;
-        if (method.Items.Count != 2 || instrument.Items.Count != 6 ||
+        if (method.Items.Count != 4 || instrument.Items.Count != 6 ||
             ukuleleTuning.Items.Count != 2 || pianoOrder.Items.Count != 3 ||
             visualMode.Parent != language.Parent || calibration.Parent != language.Parent ||
             doubleStrikeWindow.Minimum != 0.5M || doubleStrikeWindow.Maximum != 2.5M ||
@@ -407,11 +460,11 @@ var uiThread = new Thread(() =>
                     $"{label}: {(english ? "unchecked" : "odznaczone")}.")
                     throw new Exception("Komunikat pola wyboru nie podaje nowego stanu po polsku lub angielsku.");
             }
-            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 12), ReleaseNotes.Current(english), english, false, false);
+            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 13), ReleaseNotes.Current(english), english, false, false);
             var changesLayout = (System.Windows.Forms.TableLayoutPanel)changesDialog.Controls[0];
             var changesText = changesLayout.Controls.OfType<System.Windows.Forms.TextBox>().Single();
             if (string.IsNullOrWhiteSpace(changesText.Text) ||
-                changesText.AccessibleName != (english ? "Changes in version 1.0.12" : "Zmiany w wersji 1.0.12"))
+                changesText.AccessibleName != (english ? "Changes in version 1.0.13" : "Zmiany w wersji 1.0.13"))
                 throw new Exception("Okno zmian nie udostępnia opisu czytnikowi ekranu.");
             using var updateDialog = new ReleaseNotesDialog(new Version(1, 1, 0), "Sample change", english, false, true);
             var updateLayout = (System.Windows.Forms.TableLayoutPanel)updateDialog.Controls[0];
@@ -425,6 +478,52 @@ var uiThread = new Thread(() =>
                 throw new Exception("Okno aktualizacji nie pokazuje zmian lub nie wybiera bezpiecznej opcji domyślnej.");
         }
         englishField.SetValue(form, originalEnglish);
+        var applySettings = typeof(TunerForm).GetMethod("ApplySettings", flags)!;
+        var applyView = typeof(TunerForm).GetMethod("ApplyViewUI", flags)!;
+        var consonance = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_consonance", flags)!.GetValue(form)!;
+        var automaticUpdates = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_automaticUpdates", flags)!.GetValue(form)!;
+        var updateMinutes = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_updateMinutes", flags)!.GetValue(form)!;
+        var forkTap = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_forkTap", flags)!.GetValue(form)!;
+        automaticUpdates.Checked = false;
+        method.SelectedIndex = 1;
+        autoStrike.Checked = false;
+        form.Show();
+        foreach (TunerView mode in Enum.GetValues<TunerView>())
+        {
+            applySettings.Invoke(form, [new Preferences { Method = TuningMethod.Electronic, View = mode,
+                AutomaticUpdates = false, UpdateMinutes = 17, Instrument = InstrumentKind.Piano, TargetMidi = 60 }]);
+            if (!octave.Visible || octave.Items.Count != 9 || updateTimer.Enabled || updateMinutes.Value != 17 || updateMinutes.Enabled)
+                throw new Exception("Lista oktaw jest ukryta lub wyłączenie aktualizacji nie działa.");
+        }
+        consonance.SelectedIndex = 1;
+        var receivePair = typeof(TunerForm).GetMethod("ReceiveIntervalNote", flags)!;
+        receivePair.Invoke(form, [261.625565]);
+        receivePair.Invoke(form, [391.995436]);
+        var resultBox = (System.Windows.Forms.TextBox)typeof(TunerForm).GetField("_result", flags)!.GetValue(form)!;
+        if (!resultBox.Text.Contains("0.89", StringComparison.Ordinal) && !resultBox.Text.Contains("0,89", StringComparison.Ordinal))
+            throw new Exception("Sekwencyjny pomiar C–G nie pokazuje szacowanych dudnień.");
+        receivePair.Invoke(form, [261.625565]);
+        target.SelectedIndex += 1;
+        if (typeof(TunerForm).GetField("_lowerIntervalFrequency", flags)!.GetValue(form) is not null)
+            throw new Exception("Zmiana celu zachowała dolny dźwięk starego współbrzmienia.");
+        automaticUpdates.Checked = true;
+        updateMinutes.Value = 23;
+        if (updateTimer.Interval != 23 * 60000 || !updateTimer.Enabled)
+            throw new Exception("Odstęp aktualizacji nie zmienia działającego timera.");
+        automaticUpdates.Checked = false;
+        foreach (TuningMethod mode in Enum.GetValues<TuningMethod>())
+        {
+            applySettings.Invoke(form, [new Preferences { Method = mode, AutomaticUpdates = false,
+                Consonance = Consonance.Octave, ForkTapAdvance = true, Instrument = InstrumentKind.Piano }]);
+            if (method.SelectedIndex != (int)mode || consonance.SelectedIndex != 2 || !octave.Visible ||
+                forkTap.Visible != (mode != TuningMethod.Electronic))
+                throw new Exception("Nowa metoda lub ustawienia współbrzmienia nie pojawiają się w interfejsie.");
+        }
+        bool disabledNetwork = false;
+        form.CheckUpdatesAsync(true, () => { disabledNetwork = true; return Task.FromResult<ReleaseInfo?>(null); }).GetAwaiter().GetResult();
+        if (disabledNetwork) throw new Exception("Wyłączone aktualizacje nadal odpytują sieć.");
+        applySettings.Invoke(form, [originalSettings]);
+        form.Hide();
         // Four audio buffers (~0.34 s) must suffice, even at low playing level.
         var processFrame = typeof(TunerForm).GetMethod("ProcessFrameAt", flags)!;
         var resetResult = typeof(TunerForm).GetMethod("ResetResult", flags)!;
