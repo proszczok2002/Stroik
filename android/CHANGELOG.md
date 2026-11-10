@@ -1,5 +1,10 @@
 # Android changelog / Historia zmian Android
 
+## 1.03 / 103
+
+- PL: Stałe kontrolki przy zmianie metody, współbrzmienia, instrumentu i nasłuchu stuknięć; stałe zakładki i przywracanie fokusu po zmianie języka/motywu. Poprawiono etykiety pól liczbowych oraz synchronizację nuty/oktawy bez resetowania kolejności.
+- EN: Preserve controls and focus during option/tab changes; restore matching focus after language/theme changes. Fix numeric labels and note/octave synchronization without resetting the order anchor.
+- Device: 198 focus assertions, 1103 lifecycle assertions, 1831 interface assertions and 7 audio checks passed. Human speech/gesture and full GitHub updater limits remain documented.
 ## 1.02 / 102
 
 - Fix incompatible widget-state restoration after theme/configuration changes; retain the current tab, scroll and last result.

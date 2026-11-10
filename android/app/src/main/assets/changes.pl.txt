@@ -1,5 +1,7 @@
-Stroik Android 1.02
+Stroik Android 1.03
 
-Naprawiono zamykanie aplikacji przy odtwarzaniu ekranu, m.in. po zmianie motywu, obrocie telefonu lub powrocie do aplikacji. Android nie odtwarza już stanu pola wyboru w liście rozwijanej o tym samym identyfikatorze. Zapamiętywana jest bieżąca zakładka, przewinięcie i ostatni wynik. Mikrofon po przerwaniu pracy wymaga ponownego uruchomienia.
+Poprawiono utrzymywanie fokusu czytnika ekranu. Zmiana metody, współbrzmienia, instrumentu i nasłuchu dwóch stuknięć aktualizuje potrzebne pola bez tworzenia całego ekranu od nowa. Przyciski zakładek pozostają tymi samymi kontrolkami; ponowne wybranie bieżącej zakładki nie odświeża formularza. Zmiana języka i motywu przywraca odpowiadającą kontrolkę.
 
-Dodano testy ponownego tworzenia wszystkich zakładek w obu językach, zmiany motywu oraz zgodności ze stanem ekranów poprzednich wersji. Wersja używa tego samego klucza podpisu; instalację potwierdza Android. Ostrzeżenie Play Protect z testu 1.01 opisano w dokumentacji, bez zakładania jego przyczyny.
+Pola liczbowe używają etykiety i podpowiedzi, aby opis nie zasłaniał wpisanej wartości. Synchronizacja nuty i oktawy nie wykonuje ponownie akcji użytkownika. Dodano test utrzymywania rzeczywistego fokusu dostępności w PL/EN.
+
+APK korzysta z dotychczasowego podpisu. System Android potwierdza instalację; wcześniejsze ostrzeżenie Play Protect i zakres prób są opisane w dokumentacji.

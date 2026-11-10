@@ -25,6 +25,13 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private TextView heading, result, guide, status;
   private ScrollView scroll;
   private Spinner targetList, octaveList;
+  private final Button[] tabs = new Button[4];
+  private final Map<Spinner, int[]> selections = new IdentityHashMap<>();
+  private View pairControls, micControls, forkControls, monitorControls, advanceControls;
+  private View ukuleleControls, orderControls;
+  private CheckBox monitorCheck;
+  private int renderedPage = -1, renderGeneration, restoredFocus = View.NO_ID;
+  private int focusBeforeRecreate = View.NO_ID;
   private AudioEngine audio;
   private Updater updater;
   private TextToSpeech speech;
@@ -81,6 +88,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       page = Math.max(0, Math.min(3, state.getInt("stroik.page", 0)));
       lastResult = state.getString("stroik.result", "");
       autoPaused = state.getBoolean("stroik.autoPaused", false);
+      restoredFocus = state.getInt("stroik.accessibilityFocus", View.NO_ID);
     }
     setTheme(
         model.dark
@@ -118,6 +126,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     state.putInt("stroik.scroll", scroll == null ? 0 : scroll.getScrollY());
     state.putString("stroik.result", lastResult);
     state.putBoolean("stroik.autoPaused", autoPaused);
+    View focused = accessibilityFocus(root);
+    int focusId = focused == null ? focusBeforeRecreate : focused.getId();
+    if (focusId != View.NO_ID) state.putInt("stroik.accessibilityFocus", focusId);
     persist();
     super.onSaveInstanceState(state);
   }
@@ -189,6 +200,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     s.setAdapter(a);
     s.setSelection(Math.max(0, Math.min(items.length - 1, value)));
     final int[] last = {s.getSelectedItemPosition()};
+    selections.put(s, last);
     s.setOnItemSelectedListener(
         new android.widget.AdapterView.OnItemSelectedListener() {
           public void onNothingSelected(android.widget.AdapterView<?> p) {}
@@ -209,7 +221,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     EditText e = new EditText(this);
     e.setId(nextId++);
     l.setLabelFor(e.getId());
-    e.setContentDescription(label);
+    e.setHint(label);
     e.setSingleLine(true);
     e.setTextSize(18);
     e.setMinHeight(dp(64));
@@ -241,21 +253,73 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     body.addView(e, new LinearLayout.LayoutParams(-1, -2));
   }
 
+  private View accessibilityFocus(View view) {
+    if (view == null) return null;
+    if (view.isAccessibilityFocused()) return view;
+    if (view instanceof ViewGroup)
+      for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
+        View focused = accessibilityFocus(((ViewGroup) view).getChildAt(i));
+        if (focused != null) return focused;
+      }
+    return null;
+  }
+
+  private View section(Runnable contents) {
+    LinearLayout parent = body;
+    LinearLayout group = new LinearLayout(this);
+    group.setOrientation(1);
+    parent.addView(group, new LinearLayout.LayoutParams(-1, -2));
+    body = group;
+    try {
+      contents.run();
+    } finally {
+      body = parent;
+    }
+    return group;
+  }
+
+  private void visible(View view, boolean show) {
+    if (view != null) view.setVisibility(show ? View.VISIBLE : View.GONE);
+  }
+
+  private void updateTunerSections() {
+    visible(pairControls, model.interval != 0 && model.method != 0);
+    visible(micControls, model.method != 0 || model.forkTap);
+    visible(forkControls, model.method != 1);
+    visible(monitorControls, model.method == 3);
+    visible(advanceControls, model.method == 1);
+    View focused = accessibilityFocus(root);
+    if (focused != null)
+      focused.post(() -> {
+        if (focused.isAccessibilityFocused() && focused.isShown())
+          focused.requestRectangleOnScreen(
+              new Rect(0, 0, focused.getWidth(), focused.getHeight()), true);
+      });
+    updateGuide();
+  }
+
+  private void updateInstrumentSections() {
+    visible(ukuleleControls, model.instrument == 2);
+    visible(orderControls, !model.strings());
+  }
+
+  private void selectSilently(Spinner spinner, int position) {
+    int[] last = selections.get(spinner);
+    if (last != null) last[0] = position;
+    spinner.setSelection(position);
+  }
+
   private void render() {
-    nextId = 1000;
-    root = new LinearLayout(this);
-    // Dynamic pages reuse view IDs for different widget types. Restore the model and
-    // explicit page state instead of replaying Android's widget state into another layout.
-    // This also ignores incompatible hierarchy state saved by releases 1.0/1.01.
-    root.setSaveFromParentEnabled(false);
-    root.setOrientation(1);
+    boolean samePage = renderedPage == page;
+    View focused = accessibilityFocus(root);
+    int focusId = focused == null ? restoredFocus : focused.getId();
+    int scrollY = samePage && scroll != null ? scroll.getScrollY() : 0;
+    if (root == null) createShell();
+    nextId = 1000 + page * 1000;
+    selections.clear();
+    body.removeAllViews();
     root.setBackgroundColor(model.dark ? Color.rgb(30, 30, 30) : Color.WHITE);
-    setContentView(root);
-    heading = new TextView(this);
-    heading.setTextSize(24);
     heading.setTextColor(model.dark ? Color.WHITE : Color.BLACK);
-    heading.setPadding(dp(16), dp(12), dp(16), dp(12));
-    heading.setAccessibilityHeading(true);
     String[] pages = {
       t("Stroik", "Tuner"),
       t("Instrument", "Instrument"),
@@ -263,6 +327,49 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       t("Pomoc", "Help")
     };
     heading.setText("Stroik " + version() + " — " + pages[page]);
+    result = guide = status = null;
+    meter = null;
+    targetList = octaveList = null;
+    pairControls = micControls = forkControls = monitorControls = advanceControls = null;
+    ukuleleControls = orderControls = null;
+    monitorCheck = null;
+    if (page == 0) tuner();
+    else if (page == 1) instrument();
+    else if (page == 2) settings();
+    else help();
+    for (int i = 0; i < tabs.length; i++) {
+      tabs[i].setText(pages[i]);
+      tabs[i].setSelected(i == page);
+      tabs[i].setContentDescription(pages[i] + t(", zakładka", ", tab"));
+    }
+    renderedPage = page;
+    int generation = ++renderGeneration;
+    boolean restore = samePage || restoredFocus != View.NO_ID;
+    restoredFocus = View.NO_ID;
+    root.post(() -> {
+      if (generation != renderGeneration || isFinishing() || isDestroyed()) return;
+      scroll.scrollTo(0, scrollY);
+      View target = restore && focusId != View.NO_ID ? root.findViewById(focusId) : null;
+      if (target != null && target.isShown() && !target.isAccessibilityFocused())
+        target.performAccessibilityAction(
+            android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
+    });
+    root.requestApplyInsets();
+  }
+
+  private void createShell() {
+    root = new LinearLayout(this);
+    // Dynamic pages reuse view IDs for different widget types. Restore the model and
+    // explicit page state instead of replaying Android's widget state into another layout.
+    // This also ignores incompatible hierarchy state saved by releases 1.0/1.01.
+    root.setSaveFromParentEnabled(false);
+    root.setOrientation(1);
+    setContentView(root);
+    heading = new TextView(this);
+    heading.setTextSize(24);
+    heading.setTextColor(model.dark ? Color.WHITE : Color.BLACK);
+    heading.setPadding(dp(16), dp(12), dp(16), dp(12));
+    heading.setAccessibilityHeading(true);
     root.addView(heading);
     scroll = new ScrollView(this);
     scroll.setFillViewport(true);
@@ -271,13 +378,6 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     body.setPadding(dp(12), dp(4), dp(12), dp(16));
     scroll.addView(body);
     root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
-    result = guide = status = null;
-    meter = null;
-    targetList = octaveList = null;
-    if (page == 0) tuner();
-    else if (page == 1) instrument();
-    else if (page == 2) settings();
-    else help();
     nav = new LinearLayout(this);
     nav.setOrientation(1);
     LinearLayout navigationRow = null;
@@ -289,15 +389,13 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       }
       final int at = i;
       Button b = new Button(this);
-      b.setText(pages[i]);
+      tabs[i] = b;
+      b.setId(10000 + i);
       b.setAllCaps(false);
       b.setMinHeight(dp(64));
       b.setTextSize(16);
-      b.setSelected(i == page);
-      b.setContentDescription(
-          pages[i]
-              + (i == page ? t(", wybrana zakładka", ", selected tab") : t(", zakładka", ", tab")));
       b.setOnClickListener(v -> {
+        if (page == at) return;
         getCurrentFocusClear();
         page = at;
         render();
@@ -305,7 +403,6 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       navigationRow.addView(b, new LinearLayout.LayoutParams(0, -2, 1));
     }
     root.addView(nav);
-    root.requestApplyInsets();
   }
 
   private void getCurrentFocusClear() {
@@ -372,8 +469,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         v -> {
           audio.stop();
           model.method = v;
+          if (status != null) status.setText(t("Mikrofon wyłączony", "Microphone off"));
           if (model.target < 0 && v != 1) model.target = model.base();
-          render();
+          updateTunerSections();
         });
     choice(
         t("Sprawdź współbrzmienie", "Check consonance"),
@@ -381,20 +479,21 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         model.interval,
         v -> {
           model.interval = v;
-          render();
+          updateTunerSections();
         });
-    if (model.interval != 0 && model.method != 0)
-      choice(
-          t("Sposób pomiaru współbrzmienia", "Consonance measurement method"),
-          new String[] {
-            t("Osobno: dolny, potem górny", "Separate: lower, then upper"),
-            t("Razem — eksperymentalnie", "Together — experimental")
-          },
-          model.pairMode,
-          v -> {
-            model.pairMode = v;
-            updateGuide();
-          });
+    pairControls =
+        section(() ->
+            choice(
+                t("Sposób pomiaru współbrzmienia", "Consonance measurement method"),
+                new String[] {
+                  t("Osobno: dolny, potem górny", "Separate: lower, then upper"),
+                  t("Razem — eksperymentalnie", "Together — experimental")
+                },
+                model.pairMode,
+                v -> {
+                  model.pairMode = v;
+                  updateGuide();
+                }));
     targets();
     guide = text("", false);
     updateGuide();
@@ -415,68 +514,79 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 ? t("Mikrofon włączony", "Microphone on")
                 : t("Mikrofon wyłączony", "Microphone off"),
             false);
-    if (model.method != 0 || model.forkTap) {
-      button(t("Włącz mikrofon", "Start microphone"), this::startMic);
-      button(
-          t("Wyłącz mikrofon", "Stop microphone"),
-          () -> {
-            audio.stop();
-            status(t("Mikrofon wyłączony", "Microphone off"));
-          });
-    }
-    if (model.method != 1) {
-      button(t("Uderz kamerton", "Strike tuning fork"), () -> audio.strike());
-      check(
-          t("Uderzaj kamerton automatycznie", "Strike tuning fork automatically"),
-          model.autoFork,
-          v -> {
-            model.autoFork = v;
-            autoPaused = false;
-          });
-      button(
-          t("Wstrzymaj lub wznów automat kamertonu", "Pause or resume automatic fork"),
-          () -> {
-            autoPaused = !autoPaused;
-            audio.setPaused(autoPaused);
-            message(
-                autoPaused
-                    ? t("Automat wstrzymany", "Automatic strikes paused")
-                    : t("Automat wznowiony", "Automatic strikes resumed"));
-          });
-      number(
-          t("Odstęp kamertonu w sekundach (1–10)", "Fork interval in seconds (1–10)"),
-          model.forkSeconds,
-          1,
-          10,
-          v -> model.forkSeconds = v);
-      check(
-          t(
-              "Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną kolejnością",
-              "Two strikes advance to the next note in the selected order"),
-          model.forkTap,
-          v -> {
-            model.forkTap = v;
-            render();
-          });
-    }
-    if (model.method == 3)
-      check(
-          t("Odsłuch mikrofonu — tylko w słuchawkach", "Microphone monitoring — headphones only"),
-          model.monitor,
-          v -> {
-            if (v && !AudioEngine.headphones((AudioManager) getSystemService(AUDIO_SERVICE))) {
-              model.monitor = false;
-              message(t("Najpierw podłącz słuchawki.", "Connect headphones first."));
-              render();
-            } else model.monitor = v;
-          });
-    if (model.method == 1)
-      check(
-          t(
-              "Po dobrym wyniku dwa uderzenia wybierają następną nutę",
-              "After an in-tune result two strikes advance"),
-          model.advance,
-          v -> model.advance = v);
+    micControls =
+        section(() -> {
+          button(t("Włącz mikrofon", "Start microphone"), this::startMic);
+          button(
+              t("Wyłącz mikrofon", "Stop microphone"),
+              () -> {
+                audio.stop();
+                status(t("Mikrofon wyłączony", "Microphone off"));
+              });
+        });
+    forkControls =
+        section(() -> {
+          button(t("Uderz kamerton", "Strike tuning fork"), () -> audio.strike());
+          check(
+              t("Uderzaj kamerton automatycznie", "Strike tuning fork automatically"),
+              model.autoFork,
+              v -> {
+                model.autoFork = v;
+                autoPaused = false;
+              });
+          button(
+              t("Wstrzymaj lub wznów automat kamertonu", "Pause or resume automatic fork"),
+              () -> {
+                autoPaused = !autoPaused;
+                audio.setPaused(autoPaused);
+                message(
+                    autoPaused
+                        ? t("Automat wstrzymany", "Automatic strikes paused")
+                        : t("Automat wznowiony", "Automatic strikes resumed"));
+              });
+          number(
+              t("Odstęp kamertonu w sekundach (1–10)", "Fork interval in seconds (1–10)"),
+              model.forkSeconds,
+              1,
+              10,
+              v -> model.forkSeconds = v);
+          check(
+              t(
+                  "Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną"
+                      + " kolejnością",
+                  "Two strikes advance to the next note in the selected order"),
+              model.forkTap,
+              v -> {
+                model.forkTap = v;
+                updateTunerSections();
+              });
+        });
+    monitorControls =
+        section(() -> {
+          monitorCheck =
+              check(
+                  t(
+                      "Odsłuch mikrofonu — tylko w słuchawkach",
+                      "Microphone monitoring — headphones only"),
+                  model.monitor,
+                  v -> {
+                    if (v
+                        && !AudioEngine.headphones(
+                            (AudioManager) getSystemService(AUDIO_SERVICE))) {
+                      model.monitor = false;
+                      monitorCheck.setChecked(false);
+                      message(t("Najpierw podłącz słuchawki.", "Connect headphones first."));
+                    } else model.monitor = v;
+                  });
+        });
+    advanceControls =
+        section(() ->
+            check(
+                t(
+                    "Po dobrym wyniku dwa uderzenia wybierają następną nutę",
+                    "After an in-tune result two strikes advance"),
+                model.advance,
+                v -> model.advance = v));
     number(
         t(
             "Maksymalny odstęp dwóch uderzeń, sekundy (0,5–2,5)",
@@ -509,6 +619,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     }
     button(t("Zapisz plik ustawień", "Save settings file"), this::saveProfile);
     button(t("Wczytaj plik ustawień", "Open settings file"), this::loadProfile);
+    updateTunerSections();
   }
 
   private void targets() {
@@ -553,18 +664,19 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
             v -> {
               model.target = options[v];
               model.anchor = model.base();
-              if (octaveList != null) octaveList.setSelection(model.base() / 12 - 1);
+              if (octaveList != null) selectSilently(octaveList, model.base() / 12 - 1);
               updateGuide();
             });
     targetList.setTag(options);
   }
 
   private void syncTarget() {
+    if (octaveList != null) selectSilently(octaveList, model.base() / 12 - 1);
     if (targetList != null) {
       int[] options = (int[]) targetList.getTag();
       for (int i = 0; i < options.length; i++)
         if (options[i] == model.target) {
-          targetList.setSelection(i);
+          selectSilently(targetList, i);
           break;
         }
     }
@@ -597,7 +709,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                           "Experimental: play together about 2 seconds. A harmonic may mimic a"
                               + " second note — also check separately."));
     }
-    guide.setText(value);
+    if (!value.contentEquals(guide.getText())) guide.setText(value);
   }
 
   private void instrument() {
@@ -616,34 +728,35 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           model.instrument = v;
           model.target = model.strings() ? model.stringsMidi()[0] : 67;
           model.anchor = model.base();
-          render();
+          updateInstrumentSections();
         });
-    if (model.instrument == 2)
-      choice(
-          t("Strój ukulele", "Ukulele tuning"),
-          new String[] {
-            t("Standard od podłogi: A E C G", "Standard, floor upward: A E C G"),
-            t("Alternatywny od podłogi: G E C A", "Alternative, floor upward: G E C A")
-          },
-          model.swapped ? 1 : 0,
-          v -> {
-            model.swapped = v == 1;
-            model.target = model.stringsMidi()[0];
-            render();
-          });
-    if (!model.strings())
-      choice(
-          t("Kolejność strojenia", "Tuning order"),
-          new String[] {
-            t("Rosnąco", "Ascending"),
-            t("Po 5 półtonów na prawo i lewo", "5 semitones right, then left"),
-            t("Po 5 całych tonów na prawo i lewo", "5 whole tones right, then left")
-          },
-          model.order,
-          v -> {
-            model.order = v;
-            model.anchor = model.base();
-          });
+    ukuleleControls =
+        section(() ->
+            choice(
+                t("Strój ukulele", "Ukulele tuning"),
+                new String[] {
+                  t("Standard od podłogi: A E C G", "Standard, floor upward: A E C G"),
+                  t("Alternatywny od podłogi: G E C A", "Alternative, floor upward: G E C A")
+                },
+                model.swapped ? 1 : 0,
+                v -> {
+                  model.swapped = v == 1;
+                  model.target = model.stringsMidi()[0];
+                }));
+    orderControls =
+        section(() ->
+            choice(
+                t("Kolejność strojenia", "Tuning order"),
+                new String[] {
+                  t("Rosnąco", "Ascending"),
+                  t("Po 5 półtonów na prawo i lewo", "5 semitones right, then left"),
+                  t("Po 5 całych tonów na prawo i lewo", "5 whole tones right, then left")
+                },
+                model.order,
+                v -> {
+                  model.order = v;
+                  model.anchor = model.base();
+                }));
     number(
         t("Częstotliwość odniesienia A, Hz (390–466)", "A reference frequency, Hz (390–466)"),
         model.reference,
@@ -674,6 +787,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         1,
         20,
         v -> model.tolerance = v);
+    updateInstrumentSections();
   }
 
   private void settings() {
@@ -690,6 +804,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         model.dark,
         v -> {
           model.dark = v;
+          View focused = accessibilityFocus(root);
+          focusBeforeRecreate = focused == null ? View.NO_ID : focused.getId();
           persist();
           recreate();
         });

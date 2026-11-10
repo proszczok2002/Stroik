@@ -17,8 +17,8 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
-  private int expectedCode = 102;
-  private String expectedName = "1.02";
+  private int expectedCode = 103;
+  private String expectedName = "1.03";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
@@ -26,8 +26,8 @@ public final class DeviceTests extends Instrumentation {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
     if (args != null) {
-      expectedCode = args.getInt("expectedCode", 102);
-      expectedName = args.getString("expectedName", "1.02");
+      expectedCode = args.getInt("expectedCode", 103);
+      expectedName = args.getString("expectedName", "1.03");
     }
     start();
   }
@@ -88,7 +88,7 @@ public final class DeviceTests extends Instrumentation {
     float density = activity.getResources().getDisplayMetrics().density;
     int controls = 0;
     for (View v : views()) {
-      if (v.getVisibility() != View.VISIBLE) continue;
+      if (!v.isShown()) continue;
       if (v instanceof Button || v instanceof Spinner || v instanceof EditText) {
         controls++;
         require(
@@ -103,7 +103,10 @@ public final class DeviceTests extends Instrumentation {
           require(((TextView) v).getText().length() > 0, "Unnamed text control");
         if (v instanceof Spinner || v instanceof EditText)
           require(
-              v.getContentDescription() != null && v.getContentDescription().length() > 0,
+              (v.getContentDescription() != null && v.getContentDescription().length() > 0)
+                  || (v instanceof EditText
+                      && ((EditText) v).getHint() != null
+                      && ((EditText) v).getHint().length() > 0),
               "Unlabelled input");
         require(v.isFocusable(), "Input not focusable");
       }
@@ -175,6 +178,10 @@ public final class DeviceTests extends Instrumentation {
 
   @Override
   public void onStart() {
+    if (scenario.equals("focus")) {
+      focusScenario();
+      return;
+    }
     if (scenario.equals("lifecycle")) {
       lifecycleScenario();
       return;
@@ -244,6 +251,11 @@ public final class DeviceTests extends Instrumentation {
       for (boolean english : new boolean[] {false, true}) {
         main(() -> {
           activity.model.english = english;
+          activity.model.instrument = 0;
+          activity.model.method = 0;
+          activity.model.interval = 0;
+          activity.model.target = 67;
+          activity.model.forkTap = false;
           invokeRender();
         });
         String settings = english ? "Settings" : "Ustawienia",
@@ -331,6 +343,198 @@ public final class DeviceTests extends Instrumentation {
       result.putString("stream", report.toString());
       result.putString("result", "FAIL");
       restoreSettings(saved);
+      finish(Activity.RESULT_CANCELED, result);
+    }
+  }
+
+  private void focus(View view) {
+    main(() -> {
+      view.requestRectangleOnScreen(new Rect(0, 0, view.getWidth(), view.getHeight()), true);
+      if (!hasAccessibilityFocus(view))
+        view.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
+    });
+    SystemClock.sleep(150);
+    if (!hasAccessibilityFocus(view)) logActualFocus();
+    require(hasAccessibilityFocus(view), "Cannot focus " + view.getClass().getSimpleName());
+  }
+
+  private boolean hasAccessibilityFocus(View view) {
+    if (view.isAccessibilityFocused()) return true;
+    if (view instanceof ViewGroup)
+      for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++)
+        if (hasAccessibilityFocus(((ViewGroup) view).getChildAt(i))) return true;
+    return false;
+  }
+
+  private void logActualFocus() {
+    AccessibilityNodeInfo root = automation.getRootInActiveWindow();
+    AccessibilityNodeInfo focused =
+        root == null ? null : root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+    log("Actual focus=" + focused);
+    for (View view : views())
+      if (view.isAccessibilityFocused())
+        log(
+            "Focused view="
+                + view.getClass().getSimpleName()
+                + " id="
+                + view.getId()
+                + " desc="
+                + view.getContentDescription());
+  }
+
+  private void keepsFocus(View view, Runnable action, String label) {
+    focus(view);
+    main(action);
+    SystemClock.sleep(250);
+    require(view.isAttachedToWindow(), label + ": focused control was replaced");
+    if (!hasAccessibilityFocus(view)) logActualFocus();
+    require(hasAccessibilityFocus(view), label + ": accessibility focus moved");
+    log(label + ": same control and accessibility focus retained");
+  }
+
+  private void focusScenario() {
+    Bundle result = new Bundle();
+    String saved = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context target = getTargetContext();
+      saved = target.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(target, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      waitForIdleSync();
+      main(() -> {
+        activity.model.updates = false;
+        activity.model.instrument = 0;
+        activity.model.method = 0;
+        activity.model.autoFork = false;
+        invokeRender();
+      });
+      // TalkBack completes its initial window announcement asynchronously after Activity idle.
+      SystemClock.sleep(1400);
+      for (boolean english : new boolean[] {false, true}) {
+        main(() -> {
+          activity.model.english = english;
+          activity.model.instrument = 0;
+          activity.model.method = 0;
+          activity.model.interval = 0;
+          activity.model.target = 67;
+          activity.model.forkTap = false;
+          invokeRender();
+        });
+        page(english ? "Tuner" : "Stroik");
+        Spinner method = findSpinner(english ? "Tuning method" : "Metoda strojenia");
+        for (int at : new int[] {1, 2, 3, 0}) {
+          keepsFocus(method, () -> method.setSelection(at), "Method " + at);
+          require(
+              findSpinner(english ? "Tuning method" : "Metoda strojenia") == method,
+              "Method spinner identity changed");
+        }
+        Spinner interval = findSpinner(english ? "Check consonance" : "Sprawdź współbrzmienie");
+        for (int at : new int[] {1, 2, 0})
+          keepsFocus(interval, () -> interval.setSelection(at), "Interval " + at);
+        CheckBox taps =
+            findCheck(
+                english
+                    ? "Two strikes advance to the next note in the selected order"
+                    : "Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną"
+                        + " kolejnością");
+        keepsFocus(taps, taps::performClick, "Tap listening enabled");
+        keepsFocus(taps, taps::performClick, "Tap listening disabled");
+        Spinner note = findSpinner(english ? "Target note" : "Dźwięk docelowy");
+        keepsFocus(
+            note,
+            () ->
+                note.setSelection(
+                    Math.min(note.getCount() - 1, note.getSelectedItemPosition() + 13)),
+            "Target across octave");
+        Spinner octave = findSpinner(english ? "Choose octave" : "Wybierz oktawę");
+        keepsFocus(
+            octave,
+            () -> octave.setSelection((octave.getSelectedItemPosition() + 1) % octave.getCount()),
+            "Octave and target sync");
+        keepsFocus(
+            octave,
+            () -> activity.result(english ? "Focus test result" : "Wynik testu fokusu"),
+            "Result announcement");
+        main(() -> method.setSelection(1));
+        int[] options = (int[]) note.getTag();
+        int lastNote = -1;
+        for (int i = 0; i < options.length; i++) if (options[i] == 71) lastNote = i;
+        require(lastNote >= 0, "Missing boundary note for advance test");
+        final int boundaryNote = lastNote;
+        main(() -> {
+          activity.model.order = 0;
+          note.setSelection(boundaryNote);
+        });
+        int anchor = activity.model.anchor;
+        Button next = findButton(english ? "Next note" : "Następny dźwięk");
+        keepsFocus(next, next::performClick, "Next note across octave");
+        require(activity.model.target == 72, "Next note did not cross octave");
+        require(
+            activity.model.anchor == anchor,
+            "Programmatic selection reset the tuning order anchor");
+        require(octave.getSelectedItemPosition() == 5, "Octave list did not follow next note");
+        String[] pages =
+            english
+                ? new String[] {"Instrument", "Settings", "Help", "Tuner"}
+                : new String[] {"Instrument", "Ustawienia", "Pomoc", "Stroik"};
+        for (String name : pages) {
+          Button tab = findButton(name);
+          keepsFocus(tab, tab::performClick, "Tab " + name);
+          require(tab.isSelected(), "Tab selected state missing");
+          keepsFocus(tab, tab::performClick, "Selected tab " + name);
+        }
+        page("Instrument");
+        Spinner instrument = findSpinner("Instrument");
+        for (int at : new int[] {2, 1, 0, 5, 2})
+          keepsFocus(instrument, () -> instrument.setSelection(at), "Instrument " + at);
+        Spinner ukulele = findSpinner(english ? "Ukulele tuning" : "Strój ukulele");
+        keepsFocus(
+            ukulele,
+            () -> ukulele.setSelection(1 - ukulele.getSelectedItemPosition()),
+            "Ukulele tuning");
+      }
+      page("Settings");
+      Spinner language = findSpinner("Language");
+      int languageId = language.getId();
+      focus(language);
+      main(() -> language.setSelection(0));
+      SystemClock.sleep(300);
+      Spinner polish = findSpinner("Język");
+      require(
+          polish.getId() == languageId && polish.isAccessibilityFocused(),
+          "Language replacement lost semantic focus");
+      CheckBox dark = findCheck("Ciemny motyw");
+      focus(dark);
+      replaceAndWait(dark::performClick);
+      SystemClock.sleep(1500);
+      require(
+          findCheck("Ciemny motyw").isAccessibilityFocused(),
+          "Theme recreation lost checkbox focus");
+      for (View view : views())
+        if (view instanceof EditText && view.isShown()) {
+          EditText edit = (EditText) view;
+          require(
+              edit.getContentDescription() == null,
+              "Editable value is masked by contentDescription");
+          require(
+              edit.getHint() != null && edit.getHint().length() > 0, "Numeric field has no hint");
+          require(
+              edit.createAccessibilityNodeInfo().isEditable(),
+              "Numeric field lost editable semantics");
+        }
+      log("Focus assertions=" + assertions + "; PL/EN focus retention and editable labels PASS");
+      restoreSettings(saved);
+      result.putString("stream", report.toString());
+      result.putString("result", "PASS");
+      finish(Activity.RESULT_OK, result);
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      restoreSettings(saved);
+      result.putString("stream", report.toString());
+      result.putString("result", "FAIL");
       finish(Activity.RESULT_CANCELED, result);
     }
   }

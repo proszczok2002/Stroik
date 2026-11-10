@@ -1,10 +1,10 @@
-# Stroik Android 1.02
+# Stroik Android 1.03
 
 Native Android 11+ tuner for blind, partially sighted and sighted musicians, using standard controls and Polish/English UI. [Polski](README.md).
 
-[Download APK 1.02](https://github.com/proszczok2002/Stroik/releases/download/android-v1.02/Stroik-Android-1.02.apk) · [Release and SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.02).
+[Download APK 1.03](https://github.com/proszczok2002/Stroik/releases/download/android-v1.03/Stroik-Android-1.03.apk) · [Release and SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.03).
 
-**1.02 verification:** fixed screen restoration crash; POCO checks passed 1103 lifecycle assertions, 1831 interface/accessibility assertions and 7 audio checks. System installation from the local APK retained settings. Play Protect warned before installation; its classification cause remains unknown. A complete GitHub download/update to 1.02 was not separately exercised. See the [device report](DEVICE_TESTS.md).
+**1.03 accessibility:** method, consonance and instrument changes preserve controls instead of rebuilding the screen. Tabs keep their identity; language/theme changes restore the corresponding control. Numeric labels/hints no longer mask entered values. POCO checks passed 198 PL/EN focus assertions, 1103 lifecycle assertions, 1831 interface checks and 7 audio checks. System installation from the local APK retained settings. Human TalkBack listening/gestures are separate; a full GitHub update to 1.03 was not tested. The earlier Play Protect warning remains unexplained. [Device report](DEVICE_TESTS.md).
 
 See [in-app guide](app/src/main/assets/guide.en.txt). Features: fork, microphone tuner, hybrids, instruments/octaves, fifth/octave checks, JSON profiles, headphone monitoring, manual correction, graphics, support and credits.
 

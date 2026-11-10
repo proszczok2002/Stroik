@@ -1,5 +1,7 @@
-Stroik Android 1.02
+Stroik Android 1.03
 
-Fixed a crash while restoring the screen, including theme changes, rotation and returning to the app. Android no longer restores checkbox state into a dropdown with a reused view ID. The current tab, scroll position and last result are retained. Restart the microphone after an interruption.
+Improved screen reader focus retention. Changing method, consonance, instrument or tap listening updates the relevant fields without recreating the whole screen. Tab buttons keep their identity; choosing the current tab again does not refresh the form. Language and theme changes restore the corresponding control.
 
-Added recreation tests for every tab in both languages, theme changes and legacy widget state. The signing key is unchanged; Android confirms installation. The Play Protect warning observed for 1.01 is documented without assuming its cause.
+Numeric fields use labels and hints so their description does not mask the entered value. Note/octave synchronization no longer repeats user actions. Added real accessibility-focus retention tests in PL/EN.
+
+The APK uses the existing signing key. Android confirms installation; the earlier Play Protect warning and test scope are documented.

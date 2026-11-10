@@ -1,4 +1,4 @@
-# Android device verification — 1.0, 1.01 and 1.02
+# Android device verification — 1.0 through 1.03
 
 Device: POCO F8 Ultra, model 25102PCBEG, Android 16 / API 36. During the original 1.0 checks, the TalkBack-derived service from com.nirenr.talkman remained enabled. The initial USB installation restriction was resolved by the owner; ADB installation and launch then succeeded. The final 1.02 service and results are recorded separately below.
 
@@ -63,6 +63,26 @@ TalkBack remained enabled. Earlier tests used the service from `com.nirenr.talkm
 The completed installation from the local APK is separate from the earlier 1.0 → GitHub 1.01 detection/download/installer test, which Play Protect blocked. A complete GitHub updater round trip to 1.02 has not been exercised; do not report it as passed. The Play Protect classification cause is still unknown.
 
 Polski: odtworzono rzeczywistą awarię 1.0 przy ponownym tworzeniu Ustawień. Końcowy APK 1.02 jest zainstalowany i zgodny z lokalną sumą; przeszedł 1103 asercje odtwarzania ekranów, 1831 interfejsu/dostępności oraz 7 audio, bez nowej awarii podczas tej serii. Ustawienia i dane zachowano po systemowej instalacji lokalnego APK. Nie jest to potwierdzenie pełnej aktualizacji 1.02 z GitHuba ani rozstrzygnięcie ostrzeżenia Play Protect.
+
+## Focus report and 1.03 regression
+
+The owner reported focus jumping during use of 1.02. A device regression reproduced the cause: selecting Electronic tuner removed the actual focused Spinner and replaced the screen hierarchy. The test failed with “Method 1: focused control was replaced.” The earlier accessibility checks established labels/events, not focus retention after every action.
+
+Version 1.03 keeps the root, tab buttons and ordinary option controls attached. Conditional sections change visibility in place. Selecting the already-current tab is a no-op. Language changes rebuild only page content and restore the corresponding control; theme recreation saves/restores the focused control once. Programmatic note/octave selection updates the companion list without replaying the user-selection callback. EditText fields use labelFor and hint rather than contentDescription, following [Android content-label guidance](https://support.google.com/accessibility/android/answer/7158690?hl=en).
+
+Final APK: **66204 bytes**, SHA-256 **65e8e4ca39bc3cd74784176b31cc0cd5957d93859d3c95f98f1341c451acb51a**, version 1.03 / 103, unchanged production certificate. It was installed with Android system confirmation and the owner's manual interaction. The APK pulled from the installed package matched the local final artifact exactly. The app was not silently updated through ADB.
+
+Passed on that exact APK with TalkBack enabled:
+
+- **198 focus assertions** in PL/EN: all four methods, consonance choices, tap-listening toggles, note/octave synchronization, next note across an octave boundary without resetting the order anchor, result announcement without moving focus, every tab (including selecting it again), instrument choices, ukulele tuning, language restoration, and checkbox focus after theme recreation. Tests verify the actual accessibility focus and control attachment/identity. The theme check waits beyond TalkBack's asynchronous initial-window announcement.
+- **1103 lifecycle assertions**, **1831 interface assertions** (4 focus events and 14 click events), and **7 real capture/playback assertions** passed. These event counts are distinct from the 198 assertions.
+- Settings, signing certificate and the pre-install data marker were retained. No new crash-buffer entries appeared during the final sequence.
+
+The focus regression initially attempted to act before TalkBack finished its initial window announcement. That legitimately moved focus to the new window heading. The final test waits for initial-window settling before testing ordinary actions; it does not suppress TalkBack, filter out later focus failures, or retry until passing.
+
+After automated testing, the app was opened for the owner's manual TalkBack check. Human speech/gesture confirmation remains pending unless separately reported. The earlier Play Protect classification is not resolved by these focus checks or by a separate Xiaomi scanner result. As with 1.02, local system installation is distinct from an end-to-end GitHub updater round trip to 1.03.
+
+Polski: w 1.02 odtworzono usuwanie kontrolki z fokusem po zmianie metody. Końcowa 1.03 zachowuje kontrolki i przeszła 198 asercji faktycznego fokusu dostępności w PL/EN, 1103 cyklu ekranu, 1831 interfejsu i 7 audio. Zachowano ustawienia, brak nowej awarii w tej serii. Wymowa/gesty TalkBack przez człowieka, pełna aktualizacja przez GitHub i przyczyna wcześniejszego ostrzeżenia Play Protect pozostają oddzielnymi sprawami.
 
 ## Remaining physical checks
 
