@@ -4,6 +4,8 @@ Native Android 11+ tuner for blind, partially sighted and sighted musicians, usi
 
 [Download APK 1.01](https://github.com/proszczok2002/Stroik/releases/download/android-v1.01/Stroik-Android-1.01.apk) · [Release and SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.01).
 
+**Update test status:** Play Protect blocked installation of 1.01 after scanning on the test POCO, without a specific cause. Detection, download and opening the system installer work; a complete update and retained settings remain unverified. See the [device report](DEVICE_TESTS.md).
+
 See [in-app guide](app/src/main/assets/guide.en.txt). Features: fork, microphone tuner, hybrids, instruments/octaves, fifth/octave checks, JSON profiles, headphone monitoring, manual correction, graphics, support and credits.
 
 Updates use this repository's `android/update.json`. Android releases use `android-v1.0` and `android-v1.01` tags and are not marked as the latest Windows release. Installation requires Android's system confirmation. Package `pl.proszczok.stroik`, increasing versionCode and an unchanged signing certificate are required. Do not uninstall before updating if you want to retain settings.

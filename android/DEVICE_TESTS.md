@@ -30,11 +30,15 @@ Signing certificate SHA-256: 3a07196ac981d8a1d5dda9f2fb140e1c47226128edc25866e2c
 
 Installed 1.0 detected public 1.01 and displayed its Polish release notes and download confirmation. Before testing, the complete model settings, signing certificate and an app-data marker were saved as a baseline. An initial stale manifest response was observed from the app's Java HTTP connection; after propagation it detected 101 without replacing the installed app. The `manifest` test scenario can inspect this response from the actual updater code.
 
-Android then opened its app-specific unknown-source installation permission screen. The phone refused an automated accessibility click on the permission switch; no ADB app-op grant or security bypass was used. The owner has been asked to enable the permission manually and return to Stroik. **System installation and post-update persistence verification are still pending at this point.** Do not replace this test with silent ADB installation of 1.01.
+The owner manually enabled Android's app-specific unknown-source permission for Stroik. The installed 1.0 downloaded and verified 1.01, then opened the actual Android package installer with the question “Zaktualizować tę aplikację?” and an “Aktualizuj” button. This confirmation was exercised through the system UI, without an ADB replacement install.
+
+Google Play Protect then requested a scan. After scanning, it displayed “Zablokowano szkodliwą aplikację” / “Ta aplikacja może być niebezpieczna.” The expanded details supplied no specific cause. The installed package remained 1.0 / 100. **A complete update and post-update persistence verification have not yet passed.** The owner was asked whether to retain the block or explicitly allow a one-time installation despite that warning; no override was performed while waiting.
+
+The local production APK still has the published SHA-256 and original certificate. A basic source/package inspection found only the declared microphone, Internet and installation permissions; the APK contains the manifest, resources, four text assets, compiled application classes and signature files, with no bundled native libraries or other APKs. This inspection does not establish why Play Protect classified it or prove that its warning is false. Google's [developer guidance](https://developers.google.com/android/play-protect/warning-dev-guidance) describes classification review and appeal; no appeal has been submitted.
 
 Source 1.01 CI passed: Android 42840776407, Windows 42840776445. Tag CI passed: 42841104370 / 42841104717. Manifest commit CI passed: 42841173397 / 42841173405.
 
-Polski: wydania 1.0 i 1.01 są publiczne, pliki i podpis sprawdzone. Stroik 1.0 wykrył 1.01 i pokazał zmiany. Telefon wymaga ręcznego włączenia „Zezwalaj z tego źródła” dla Stroika; instalacja systemowa i porównanie ustawień po aktualizacji oczekują na ten krok. Testy struktury dostępności i uruchamiania audio przeszły, odsłuch TalkBack przez człowieka i testy z instrumentem pozostają osobnymi próbami.
+Polski: wydania 1.0 i 1.01 są publiczne, pliki i podpis sprawdzone. Stroik 1.0 wykrył i pobrał 1.01, pokazał zmiany i systemowe potwierdzenie aktualizacji. Po skanowaniu Play Protect zablokował instalację jako potencjalnie niebezpieczną, bez podania konkretnej przyczyny. Na telefonie pozostaje 1.0; pełna aktualizacja i zachowanie ustawień nie są jeszcze potwierdzone. Testy struktury dostępności i uruchamiania audio przeszły, odsłuch TalkBack przez człowieka i testy z instrumentem pozostają osobnymi próbami.
 
 ## Remaining physical checks
 

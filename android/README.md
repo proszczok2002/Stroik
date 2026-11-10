@@ -4,6 +4,8 @@ Natywna aplikacja Android 11+ dla osób niewidomych, słabowidzących i widzący
 
 [Pobierz APK 1.01](https://github.com/proszczok2002/Stroik/releases/download/android-v1.01/Stroik-Android-1.01.apk) · [Wydanie i suma SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.01).
 
+**Status próby aktualizacji:** na testowym POCO Play Protect zablokował instalację 1.01 po skanowaniu, bez podania konkretnej przyczyny. Wykrywanie, pobranie i otwarcie systemowego instalatora działają; pełna aktualizacja i zachowanie ustawień pozostają niepotwierdzone. Szczegóły w [raporcie urządzenia](DEVICE_TESTS.md).
+
 Instrukcja aplikacji: [guide.pl.txt](app/src/main/assets/guide.pl.txt). Kamerton, stroik mikrofonowy, hybryda, instrumenty, oktawy, kwinty/oktawy, profile JSON, odsłuch w słuchawkach, korekta pomiaru, grafika, wsparcie i informacje o autorach.
 
 Aktualizator korzysta z `android/update.json` w tym repozytorium. Pliki wydań mają tagi `android-v1.0`, `android-v1.01` i nie zmieniają najnowszego wydania Windows. Instalacja wymaga systemowego potwierdzenia Androida; APK musi mieć ten sam podpis, właściwy pakiet `pl.proszczok.stroik` i wyższy versionCode. Nie odinstalowuj aplikacji przed aktualizacją, żeby zachować ustawienia.
