@@ -35,11 +35,11 @@ public final class UiBridge extends Instrumentation {
       if (!wanted.isEmpty() || !id.isEmpty()) {
         List<AccessibilityNodeInfo> matches = new ArrayList<>();
         for (AccessibilityNodeInfo node : nodes) {
-          if (!expectedPackage.isEmpty() && !expectedPackage.contentEquals(node.getPackageName()))
+          if (!expectedPackage.isEmpty() && !expectedPackage.equals(String.valueOf(node.getPackageName())))
             continue;
           if ((!wanted.isEmpty()
-                  && (wanted.contentEquals(node.getText())
-                      || wanted.contentEquals(node.getContentDescription())))
+                  && (wanted.equals(String.valueOf(node.getText()))
+                      || wanted.equals(String.valueOf(node.getContentDescription()))))
               || (!id.isEmpty() && id.equals(node.getViewIdResourceName()))) matches.add(node);
         }
         if (matches.size() != 1)
