@@ -24,6 +24,8 @@ Release 1.01 / 101: 62108 bytes; SHA-256 05932dc48a072ebbf8e9a5238591417c9716be0
 
 Both releases are published under `android-v1.0` and `android-v1.01`. Public APK/checksum files were downloaded and compared against local size/SHA-256. The 1.01 APK was also downloaded anonymously. Manifest 101 was published only after asset verification. Windows latest remains `v1.0.14`.
 
+The stability fix is published as `android-v1.02`, source `b53495f4efaed379ccf1c3135c7e1c5bafc04838`. Its APK and checksum were downloaded anonymously and matched local size/hash; the public APK signature matches the production certificate. Source CI passed: Android 42847113032 and Windows 42847113044. The installed phone APK matches the same public artifact; Windows latest remains `v1.0.14`.
+
 Signing certificate SHA-256: 3a07196ac981d8a1d5dda9f2fb140e1c47226128edc25866e2c37a8f65ab1522. Private signing files remain local under ignored .signing.
 
 ## Update test

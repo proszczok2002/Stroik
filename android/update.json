@@ -1,9 +1,9 @@
 {
     "packageName":  "pl.proszczok.stroik",
-    "versionCode":  101,
-    "versionName":  "1.01",
-    "apkUrl":  "https://github.com/proszczok2002/Stroik/releases/download/android-v1.01/Stroik-Android-1.01.apk",
-    "sha256":  "05932dc48a072ebbf8e9a5238591417c9716be06a7ba554b7b9858357a2f04dd",
-    "notesPl":  "Wersja testowa aktualizatora: ten sam podpis i zachowanie ustawień. Zakładki w dwóch rzędach lepiej mieszczą duże litery; poprawiono polskie nazwy oktaw. Funkcje strojenia zgodne z 1.0.",
-    "notesEn":  "Updater test release: same signing certificate and retained settings. Two-row tabs fit large text better; corrected Polish octave names. Tuning features remain compatible with 1.0."
+    "versionCode":  102,
+    "versionName":  "1.02",
+    "apkUrl":  "https://github.com/proszczok2002/Stroik/releases/download/android-v1.02/Stroik-Android-1.02.apk",
+    "sha256":  "06a5de6a6c69ea0d2906558f402498f5f3c84a05c7fa908ff2a56afd5c279862",
+    "notesPl":  "Poprawka zamykania aplikacji przy zmianie motywu i odtwarzaniu ekranu. Przywracana jest właściwa zakładka i ostatni wynik. Końcowy APK przetestowano na POCO; ustawienia zachowano po instalacji systemowej. Play Protect ostrzegał przed instalacją kandydatów; przyczyna klasyfikacji pozostaje nieustalona.",
+    "notesEn":  "Fixes crashes during theme changes and screen restoration. Restores the correct tab and last result. The final APK was tested on POCO; system installation retained settings. Play Protect warned before installing candidates; the classification cause remains unknown."
 }
