@@ -17,12 +17,18 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
+  private int expectedCode = 102;
+  private String expectedName = "1.02";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
   public void onCreate(Bundle args) {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
+    if (args != null) {
+      expectedCode = args.getInt("expectedCode", 102);
+      expectedName = args.getString("expectedName", "1.02");
+    }
     start();
   }
 
@@ -169,6 +175,10 @@ public final class DeviceTests extends Instrumentation {
 
   @Override
   public void onStart() {
+    if (scenario.equals("lifecycle")) {
+      lifecycleScenario();
+      return;
+    }
     if (scenario.equals("manifest")) {
       Bundle result = new Bundle();
       try {
@@ -325,6 +335,108 @@ public final class DeviceTests extends Instrumentation {
     }
   }
 
+  private void recreateAndWait() {
+    replaceAndWait(() -> activity.recreate());
+  }
+
+  private void replaceAndWait(Runnable action) {
+    ActivityMonitor monitor = addMonitor(MainActivity.class.getName(), null, false);
+    try {
+      main(action);
+      Activity replacement = waitForMonitorWithTimeout(monitor, 10000);
+      require(replacement instanceof MainActivity, "Recreated activity did not start");
+      activity = (MainActivity) replacement;
+      waitForIdleSync();
+      require(!activity.isFinishing() && !activity.isDestroyed(), "Recreated activity closed");
+    } finally {
+      removeMonitor(monitor);
+    }
+  }
+
+  private void lifecycleScenario() {
+    Bundle result = new Bundle();
+    String saved = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context target = getTargetContext();
+      saved = target.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(target, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      waitForIdleSync();
+      main(() -> activity.model.updates = false);
+      page(activity.model.english ? "Settings" : "Ustawienia");
+      log("Recreating Settings: original releases crash here with incompatible widget SavedState");
+      recreateAndWait();
+      require(
+          findSpinner(activity.model.english ? "Language" : "Język") != null,
+          "Settings page was lost");
+      android.util.SparseArray<Parcelable> legacy = new android.util.SparseArray<>();
+      main(() -> {
+        ViewGroup content = activity.findViewById(android.R.id.content);
+        View dynamicRoot = content.getChildAt(0);
+        dynamicRoot.setSaveFromParentEnabled(true);
+        content.saveHierarchyState(legacy);
+        dynamicRoot.setSaveFromParentEnabled(false);
+      });
+      require(legacy.size() > 0, "Legacy hierarchy test did not save widget state");
+      page(activity.model.english ? "Tuner" : "Stroik");
+      main(() -> {
+        ViewGroup content = activity.findViewById(android.R.id.content);
+        content.restoreHierarchyState(legacy);
+      });
+      require(
+          findSpinner(activity.model.english ? "Tuning method" : "Metoda strojenia") != null,
+          "Legacy hierarchy damaged the tuner");
+      for (boolean english : new boolean[] {false, true}) {
+        main(() -> {
+          activity.model.english = english;
+          activity.model.updates = false;
+          activity.model.dark = false;
+          invokeRender();
+        });
+        String[] pages =
+            english
+                ? new String[] {"Tuner", "Instrument", "Settings", "Help"}
+                : new String[] {"Stroik", "Instrument", "Ustawienia", "Pomoc"};
+        for (int cycle = 0; cycle < 3; cycle++)
+          for (int at = 0; at < pages.length; at++) {
+            page(pages[at]);
+            final int chosenPage = at;
+            String before = activity.model.json().toString();
+            recreateAndWait();
+            java.lang.reflect.Field pageField = MainActivity.class.getDeclaredField("page");
+            pageField.setAccessible(true);
+            require(pageField.getInt(activity) == chosenPage, "Page changed after recreation");
+            require(
+                before.equals(activity.model.json().toString()),
+                "Settings changed after recreation");
+            inspect((english ? "EN" : "PL") + " recreation " + cycle + "/" + at);
+          }
+        page(english ? "Settings" : "Ustawienia");
+        replaceAndWait(() -> findCheck(english ? "Dark theme" : "Ciemny motyw").performClick());
+        require(activity.model.dark, "Dark theme did not survive recreation");
+        replaceAndWait(() -> findCheck(english ? "Dark theme" : "Ciemny motyw").performClick());
+        require(!activity.model.dark, "Light theme did not survive recreation");
+      }
+      log(
+          "Lifecycle assertions="
+              + assertions
+              + "; repeated page recreation and both theme changes PASS");
+      result.putString("result", "PASS");
+      restoreSettings(saved);
+      result.putString("stream", report.toString());
+      finish(Activity.RESULT_OK, result);
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      restoreSettings(saved);
+      result.putString("stream", report.toString());
+      result.putString("result", "FAIL");
+      finish(Activity.RESULT_CANCELED, result);
+    }
+  }
+
   private void persistenceScenario() {
     Bundle result = new Bundle();
     try {
@@ -343,20 +455,26 @@ public final class DeviceTests extends Instrumentation {
       String canonical =
           Model.from(new org.json.JSONObject(prefs.getString("settings", "{}"))).json().toString();
       if (scenario.equals("prepare-update")) {
-        require(info.getLongVersionCode() == 100, "Baseline must be installed 1.0");
+        require(
+            info.getLongVersionCode() < expectedCode, "Baseline must precede the expected update");
         prefs
             .edit()
             .putString("updateBaseline", canonical)
             .putString("updateCertificate", certificate)
-            .putString("updateTestMarker", "from-100-to-101")
+            .putString(
+                "updateTestMarker", "from-" + info.getLongVersionCode() + "-to-" + expectedCode)
             .commit();
-        log("Prepared 1.0 settings and signing baseline for real system update");
+        log(
+            "Prepared version "
+                + info.versionName
+                + " settings/signing baseline for "
+                + expectedName);
       } else {
         require(
-            info.getLongVersionCode() == 101 && "1.01".equals(info.versionName),
-            "Expected Android 1.01 / 101");
+            info.getLongVersionCode() == expectedCode && expectedName.equals(info.versionName),
+            "Expected Android " + expectedName + " / " + expectedCode);
         require(
-            "from-100-to-101".equals(prefs.getString("updateTestMarker", "")),
+            prefs.getString("updateTestMarker", "").endsWith("-to-" + expectedCode),
             "App data marker was lost");
         require(
             canonical.equals(prefs.getString("updateBaseline", "")),
@@ -365,8 +483,11 @@ public final class DeviceTests extends Instrumentation {
             certificate.equals(prefs.getString("updateCertificate", "")),
             "Signing certificate changed");
         log(
-            "Real update verified: version=1.01 code=101, same certificate, all model settings and"
-                + " app data marker retained");
+            "System install verified: version="
+                + expectedName
+                + " code="
+                + expectedCode
+                + ", same certificate, all model settings and app data marker retained");
       }
       result.putString("stream", report.toString());
       result.putString("result", "PASS");

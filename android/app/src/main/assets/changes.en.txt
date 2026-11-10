@@ -1,5 +1,5 @@
-Stroik Android 1.01
+Stroik Android 1.02
 
-Updater test release from 1.0. Version code is now 101 and the signing certificate is unchanged. Updating retains settings, local app data and microphone permission. Android asks for installation confirmation.
+Fixed a crash while restoring the screen, including theme changes, rotation and returning to the app. Android no longer restores checkbox state into a dropdown with a reused view ID. The current tab, scroll position and last result are retained. Restart the microphone after an interruption.
 
-Tuning features remain compatible with 1.0. Bottom tabs use two rows so their names fit better at large text sizes. Polish octave dropdown labels were corrected. Latest changes shows the 1.01 description.
+Added recreation tests for every tab in both languages, theme changes and legacy widget state. The signing key is unchanged; Android confirms installation. The Play Protect warning observed for 1.01 is documented without assuming its cause.

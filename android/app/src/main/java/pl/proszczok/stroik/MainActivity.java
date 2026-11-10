@@ -77,6 +77,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     }
     if (!getSharedPreferences("stroik", 0).contains("settings"))
       model.english = !Locale.getDefault().getLanguage().equals("pl");
+    if (state != null) {
+      page = Math.max(0, Math.min(3, state.getInt("stroik.page", 0)));
+      lastResult = state.getString("stroik.result", "");
+      autoPaused = state.getBoolean("stroik.autoPaused", false);
+    }
     setTheme(
         model.dark
             ? android.R.style.Theme_Material_NoActionBar
@@ -91,6 +96,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
               speechReady = code == TextToSpeech.SUCCESS;
             });
     render();
+    if (state != null) {
+      final int scrollY = Math.max(0, state.getInt("stroik.scroll", 0));
+      ScrollView restoredScroll = scroll;
+      restoredScroll.post(() -> restoredScroll.scrollTo(0, scrollY));
+    }
     getWindow()
         .getDecorView()
         .setOnApplyWindowInsetsListener((v, insets) -> {
@@ -100,6 +110,16 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           return insets;
         });
     getWindow().getDecorView().requestApplyInsets();
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle state) {
+    state.putInt("stroik.page", page);
+    state.putInt("stroik.scroll", scroll == null ? 0 : scroll.getScrollY());
+    state.putString("stroik.result", lastResult);
+    state.putBoolean("stroik.autoPaused", autoPaused);
+    persist();
+    super.onSaveInstanceState(state);
   }
 
   private void persist() {
@@ -224,6 +244,10 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private void render() {
     nextId = 1000;
     root = new LinearLayout(this);
+    // Dynamic pages reuse view IDs for different widget types. Restore the model and
+    // explicit page state instead of replaying Android's widget state into another layout.
+    // This also ignores incompatible hierarchy state saved by releases 1.0/1.01.
+    root.setSaveFromParentEnabled(false);
     root.setOrientation(1);
     root.setBackgroundColor(model.dark ? Color.rgb(30, 30, 30) : Color.WHITE);
     setContentView(root);

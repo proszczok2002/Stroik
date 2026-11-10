@@ -1,10 +1,10 @@
-# Stroik Android 1.01
+# Stroik Android 1.02
 
 Natywna aplikacja Android 11+ dla osób niewidomych, słabowidzących i widzących. Interfejs PL/EN oparty na standardowych kontrolkach Androida. [English](README.en.md).
 
-[Pobierz APK 1.01](https://github.com/proszczok2002/Stroik/releases/download/android-v1.01/Stroik-Android-1.01.apk) · [Wydanie i suma SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.01).
+[Pobierz APK 1.02](https://github.com/proszczok2002/Stroik/releases/download/android-v1.02/Stroik-Android-1.02.apk) · [Wydanie i suma SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.02).
 
-**Status próby aktualizacji:** na testowym POCO Play Protect zablokował instalację 1.01 po skanowaniu, bez podania konkretnej przyczyny. Wykrywanie, pobranie i otwarcie systemowego instalatora działają; pełna aktualizacja i zachowanie ustawień pozostają niepotwierdzone. Szczegóły w [raporcie urządzenia](DEVICE_TESTS.md).
+**Weryfikacja 1.02:** naprawiono awarię odtwarzania ekranu; na POCO przeszły 1103 asercje cyklu ekranu, 1831 interfejsu/dostępności i 7 audio. Instalacja systemowa z lokalnego APK zachowała ustawienia. Play Protect ostrzegał przed instalacją; przyczyna klasyfikacji pozostaje nieustalona. Pełna aktualizacja z pobraniem 1.02 przez GitHub nie była osobnym testem. Szczegóły w [raporcie urządzenia](DEVICE_TESTS.md).
 
 Instrukcja aplikacji: [guide.pl.txt](app/src/main/assets/guide.pl.txt). Kamerton, stroik mikrofonowy, hybryda, instrumenty, oktawy, kwinty/oktawy, profile JSON, odsłuch w słuchawkach, korekta pomiaru, grafika, wsparcie i informacje o autorach.
 

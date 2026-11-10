@@ -1,5 +1,10 @@
 # Android changelog / Historia zmian Android
 
+## 1.02 / 102
+
+- Fix incompatible widget-state restoration after theme/configuration changes; retain the current tab, scroll and last result.
+- Add real-device regression for legacy state and repeated PL/EN page recreation/theme switching.
+- Original 1.0 crash reproduced on the device; candidate verification and Play Protect status are recorded in DEVICE_TESTS.md.
 ## 1.01 / 101
 
 - Updater test release, signed with the same production key as 1.0.

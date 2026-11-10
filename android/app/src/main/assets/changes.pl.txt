@@ -1,5 +1,5 @@
-Stroik Android 1.01
+Stroik Android 1.02
 
-Wydanie do testu aktualizatora z wersji 1.0. Numer wersji został podniesiony do 101, a podpis aplikacji pozostaje ten sam. Aktualizacja ma zachować ustawienia, profile lokalne i zgodę na mikrofon. Instalację potwierdza system Android.
+Naprawiono zamykanie aplikacji przy odtwarzaniu ekranu, m.in. po zmianie motywu, obrocie telefonu lub powrocie do aplikacji. Android nie odtwarza już stanu pola wyboru w liście rozwijanej o tym samym identyfikatorze. Zapamiętywana jest bieżąca zakładka, przewinięcie i ostatni wynik. Mikrofon po przerwaniu pracy wymaga ponownego uruchomienia.
 
-Funkcje strojenia pozostają zgodne z 1.0. Dolne zakładki są w dwóch rzędach, żeby ich nazwy lepiej mieściły się przy dużej czcionce. Poprawiono też odmianę nazw oktaw w liście. Przycisk Ostatnie zmiany pokazuje opis 1.01.
+Dodano testy ponownego tworzenia wszystkich zakładek w obu językach, zmiany motywu oraz zgodności ze stanem ekranów poprzednich wersji. Wersja używa tego samego klucza podpisu; instalację potwierdza Android. Ostrzeżenie Play Protect z testu 1.01 opisano w dokumentacji, bez zakładania jego przyczyny.

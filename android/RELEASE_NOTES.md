@@ -1,31 +1,27 @@
-# Stroik Android 1.01
+# Stroik Android 1.02
 
 ## Polski
 
-Wydanie przeznaczone do sprawdzenia rzeczywistej aktualizacji z 1.0.
+Poprawka zamykania aplikacji przy odtwarzaniu ekranu — np. po zmianie motywu, obrocie telefonu lub powrocie do aplikacji.
 
-Status testu na POCO Android 16: Play Protect zablokował instalację po skanowaniu. Przyczyna klasyfikacji nie jest ustalona; pełne przejście 1.0 → 1.01 i zachowanie ustawień pozostają niepotwierdzone. Szczegóły: [raport urządzenia](https://github.com/proszczok2002/Stroik/blob/main/android/DEVICE_TESTS.md).
+- Rozdzielono zapis ustawień od automatycznego zapisu dynamicznych kontrolek, aby stan pola wyboru nie trafiał do listy rozwijanej.
+- Przywracana jest właściwa zakładka, przewinięcie i ostatni wynik. Mikrofon po przerwie uruchom ponownie.
+- Dodano regresję dla stanu starszych wydań i wielokrotnego odtwarzania wszystkich zakładek PL/EN oraz zmiany motywu.
+- versionName 1.02, versionCode 102; zachowany klucz podpisu. Nie odinstalowuj poprzedniej wersji, aby zachować ustawienia.
 
-- versionName 1.01, versionCode 101; ten sam klucz podpisu.
-- Nowy opis w przycisku Ostatnie zmiany.
-- Dolne zakładki w dwóch rzędach lepiej mieszczą nazwy przy dużej czcionce. Poprawiono odmianę nazw oktaw w liście.
-- Funkcje strojenia pozostają zgodne z 1.0.
+Końcowy APK na POCO przeszedł 1103 asercje odtwarzania ekranów, 1831 interfejsu/dostępności i 7 audio, bez nowej awarii w tej serii. Systemowa instalacja z lokalnego APK zachowała ustawienia; pełne pobranie i aktualizacja 1.02 przez GitHub nie były osobnym testem.
 
-W zainstalowanej 1.0 wybierz Ustawienia → Sprawdź aktualizacje, potwierdź pobranie i systemową instalację Androida. Nie odinstalowuj 1.0: ustawienia mają zostać zachowane. APK jest sprawdzany przez SHA-256, nazwę pakietu, numer wersji i certyfikat.
-
-Pobieranie ręczne: Stroik-Android-1.01.apk i plik .apk.sha256. Nadal obowiązują ograniczenia pomiaru współbrzmień i prób sprzętowych opisane w instrukcji i android/DEVICE_TESTS.md.
+Na testowym POCO Play Protect blokował instalację kandydatów jako potencjalnie niebezpiecznych, bez szczegółowej przyczyny. Instalacja testowa wymagała ręcznej decyzji właściciela. Przyczyna klasyfikacji nie jest ustalona; nie traktujemy zgodności podpisu jako rozstrzygnięcia ostrzeżenia. Szczegóły i aktualny zakres prób: [raport urządzenia](https://github.com/proszczok2002/Stroik/blob/main/android/DEVICE_TESTS.md).
 
 ## English
 
-Release for exercising the actual update from 1.0.
+Fix for a crash during screen restoration, including theme changes, rotation or returning to the app.
 
-POCO Android 16 test status: Play Protect blocked installation after scanning. The classification cause is unknown; a complete 1.0 → 1.01 update and retained settings remain unverified. See the [device report](https://github.com/proszczok2002/Stroik/blob/main/android/DEVICE_TESTS.md).
+- Settings and dynamic widget state are handled separately, preventing checkbox state from being restored into a dropdown.
+- The correct tab, scroll position and last result are restored. Restart the microphone after an interruption.
+- Added legacy-state and repeated recreation coverage for every PL/EN tab and theme switching.
+- versionName 1.02, versionCode 102; unchanged signing key. Update without uninstalling to retain settings.
 
-- versionName 1.01, versionCode 101; unchanged signing key.
-- Latest changes shows the new release description.
-- Bottom tabs use two rows for large text; Polish octave dropdown names were corrected.
-- Tuning features remain compatible with 1.0.
+The final APK passed 1103 lifecycle assertions, 1831 interface/accessibility assertions and 7 audio checks on the POCO, with no new crash during that sequence. System installation from the local APK retained settings; a complete GitHub download/update to 1.02 was not separately tested.
 
-In installed 1.0 choose Settings → Check for updates, confirm download and Android's system installation. Do not uninstall 1.0; settings should be retained. SHA-256, package name, version code and signing certificate are verified.
-
-Manual download: Stroik-Android-1.01.apk with its .apk.sha256 file. Consonance and hardware test limitations in the guide and android/DEVICE_TESTS.md still apply.
+On the test POCO, Play Protect blocked candidate installations as potentially unsafe without a detailed cause. Test installation required the owner's manual decision. The classification cause remains unknown; a matching signature does not resolve the warning. Actual test scope and current results: [device report](https://github.com/proszczok2002/Stroik/blob/main/android/DEVICE_TESTS.md).

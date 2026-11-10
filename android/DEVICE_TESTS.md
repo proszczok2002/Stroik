@@ -1,8 +1,8 @@
-# Android device verification — 1.0 and 1.01
+# Android device verification — 1.0, 1.01 and 1.02
 
-Device: POCO F8 Ultra, model 25102PCBEG, Android 16 / API 36. The TalkBack-derived service from com.nirenr.talkman remained enabled throughout instrumentation. The initial USB installation restriction was resolved by the owner; ADB installation and launch then succeeded.
+Device: POCO F8 Ultra, model 25102PCBEG, Android 16 / API 36. During the original 1.0 checks, the TalkBack-derived service from com.nirenr.talkman remained enabled. The initial USB installation restriction was resolved by the owner; ADB installation and launch then succeeded. The final 1.02 service and results are recorded separately below.
 
-## Passed
+## Passed on 1.0
 
 - Signed production candidate 1.0 / versionCode 100 installed and launched on the actual phone.
 - DeviceTests completed **1831 assertions**: PL/EN Tuner, Instrument, Settings and Help; all four tuning methods; fifth/octave choices; nine octave choices; dark rendering; input labels, focusability and minimum 48 dp touch targets. Controls are designed for 64 dp minimum height.
@@ -39,6 +39,28 @@ The local production APK still has the published SHA-256 and original certificat
 Source 1.01 CI passed: Android 42840776407, Windows 42840776445. Tag CI passed: 42841104370 / 42841104717. Manifest commit CI passed: 42841173397 / 42841173405.
 
 Polski: wydania 1.0 i 1.01 są publiczne, pliki i podpis sprawdzone. Stroik 1.0 wykrył i pobrał 1.01, pokazał zmiany i systemowe potwierdzenie aktualizacji. Po skanowaniu Play Protect zablokował instalację jako potencjalnie niebezpieczną, bez podania konkretnej przyczyny. Na telefonie pozostaje 1.0; pełna aktualizacja i zachowanie ustawień nie są jeszcze potwierdzone. Testy struktury dostępności i uruchamiania audio przeszły, odsłuch TalkBack przez człowieka i testy z instrumentem pozostają osobnymi próbami.
+
+## Crash report and 1.02 regression
+
+The owner reported apparently random exits while touching controls. The actual crash buffer contained repeated `ClassCastException: CompoundButton$SavedState cannot be cast to Spinner$SavedState` in Android's restoration code. Version 1.0 deterministically reproduced this fatal error when recreating the Settings activity. The original screen matrix did not cover activity recreation and did not establish lifecycle stability.
+
+Dynamic layouts reused sequential view IDs for different widget types and always recreated the Tuner page. Version 1.02 excludes that dynamic subtree from automatic hierarchy saving/restoration and explicitly preserves the page, scroll position, last result and fork pause state. Settings remain in the existing model/preferences. It does not merely catch and hide the exception.
+
+Final 1.02 APK: 62108 bytes, SHA-256 **06a5de6a6c69ea0d2906558f402498f5f3c84a05c7fa908ff2a56afd5c279862**. Package/version 1.02 / 102 and unchanged production signing certificate were checked. The APK pulled back from the actual installed package matched this hash exactly. The owner completed system installation from a local APK after the Play Protect warning. The agent did not silently replace the production app through ADB or disable Play Protect.
+
+Passed on that exact final APK:
+
+- **1103 lifecycle assertions**: initial Settings recreation, legacy checkbox hierarchy replay into a different page, three cycles recreating all four pages in PL/EN, matching model settings/page, and both actual theme checkbox changes. These exercise Android activity recreation; they are not a claim that every physical rotation or arbitrary touch sequence was tested.
+- **1831 interface/accessibility assertions**, with 5 focus and 6 click events; all four methods and interval choices, octave selection, PL/EN and dark theme.
+- **7 capture/playback assertions**, including the speaker-hybrid handover. No headphones were connected.
+- System installation retained the complete saved model, signing certificate and pre-install app-data marker. The final test log uses the label “System install verified”; it does not represent an end-to-end GitHub updater test for 1.02.
+- No new entries appeared in the crash buffer during the final test sequence. A screenshot confirmed the two-row tab labels fit at the device's large font size.
+
+TalkBack remained enabled. Earlier tests used the service from `com.nirenr.talkman`; final checks observed the official `com.google.android.marvin.talkback/.TalkBackService`. The agent did not change these services. Human speech/gesture listening remains unverified.
+
+The completed installation from the local APK is separate from the earlier 1.0 → GitHub 1.01 detection/download/installer test, which Play Protect blocked. A complete GitHub updater round trip to 1.02 has not been exercised; do not report it as passed. The Play Protect classification cause is still unknown.
+
+Polski: odtworzono rzeczywistą awarię 1.0 przy ponownym tworzeniu Ustawień. Końcowy APK 1.02 jest zainstalowany i zgodny z lokalną sumą; przeszedł 1103 asercje odtwarzania ekranów, 1831 interfejsu/dostępności oraz 7 audio, bez nowej awarii podczas tej serii. Ustawienia i dane zachowano po systemowej instalacji lokalnego APK. Nie jest to potwierdzenie pełnej aktualizacji 1.02 z GitHuba ani rozstrzygnięcie ostrzeżenia Play Protect.
 
 ## Remaining physical checks
 
