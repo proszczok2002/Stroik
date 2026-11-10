@@ -1,5 +1,10 @@
 # Changelog / Historia zmian
 
+## 1.0.14 (Stroik 1.14) — 2026-11-10
+
+- Retain the consonance, hybrid practice, octave visibility and update settings introduced in 1.13.
+- Stop the active microphone and hybrid cycle before importing a settings profile so a different method starts cleanly; add a lifecycle regression check.
+
 ## 1.0.13 (Stroik 1.13) — 2026-11-10
 
 - Restore the octave selector for both piano/chromatic views, independently of the legacy visibility preference.

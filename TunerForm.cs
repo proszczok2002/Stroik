@@ -457,8 +457,8 @@ internal sealed partial class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.13 — dostępny stroiciel", "Stroik 1.13 — accessible tuner");
-        _heading.Text = "Stroik 1.13";
+        Text = T("Stroik 1.14 — dostępny stroiciel", "Stroik 1.14 — accessible tuner");
+        _heading.Text = "Stroik 1.14";
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tunerTab.AccessibleName = _tunerTab.Text;
@@ -585,6 +585,7 @@ internal sealed partial class TunerForm : Form
     private void Persist() { if (!_initializing) Preferences.Save(ReadSettings()); }
     private void ApplySettings(Preferences settings)
     {
+        StopMicrophone(false);
         _initializing = true;
         _english = settings.English;
         _language.SelectedIndex = settings.English ? 1 : 0;
@@ -985,7 +986,7 @@ internal sealed partial class TunerForm : Form
     {
         try
         {
-            Version assemblyVersion = typeof(TunerForm).Assembly.GetName().Version ?? new Version(1, 0, 13);
+            Version assemblyVersion = typeof(TunerForm).Assembly.GetName().Version ?? new Version(1, 0, 14);
             Version version = new(assemblyVersion.Major, assemblyVersion.Minor, Math.Max(0, assemblyVersion.Build));
             using var dialog = new ReleaseNotesDialog(version, ReleaseNotes.Current(_english), _english, _dark.Checked, false);
             dialog.ShowDialog(this);
@@ -1000,8 +1001,8 @@ internal sealed partial class TunerForm : Form
         MessageBox.Show(this, AboutText(_english), T("O programie", "About Stroik"), MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
     internal static string AboutText(bool english) => english
-        ? "Stroik 1.13 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
-        : "Stroik 1.13 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
+        ? "Stroik 1.14 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
+        : "Stroik 1.14 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
     private void OpenExternal(string url)
     {
         try

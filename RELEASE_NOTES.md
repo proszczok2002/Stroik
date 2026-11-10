@@ -1,7 +1,8 @@
-# Stroik 1.13 / Stroik 1.13
+# Stroik 1.14 / Stroik 1.14
 
 ## Polski
 
+- Wersja 1.14 zawiera funkcje 1.13 opisane poniżej oraz poprawkę: wczytanie profilu zatrzymuje poprzedni mikrofon i cykl hybrydowy. Po zmianie profilu naciśnij „Włącz mikrofon”, aby rozpocząć pracę z jego ustawieniami.
 - Przywrócono stale widoczną listę oktaw w pianinie i trybie chromatycznym, także w widoku klasycznym. Przy gotowych listach pustych strun wybiera się strunę; inne oktawy są w trybie chromatycznym.
 - Dodano listę „Sprawdź współbrzmienie”: wyłączone, kwinty, oktawy, budowane od wybranego dźwięku w górę. Kamerton gra parę jednocześnie. Mikrofon porównuje nuty osobno lub mierzy dwie składowe naraz w trybie eksperymentalnym. Wyniki podają centy i szacowane dudnienia idealnych harmonicznych, bez gwarancji braku dudnień całego instrumentu. Przy oktawie harmoniczna dolnej nuty może udawać drugą nutę; sprawdź także osobno.
 - Kamerton i tryby hybrydowe mają opcję przejścia do następnego celu po dwóch stuknięciach według wybranej kolejności. To gest akustyczny bez sprawdzania wysokości; przypadkowe hałasy również mogą go wywołać.
@@ -13,6 +14,7 @@ Nowe funkcje przetestowano programowo na sygnałach syntetycznych i kontrolkach 
 
 ## English
 
+- Version 1.14 includes the 1.13 features below and fixes profile loading: the previous microphone capture and hybrid cycle stop first. Press Start microphone after loading a profile to begin with its settings.
 - Restored an always-visible octave list in piano and chromatic modes, including Classic view. Open-string presets use their string list; other octaves are available in chromatic mode.
 - Added Check consonance: Off, Fifths, Octaves, built upward from the selected note. The fork plays both notes together. Microphone mode compares separate notes or estimates two simultaneous components experimentally. Results show cents and estimated ideal-harmonic beats, not a guarantee of no beating across the instrument. A lower note's harmonic can mimic the upper octave; also check separately.
 - Fork and hybrid modes can advance to the next target in the selected order after two taps. This acoustic gesture does not validate pitch; incidental noises can trigger it.

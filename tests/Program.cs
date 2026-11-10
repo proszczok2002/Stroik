@@ -55,11 +55,11 @@ if (UpdateCheckState.IntervalMilliseconds != 300000 || !checks.TryBegin() || che
 checks.End();
 if (!checks.TryBegin()) throw new Exception("Sprawdzanie nie wraca po zakończeniu poprzedniego.");
 checks.End();
-var offeredVersion = new Version(1, 0, 13);
+var offeredVersion = new Version(1, 0, 14);
 if (!checks.ShouldPrompt(offeredVersion, true)) throw new Exception("Nowa wersja nie wywołuje pytania.");
 checks.MarkPrompted(offeredVersion);
 if (checks.ShouldPrompt(offeredVersion, true) || !checks.ShouldPrompt(offeredVersion, false) ||
-    !checks.ShouldPrompt(new Version(1, 0, 14), true))
+    !checks.ShouldPrompt(new Version(1, 0, 15), true))
     throw new Exception("Ponowne pytania w tle lub ręczne sprawdzanie działają błędnie.");
 
 if (args.Length == 3 && args[0] == "--verify-public-changelog")
@@ -460,11 +460,11 @@ var uiThread = new Thread(() =>
                     $"{label}: {(english ? "unchecked" : "odznaczone")}.")
                     throw new Exception("Komunikat pola wyboru nie podaje nowego stanu po polsku lub angielsku.");
             }
-            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 13), ReleaseNotes.Current(english), english, false, false);
+            using var changesDialog = new ReleaseNotesDialog(new Version(1, 0, 14), ReleaseNotes.Current(english), english, false, false);
             var changesLayout = (System.Windows.Forms.TableLayoutPanel)changesDialog.Controls[0];
             var changesText = changesLayout.Controls.OfType<System.Windows.Forms.TextBox>().Single();
             if (string.IsNullOrWhiteSpace(changesText.Text) ||
-                changesText.AccessibleName != (english ? "Changes in version 1.0.13" : "Zmiany w wersji 1.0.13"))
+                changesText.AccessibleName != (english ? "Changes in version 1.0.14" : "Zmiany w wersji 1.0.14"))
                 throw new Exception("Okno zmian nie udostępnia opisu czytnikowi ekranu.");
             using var updateDialog = new ReleaseNotesDialog(new Version(1, 1, 0), "Sample change", english, false, true);
             var updateLayout = (System.Windows.Forms.TableLayoutPanel)updateDialog.Controls[0];
@@ -485,6 +485,15 @@ var uiThread = new Thread(() =>
         var updateMinutes = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_updateMinutes", flags)!.GetValue(form)!;
         var forkTap = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_forkTap", flags)!.GetValue(form)!;
         automaticUpdates.Checked = false;
+        // A profile switch must end an existing capture/cycle before changing methods.
+        // This capture object has no driver handle: this checks lifecycle, not hardware.
+        var inactiveCapture = new Microphone();
+        typeof(TunerForm).GetField("_microphone", flags)!.SetValue(form, inactiveCapture);
+        var practiceTimer = (System.Windows.Forms.Timer)typeof(TunerForm).GetField("_practiceTimer", flags)!.GetValue(form)!;
+        practiceTimer.Start();
+        applySettings.Invoke(form, [new Preferences { Method = TuningMethod.HybridSpeakers, AutomaticUpdates = false }]);
+        if (practiceTimer.Enabled || typeof(TunerForm).GetField("_microphone", flags)!.GetValue(form) is not null)
+            throw new Exception("Profil pozostawił aktywny poprzedni cykl mikrofonu.");
         method.SelectedIndex = 1;
         autoStrike.Checked = false;
         form.Show();
