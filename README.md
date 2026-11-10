@@ -1,5 +1,7 @@
 # Stroik 1.14
 
+Trwają prace nad [natywną wersją Android](android/README.md). Stan prób na telefonie jest zapisany w [android/DEVICE_TESTS.md](android/DEVICE_TESTS.md); publikacja Android 1.0 i testowej aktualizacji 1.01 czeka na zakończenie weryfikacji urządzenia.
+
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
 [English documentation](README.en.md) · [Najnowsze wydanie](https://github.com/proszczok2002/Stroik/releases/latest) · [Historia zmian](CHANGELOG.md)

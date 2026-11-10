@@ -6,3 +6,9 @@ tests/obj/
 dist/
 /niepotrzebne/
 .dotnet10/
+android/build/
+android/releases/
+android/.signing/
+android/local.properties
+android/device-results/
+android/.tools/

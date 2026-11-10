@@ -1,0 +1,5 @@
+Stroik Android 1.0
+
+Initial Android release: tuning fork, microphone, speaker and headphone hybrid practice, instruments and octaves, traditional note names, fifths and octaves, JSON profiles, correction, double strikes, graphics, language/theme settings and GitHub updates through Android's installation confirmation.
+
+Created by Proszczok with Codex. Original idea: Witold.

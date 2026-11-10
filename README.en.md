@@ -1,5 +1,7 @@
 # Stroik 1.14
 
+A [native Android version](android/README.en.md) is in development. See [device test state](android/DEVICE_TESTS.md). Android 1.0 and the 1.01 updater-test release await completion of device verification.
+
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
 [Dokumentacja po polsku](README.md) · [Latest release](https://github.com/proszczok2002/Stroik/releases/latest) · [Changelog](CHANGELOG.md)

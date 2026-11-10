@@ -1,0 +1,5 @@
+Stroik Android 1.0
+
+Pierwsze wydanie dla Androida: kamerton, mikrofon, hybryda głośnikowa i słuchawkowa, wybór instrumentu i oktawy, tradycyjne nazwy nut, kwinty i oktawy, profile JSON, kalibracja, dwukrotne uderzenie, grafika, ustawienia języka i motywu oraz aktualizator GitHub z systemowym potwierdzeniem instalacji.
+
+Wykonawca: Proszczok z Codex. Pomysłodawca: Witold.

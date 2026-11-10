@@ -1,0 +1,28 @@
+Stroik Android — instrukcja
+
+Dostępność
+Dolne przyciski otwierają Stroik, Instrument, Ustawienia i Pomoc. Każdy przycisk ma duże pole dotykowe. Przechodź między kontrolkami gestami TalkBack. Listy rozwijają się po dwukrotnym stuknięciu; stan pól wyboru zgłasza Android. Wyniki są wypowiadane po pomiarze, nie przy każdej próbce. Przy wyłączonym TalkBack wyniki może czytać syntezator systemowy. Grafika jest opcjonalna i domyślnie wyłączona. Język polski/angielski i ciemny motyw są w Ustawieniach.
+
+Metody
+Kamerton odtwarza gasnący wzorzec wybranej nuty. Wybierz automatyczne uderzenia i odstęp lub naciskaj Uderz kamerton. Przycisk pauzy zatrzymuje lub wznawia automat.
+Stroik elektroniczny wymaga zgody na mikrofon. Naciśnij Włącz mikrofon, zagraj jedną nutę i wycisz instrument. Wynik podaje nazwę nuty, kierunek i odchyłkę. Wyłącz mikrofon kończy nasłuch. Opuszczenie aplikacji zatrzymuje nagrywanie i dźwięk; po powrocie uruchom pomiar ponownie. Nagrania nie są zapisywane ani wysyłane.
+Hybryda głośnikowa gra wzorzec 3 sekundy, pomija mikrofon przez 3,4 sekundy, słucha instrumentu, podaje wynik, czeka około 5 sekund i powtarza wzorzec. Długi komunikat czytnika lub pogłos mogą zakłócić rytm; wtedy zatrzymaj i powtórz próbę.
+Hybryda słuchawkowa słucha równocześnie z wzorcem. Odsłuch mikrofonu jest opcjonalny i wymaga podłączonych słuchawek. Nie włączaj odsłuchu przez głośniki: grozi sprzężeniem. Opóźnienie zależy od urządzenia. Program używa domyślnych urządzeń Androida i nie zmienia ustawień systemowych.
+
+Instrument i dźwięk
+Pianino i tryb chromatyczny mają 88 nut od A subkontra do c pięciokreślnego oraz zawsze widoczną listę oktaw. Domyślny cel: g razkreślne. Przy gitarze, ukulele, skrzypcach i basie lista obejmuje puste struny. Ukulele: standard od podłogi A E C G lub alternatywa G E C A. Gitara od grubej struny E A d g h e. Do innych strojów użyj trybu chromatycznego. Kolejność pianina: rosnąco, po 5 półtonów na przemian w prawo i lewo lub po 5 całych tonów. Następny dźwięk przechodzi ręcznie.
+W mikrofonie dwa uderzenia po poprawnym wyniku mogą przesunąć cel. W kamertonie i hybrydzie można włączyć gest dwóch oddzielnych ataków; przypadkowe hałasy też mogą go wywołać. Czas wynosi 0,5–2,5 sekundy. Własny wzorzec głośnikowy jest pomijany, a automatyczny kamerton z gestem pozostawia co najmniej 6,5 sekundy odstępu.
+
+Współbrzmienia
+Wybierz dolną nutę, potem Kwinty lub Oktawy. c razkreślne łączy się z g razkreślnym lub c dwukreślnym. Kamerton gra oba dźwięki razem. Pomiar osobny: dolny, wyciszenie, potwierdzenie, górny, wyciszenie. Wynik pokazuje odchyłkę od 700/1200 centów i szacowane dudnienia idealnych harmonicznych: |2×górny−3×dolny| lub |górny−2×dolny| Hz.
+Tryb Razem jest eksperymentalny: graj blisko wybranego celu przez około 2 sekundy. Harmoniczna dolnej nuty może udawać drugą nutę, szczególnie w oktawie. Wynik koniecznie potwierdź osobno. Nie jest to gwarancja braku rzeczywistych dudnień. Kwinty temperowane naturalnie mogą dudnić, a pianina potrzebować rozciągniętych oktaw z powodu nieharmoniczności strun.
+
+Poprawny pomiar
+Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty. Graj równomiernie bez przesterowania. Zmień czułość w zakładce Instrument. Ręczna korekta ±100 centów wymaga porównania ze znanym wzorcem. Wyświetlanie dziesiątych części Hz nie gwarantuje takiej dokładności. Standard A to 440 Hz. Przed podniesieniem naciągu starego pianina poproś technika o ocenę; sam wiek nie wyznacza bezpiecznego stroju. Na słuch warto najpierw ćwiczyć na niedrogim instrumencie; zerwana struna nadal może zranić.
+
+Profile i aktualizacje
+Zapisz plik ustawień i Wczytaj plik ustawień używają systemowego wyboru pliku JSON. Profil obejmuje metodę, instrument, język, motyw i ustawienia aktualizacji. Wczytanie kończy bieżący pomiar. Automatyczne sprawdzanie odbywa się przy wejściu i co ustawioną liczbę minut, tylko gdy aplikacja jest otwarta. Można je wyłączyć. Brak nowej wersji lub błąd sieci nie powoduje komunikatu w tle. Ręczne sprawdzenie jest w Ustawieniach.
+Nowe wydanie pokazuje zmiany i pytanie o pobranie. APK jest sprawdzany przez SHA-256, nazwę pakietu, numer wersji i podpis. Potem Android pyta o zgodę na instalację. Może być potrzebna zgoda na instalowanie z aplikacji Stroik. Program nie instaluje bez potwierdzenia systemowego. Ustawienia pozostają po poprawnej aktualizacji.
+
+Projekt: https://github.com/proszczok2002/Stroik
+Licencja MIT. Wykonawca Proszczok z Codex; pomysłodawca Witold.
