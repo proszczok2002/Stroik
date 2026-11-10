@@ -8,6 +8,7 @@ Device observed: POCO F8 Ultra, serial suffix `eff8`, model `25102PCBEG`, Androi
 - APK signing certificate remains local under ignored `.signing`; release APK is not a debug-key build.
 - JVM core suite: 22 pitch/interval cases at 44.1/48 kHz, piano extremes, silence, DC offset, recovery after unpitched noise, paired fork synthesis and double strikes.
 - Test APK compilation. `DeviceTests` requests `FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES` to preserve TalkBack during checks.
+- GitHub Actions passed for source commit `f7c3f42124560f1acab761af76b6699cd9209713`: [Android build/core tests](https://github.com/proszczok2002/Stroik/actions/runs/42830350350) and [Windows regression build](https://github.com/proszczok2002/Stroik/actions/runs/42830350428). The CI Android APK uses its own disposable key and must not be used to update the locally signed release candidate.
 
 ## Device gate
 
