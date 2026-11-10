@@ -16,11 +16,13 @@ public final class DeviceTests extends Instrumentation {
   private MainActivity activity;
   private UiAutomation automation;
   private int assertions;
+  private String scenario = "";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
   public void onCreate(Bundle args) {
     super.onCreate(args);
+    scenario = args == null ? "" : args.getString("scenario", "");
     start();
   }
 
@@ -167,6 +169,18 @@ public final class DeviceTests extends Instrumentation {
 
   @Override
   public void onStart() {
+    if (scenario.equals("gestures")) {
+      gestureScenario();
+      return;
+    }
+    if (scenario.equals("audio")) {
+      audioScenario();
+      return;
+    }
+    if (scenario.equals("update")) {
+      updateScenario();
+      return;
+    }
     Bundle result = new Bundle();
     String saved = null;
     try {
@@ -284,6 +298,165 @@ public final class DeviceTests extends Instrumentation {
       result.putString("stream", report.toString());
       result.putString("result", "FAIL");
       restoreSettings(saved);
+      finish(Activity.RESULT_CANCELED, result);
+    }
+  }
+
+  private void updateScenario() {
+    Bundle result = new Bundle();
+    try {
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(getTargetContext(), MainActivity.class)
+                      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      waitForIdleSync();
+      java.lang.reflect.Field page = MainActivity.class.getDeclaredField("page");
+      page.setAccessible(true);
+      main(() -> {
+        try {
+          page.setInt(activity, 2);
+        } catch (Exception e) {
+          throw new IllegalStateException(e);
+        }
+        invokeRender();
+        findButton(activity.model.english ? "Check for updates" : "Sprawdź aktualizacje")
+            .performClick();
+      });
+      log("Opened real in-app updater. Android confirmation must be completed on the phone.");
+      SystemClock.sleep(180000);
+      result.putString("stream", report.toString());
+      result.putString("result", "PROMPT_OPENED");
+      finish(Activity.RESULT_OK, result);
+    } catch (Throwable e) {
+      log("FAIL: " + e);
+      result.putString("stream", report.toString());
+      result.putString("result", "FAIL");
+      finish(Activity.RESULT_CANCELED, result);
+    }
+  }
+
+  private void gestureScenario() {
+    Bundle result = new Bundle();
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      automation.setOnAccessibilityEventListener(event -> {
+        if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED
+            && event.getPackageName() != null
+            && event.getPackageName().toString().equals("pl.proszczok.stroik")) {
+          focused.incrementAndGet();
+          log("TalkBack swipe focus: " + event.getText() + " / " + event.getContentDescription());
+        }
+      });
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(getTargetContext(), MainActivity.class)
+                      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      waitForIdleSync();
+      SystemClock.sleep(15000);
+      require(focused.get() >= 3, "TalkBack swipes did not generate enough focus changes");
+      log(
+          "TalkBack actual swipe navigation PASS; focus events="
+              + focused.get()
+              + ". Human pronunciation/listening remains separate.");
+      result.putString("stream", report.toString());
+      result.putString("result", "PASS");
+      finish(Activity.RESULT_OK, result);
+    } catch (Throwable e) {
+      log("FAIL: " + e);
+      result.putString("stream", report.toString());
+      result.putString("result", "FAIL");
+      finish(Activity.RESULT_CANCELED, result);
+    }
+  }
+
+  private void audioScenario() {
+    Bundle result = new Bundle();
+    String saved = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context target = getTargetContext();
+      saved = target.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(target, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      waitForIdleSync();
+      java.lang.reflect.Field audioField = MainActivity.class.getDeclaredField("audio");
+      audioField.setAccessible(true);
+      AudioEngine engine = (AudioEngine) audioField.get(activity);
+      main(() -> {
+        activity.model.method = 1;
+        activity.model.autoFork = false;
+        activity.model.updates = false;
+        activity.model.target = 69;
+        activity.model.interval = 0;
+        activity.model.monitor = false;
+        invokeRender();
+        findButton(activity.model.english ? "Start microphone" : "Włącz mikrofon").performClick();
+      });
+      long deadline = SystemClock.elapsedRealtime() + 45000;
+      while (!engine.running() && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(300);
+      require(engine.running(), "Microphone permission/start not completed within 45 seconds");
+      SystemClock.sleep(700);
+      java.lang.reflect.Field recordField = AudioEngine.class.getDeclaredField("recorder");
+      recordField.setAccessible(true);
+      android.media.AudioRecord record = (android.media.AudioRecord) recordField.get(engine);
+      require(
+          record.getRecordingState() == android.media.AudioRecord.RECORDSTATE_RECORDING,
+          "AudioRecord is not recording");
+      log("Actual AudioRecord capture started with Android microphone permission");
+      engine.strike();
+      SystemClock.sleep(600);
+      java.lang.reflect.Field forkField = AudioEngine.class.getDeclaredField("fork");
+      forkField.setAccessible(true);
+      android.media.AudioTrack fork = (android.media.AudioTrack) forkField.get(engine);
+      require(
+          fork != null && fork.getPlayState() == android.media.AudioTrack.PLAYSTATE_PLAYING,
+          "Fork output did not start");
+      log("Actual AudioTrack fork playback started");
+      main(engine::stop);
+      require(!engine.running() && recordField.get(engine) == null, "Stop left recording active");
+      main(() -> {
+        activity.model.method = 2;
+        engine.configure(activity.model);
+        findButton(activity.model.english ? "Start microphone" : "Włącz mikrofon").performClick();
+      });
+      SystemClock.sleep(500);
+      require(engine.running(), "Speaker hybrid capture did not start");
+      java.lang.reflect.Field mute = AudioEngine.class.getDeclaredField("muteUntil");
+      mute.setAccessible(true);
+      require(
+          mute.getLong(engine) > SystemClock.elapsedRealtime(),
+          "Speaker hybrid did not suppress its own reference");
+      SystemClock.sleep(3500);
+      require(
+          engine.running() && mute.getLong(engine) <= SystemClock.elapsedRealtime(),
+          "Speaker hybrid did not reopen listening");
+      log("Speaker hybrid ignored reference and reopened listening");
+      main(engine::stop);
+      boolean headphones =
+          AudioEngine.headphones(
+              (android.media.AudioManager) activity.getSystemService(Context.AUDIO_SERVICE));
+      log(
+          "Headphones connected="
+              + headphones
+              + "; headphone monitoring physical test "
+              + (headphones ? "available but not exercised" : "pending (no headphones)"));
+      log(
+          "Audio assertions="
+              + assertions
+              + "; instrument accuracy and human speech listening not established");
+      restoreSettings(saved);
+      result.putString("stream", report.toString());
+      result.putString("result", "PASS");
+      finish(Activity.RESULT_OK, result);
+    } catch (Throwable e) {
+      log("FAIL: " + e);
+      restoreSettings(saved);
+      result.putString("stream", report.toString());
+      result.putString("result", "FAIL");
       finish(Activity.RESULT_CANCELED, result);
     }
   }

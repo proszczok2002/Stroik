@@ -1,28 +1,31 @@
-# Android device test state
+# Android device verification — 1.0
 
-Device observed: POCO F8 Ultra, serial suffix `eff8`, model `25102PCBEG`, Android 16 / API 36. A TalkBack-derived service (`com.nirenr.talkman`) is enabled, alongside two other accessibility services.
+Device: POCO F8 Ultra, model 25102PCBEG, Android 16 / API 36. The TalkBack-derived service from com.nirenr.talkman remained enabled throughout instrumentation. The initial USB installation restriction was resolved by the owner; ADB installation and launch then succeeded.
 
-## Passed locally
+## Passed
 
-- Java SDK compilation, resource packaging, DEX compilation, ZIP alignment and release signing.
-- APK signing certificate remains local under ignored `.signing`; release APK is not a debug-key build.
-- JVM core suite: 22 pitch/interval cases at 44.1/48 kHz, piano extremes, silence, DC offset, recovery after unpitched noise, paired fork synthesis and double strikes.
-- Test APK compilation. `DeviceTests` requests `FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES` to preserve TalkBack during checks.
-- GitHub Actions passed for source commit `f7c3f42124560f1acab761af76b6699cd9209713`: [Android build/core tests](https://github.com/proszczok2002/Stroik/actions/runs/42830350350) and [Windows regression build](https://github.com/proszczok2002/Stroik/actions/runs/42830350428). The CI Android APK uses its own disposable key and must not be used to update the locally signed release candidate.
+- Signed production candidate 1.0 / versionCode 100 installed and launched on the actual phone.
+- DeviceTests completed **1831 assertions**: PL/EN Tuner, Instrument, Settings and Help; all four tuning methods; fifth/octave choices; nine octave choices; dark rendering; input labels, focusability and minimum 48 dp touch targets. Controls are designed for 64 dp minimum height.
+- Actual accessibility events: **5 accessibility focus changes and 6 click events**. Tests used FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES, preserving TalkBack.
+- Device-side algorithm/profile/update-origin checks passed. JVM tests separately covered 22 pitch/interval cases at 44.1/48 kHz, lowest/highest piano notes, silence, DC, noise recovery, paired fork output and double attacks.
+- With microphone permission granted through Android, **7 audio assertions** passed: AudioRecord was recording; AudioTrack fork playback was active; stop released recording; speaker hybrid suppressed its reference and reopened listening after the decay interval.
+- No headphones were connected, so physical microphone monitoring was not exercised.
+- GitHub CI source build/core checks passed before device testing. CI uses a disposable key; its APK must not replace production-signed APKs.
 
-## Device gate
+## Scope of accessibility evidence
 
-Initial installation was attempted using authorized ADB deployment. The phone returned `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user`. The app was not installed or launched. The user has been asked to enable/confirm Install via USB on the phone. No installation restriction was bypassed.
+The complete screen matrix was checked for accessible structure, geometry and focus/state events. This is not a human listening test of TalkBack pronunciation or every gesture. An additional remote swipe attempt was blocked by the phone with INJECT_EVENTS permission errors; the setting was not bypassed. The user has been asked to check spoken names and checkbox state directly.
 
-The signed candidate was also copied to the phone's Downloads as `Stroik-Android-1.0-test-20261110.apk` for optional manual installation through the ordinary Android installer. Candidate: 62110 bytes, SHA-256 `97e9169b68ecb012a6f9df63488890df473854f23a1360ced6f7df31939ce843`. Signing certificate SHA-256: `3a07196ac981d8a1d5dda9f2fb140e1c47226128edc25866e2c37a8f65ab1522`.
+## Candidate identity
 
-## Pending before publication
+APK: 62110 bytes; SHA-256 97e9169b68ecb012a6f9df63488890df473854f23a1360ced6f7df31939ce843.
 
-1. Install and launch 1.0; inspect crash logs and all screens on the actual phone.
-2. Run DeviceTests: PL/EN pages, all four methods, fifth/octave selectors, octave dropdown, checkbox state events, TalkBack accessibility focus, touch sizes and labels.
-3. Human listening/gesture check with TalkBack across the app; structural tests cannot prove correct spoken navigation.
-4. Confirm microphone permission and check capture/playback lifecycle, target changes, start/stop and leaving the app. Real instrument accuracy and headphone monitoring need physical audio equipment.
-5. Publish Android 1.0 with public APK/checksum checks and a manifest pointing to it.
-6. Build/sign 1.01 with the same key; publish its assets and manifest last. From installed 1.0, use the in-app updater, confirm Android's system installation, verify 1.01/package/signature and retained settings. Do not use silent ADB replacement for this updater test.
+Signing certificate SHA-256: 3a07196ac981d8a1d5dda9f2fb140e1c47226128edc25866e2c37a8f65ab1522. Private signing files remain local under ignored .signing.
 
-Current source/APK is a development candidate; neither requested Android release has been published yet.
+## Update test
+
+Next: publish 1.0 assets and verified manifest, then sign 1.01 with the same key and increasing versionCode. Publish and verify its assets before updating the manifest. Exercise the installed 1.0 in-app updater and Android's actual installation confirmation. Check package version, certificate and retained settings after installation. Do not replace this test with silent ADB installation.
+
+## Remaining physical checks
+
+Human TalkBack speech/gestures, real instrument accuracy in noise, headphone monitoring/latency, and complete 1.0 → 1.01 installation confirmation remain separate from the passed structural and audio-device checks.
