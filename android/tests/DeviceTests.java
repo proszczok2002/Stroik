@@ -169,6 +169,25 @@ public final class DeviceTests extends Instrumentation {
 
   @Override
   public void onStart() {
+    if (scenario.equals("manifest")) {
+      Bundle result = new Bundle();
+      try {
+        String manifest =
+            new String(
+                Updater.fetch(Updater.MANIFEST, 100000), java.nio.charset.StandardCharsets.UTF_8);
+        org.json.JSONObject parsed = new org.json.JSONObject(manifest);
+        require("pl.proszczok.stroik".equals(parsed.getString("packageName")), "Manifest package");
+        log("Device updater manifest versionCode=" + parsed.getInt("versionCode"));
+        log("Device updater manifest sha256=" + parsed.getString("sha256"));
+        result.putString("stream", report.toString());
+        result.putString("result", "PASS");
+        finish(Activity.RESULT_OK, result);
+      } catch (Throwable error) {
+        result.putString("stream", "Manifest probe failed: " + error);
+        finish(Activity.RESULT_CANCELED, result);
+      }
+      return;
+    }
     if (scenario.equals("prepare-update") || scenario.equals("verify-update")) {
       persistenceScenario();
       return;

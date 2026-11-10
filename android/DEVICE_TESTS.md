@@ -1,4 +1,4 @@
-# Android device verification — 1.0
+# Android device verification — 1.0 and 1.01
 
 Device: POCO F8 Ultra, model 25102PCBEG, Android 16 / API 36. The TalkBack-derived service from com.nirenr.talkman remained enabled throughout instrumentation. The initial USB installation restriction was resolved by the owner; ADB installation and launch then succeeded.
 
@@ -16,15 +16,25 @@ Device: POCO F8 Ultra, model 25102PCBEG, Android 16 / API 36. The TalkBack-deriv
 
 The complete screen matrix was checked for accessible structure, geometry and focus/state events. This is not a human listening test of TalkBack pronunciation or every gesture. An additional remote swipe attempt was blocked by the phone with INJECT_EVENTS permission errors; the setting was not bypassed. The user has been asked to check spoken names and checkbox state directly.
 
-## Candidate identity
+## Published artifacts
 
 APK: 62110 bytes; SHA-256 97e9169b68ecb012a6f9df63488890df473854f23a1360ced6f7df31939ce843.
+
+Release 1.01 / 101: 62108 bytes; SHA-256 05932dc48a072ebbf8e9a5238591417c9716be06a7ba554b7b9858357a2f04dd. Two-row bottom navigation improves large-text labels; Polish octave dropdown grammar was corrected.
+
+Both releases are published under `android-v1.0` and `android-v1.01`. Public APK/checksum files were downloaded and compared against local size/SHA-256. The 1.01 APK was also downloaded anonymously. Manifest 101 was published only after asset verification. Windows latest remains `v1.0.14`.
 
 Signing certificate SHA-256: 3a07196ac981d8a1d5dda9f2fb140e1c47226128edc25866e2c37a8f65ab1522. Private signing files remain local under ignored .signing.
 
 ## Update test
 
-Next: publish 1.0 assets and verified manifest, then sign 1.01 with the same key and increasing versionCode. Publish and verify its assets before updating the manifest. Exercise the installed 1.0 in-app updater and Android's actual installation confirmation. Check package version, certificate and retained settings after installation. Do not replace this test with silent ADB installation.
+Installed 1.0 detected public 1.01 and displayed its Polish release notes and download confirmation. Before testing, the complete model settings, signing certificate and an app-data marker were saved as a baseline. An initial stale manifest response was observed from the app's Java HTTP connection; after propagation it detected 101 without replacing the installed app. The `manifest` test scenario can inspect this response from the actual updater code.
+
+Android then opened its app-specific unknown-source installation permission screen. The phone refused an automated accessibility click on the permission switch; no ADB app-op grant or security bypass was used. The owner has been asked to enable the permission manually and return to Stroik. **System installation and post-update persistence verification are still pending at this point.** Do not replace this test with silent ADB installation of 1.01.
+
+Source 1.01 CI passed: Android 42840776407, Windows 42840776445. Tag CI passed: 42841104370 / 42841104717. Manifest commit CI passed: 42841173397 / 42841173405.
+
+Polski: wydania 1.0 i 1.01 są publiczne, pliki i podpis sprawdzone. Stroik 1.0 wykrył 1.01 i pokazał zmiany. Telefon wymaga ręcznego włączenia „Zezwalaj z tego źródła” dla Stroika; instalacja systemowa i porównanie ustawień po aktualizacji oczekują na ten krok. Testy struktury dostępności i uruchamiania audio przeszły, odsłuch TalkBack przez człowieka i testy z instrumentem pozostają osobnymi próbami.
 
 ## Remaining physical checks
 
