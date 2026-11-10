@@ -1,9 +1,9 @@
 {
     "packageName":  "pl.proszczok.stroik",
-    "versionCode":  100,
-    "versionName":  "1.0",
-    "apkUrl":  "https://github.com/proszczok2002/Stroik/releases/download/android-v1.0/Stroik-Android-1.0.apk",
-    "sha256":  "97e9169b68ecb012a6f9df63488890df473854f23a1360ced6f7df31939ce843",
-    "notesPl":  "Pierwsze wydanie Android. Kamerton, mikrofon, hybryda, instrumenty i oktawy, profile oraz systemowy instalator aktualizacji.",
-    "notesEn":  "Initial Android release: fork, microphone, hybrid practice, instruments/octaves, profiles and system update installation."
+    "versionCode":  101,
+    "versionName":  "1.01",
+    "apkUrl":  "https://github.com/proszczok2002/Stroik/releases/download/android-v1.01/Stroik-Android-1.01.apk",
+    "sha256":  "05932dc48a072ebbf8e9a5238591417c9716be06a7ba554b7b9858357a2f04dd",
+    "notesPl":  "Wersja testowa aktualizatora: ten sam podpis i zachowanie ustawień. Zakładki w dwóch rzędach lepiej mieszczą duże litery; poprawiono polskie nazwy oktaw. Funkcje strojenia zgodne z 1.0.",
+    "notesEn":  "Updater test release: same signing certificate and retained settings. Two-row tabs fit large text better; corrected Polish octave names. Tuning features remain compatible with 1.0."
 }
