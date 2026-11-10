@@ -1,4 +1,4 @@
-# Stroik Android 1.0
+# Stroik Android 1.01
 
 Natywna aplikacja Android 11+ dla osób niewidomych, słabowidzących i widzących. Interfejs PL/EN oparty na standardowych kontrolkach Androida. [English](README.en.md).
 

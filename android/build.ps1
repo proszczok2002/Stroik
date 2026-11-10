@@ -55,6 +55,13 @@ if(-not $Ci){
         New-Item -ItemType Directory -Force -Path $archive | Out-Null
         Move-Item -LiteralPath $absolute -Destination (Join-Path $archive $old.Name)
     }
+    foreach($oldBuild in Get-ChildItem -LiteralPath (Join-Path $root 'build') -Directory | Where-Object { ($_.Name -like 'stage-*' -or $_.Name -like 'tests-*') -and $_.FullName -ne $stage }) {
+        $absolute=(Resolve-Path -LiteralPath $oldBuild.FullName).ProviderPath
+        if(-not $absolute.StartsWith($workspace,[StringComparison]::OrdinalIgnoreCase) -or ($oldBuild.Attributes -band [IO.FileAttributes]::ReparsePoint)){throw 'Unsafe build archive path'}
+        $compiled=Join-Path $archive 'kompilacje'
+        New-Item -ItemType Directory -Force -Path $compiled | Out-Null
+        Move-Item -LiteralPath $absolute -Destination (Join-Path $compiled $oldBuild.Name)
+    }
 }
 Copy-Item -LiteralPath $apk,(Join-Path $stage "$name.sha256") -Destination $output
 foreach($doc in @('README.md','README.en.md')){Copy-Item -LiteralPath (Join-Path $root $doc) -Destination $output}

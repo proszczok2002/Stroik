@@ -169,6 +169,10 @@ public final class DeviceTests extends Instrumentation {
 
   @Override
   public void onStart() {
+    if (scenario.equals("prepare-update") || scenario.equals("verify-update")) {
+      persistenceScenario();
+      return;
+    }
     if (scenario.equals("gestures")) {
       gestureScenario();
       return;
@@ -298,6 +302,60 @@ public final class DeviceTests extends Instrumentation {
       result.putString("stream", report.toString());
       result.putString("result", "FAIL");
       restoreSettings(saved);
+      finish(Activity.RESULT_CANCELED, result);
+    }
+  }
+
+  private void persistenceScenario() {
+    Bundle result = new Bundle();
+    try {
+      Context target = getTargetContext();
+      android.content.SharedPreferences prefs = target.getSharedPreferences("stroik", 0);
+      android.content.pm.PackageInfo info =
+          target
+              .getPackageManager()
+              .getPackageInfo(
+                  "pl.proszczok.stroik",
+                  android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
+      String certificate =
+          Updater.hex(
+              java.security.MessageDigest.getInstance("SHA-256")
+                  .digest(info.signingInfo.getApkContentsSigners()[0].toByteArray()));
+      String canonical =
+          Model.from(new org.json.JSONObject(prefs.getString("settings", "{}"))).json().toString();
+      if (scenario.equals("prepare-update")) {
+        require(info.getLongVersionCode() == 100, "Baseline must be installed 1.0");
+        prefs
+            .edit()
+            .putString("updateBaseline", canonical)
+            .putString("updateCertificate", certificate)
+            .putString("updateTestMarker", "from-100-to-101")
+            .commit();
+        log("Prepared 1.0 settings and signing baseline for real system update");
+      } else {
+        require(
+            info.getLongVersionCode() == 101 && "1.01".equals(info.versionName),
+            "Expected Android 1.01 / 101");
+        require(
+            "from-100-to-101".equals(prefs.getString("updateTestMarker", "")),
+            "App data marker was lost");
+        require(
+            canonical.equals(prefs.getString("updateBaseline", "")),
+            "User settings changed during update");
+        require(
+            certificate.equals(prefs.getString("updateCertificate", "")),
+            "Signing certificate changed");
+        log(
+            "Real update verified: version=1.01 code=101, same certificate, all model settings and"
+                + " app data marker retained");
+      }
+      result.putString("stream", report.toString());
+      result.putString("result", "PASS");
+      finish(Activity.RESULT_OK, result);
+    } catch (Throwable e) {
+      log("FAIL: " + e);
+      result.putString("stream", report.toString());
+      result.putString("result", "FAIL");
       finish(Activity.RESULT_CANCELED, result);
     }
   }

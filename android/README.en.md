@@ -1,4 +1,4 @@
-# Stroik Android 1.0
+# Stroik Android 1.01
 
 Native Android 11+ tuner for blind, partially sighted and sighted musicians, using standard controls and Polish/English UI. [Polski](README.md).
 

@@ -1,5 +1,5 @@
-Stroik Android 1.0
+Stroik Android 1.01
 
-Initial Android release: tuning fork, microphone, speaker and headphone hybrid practice, instruments and octaves, traditional note names, fifths and octaves, JSON profiles, correction, double strikes, graphics, language/theme settings and GitHub updates through Android's installation confirmation.
+Updater test release from 1.0. Version code is now 101 and the signing certificate is unchanged. Updating retains settings, local app data and microphone permission. Android asks for installation confirmation.
 
-Created by Proszczok with Codex. Original idea: Witold.
+Tuning features and the accessible interface are the same as 1.0. Latest changes now shows this release description.
