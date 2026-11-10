@@ -72,6 +72,8 @@ Version 1.03 keeps the root, tab buttons and ordinary option controls attached. 
 
 Final APK: **66204 bytes**, SHA-256 **65e8e4ca39bc3cd74784176b31cc0cd5957d93859d3c95f98f1341c451acb51a**, version 1.03 / 103, unchanged production certificate. It was installed with Android system confirmation and the owner's manual interaction. The APK pulled from the installed package matched the local final artifact exactly. The app was not silently updated through ADB.
 
+Published as `android-v1.03`, source `e946f78e49f3ead4c7b9e211afe9dfb6d4bd6a31`. Source CI passed: Android 42850753513 and Windows 42850753784. The public APK/checksum were downloaded anonymously and matched local size/SHA-256; the public signature matches the production certificate. Windows latest remains `v1.0.14`. The Android manifest is published after artifact verification.
+
 Passed on that exact APK with TalkBack enabled:
 
 - **198 focus assertions** in PL/EN: all four methods, consonance choices, tap-listening toggles, note/octave synchronization, next note across an octave boundary without resetting the order anchor, result announcement without moving focus, every tab (including selecting it again), instrument choices, ukulele tuning, language restoration, and checkbox focus after theme recreation. Tests verify the actual accessibility focus and control attachment/identity. The theme check waits beyond TalkBack's asynchronous initial-window announcement.

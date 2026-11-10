@@ -1,9 +1,9 @@
 {
     "packageName":  "pl.proszczok.stroik",
-    "versionCode":  102,
-    "versionName":  "1.02",
-    "apkUrl":  "https://github.com/proszczok2002/Stroik/releases/download/android-v1.02/Stroik-Android-1.02.apk",
-    "sha256":  "06a5de6a6c69ea0d2906558f402498f5f3c84a05c7fa908ff2a56afd5c279862",
-    "notesPl":  "Poprawka zamykania aplikacji przy zmianie motywu i odtwarzaniu ekranu. Przywracana jest właściwa zakładka i ostatni wynik. Końcowy APK przetestowano na POCO; ustawienia zachowano po instalacji systemowej. Play Protect ostrzegał przed instalacją kandydatów; przyczyna klasyfikacji pozostaje nieustalona.",
-    "notesEn":  "Fixes crashes during theme changes and screen restoration. Restores the correct tab and last result. The final APK was tested on POCO; system installation retained settings. Play Protect warned before installing candidates; the classification cause remains unknown."
+    "versionCode":  103,
+    "versionName":  "1.03",
+    "apkUrl":  "https://github.com/proszczok2002/Stroik/releases/download/android-v1.03/Stroik-Android-1.03.apk",
+    "sha256":  "65e8e4ca39bc3cd74784176b31cc0cd5957d93859d3c95f98f1341c451acb51a",
+    "notesPl":  "Poprawiono utrzymywanie fokusu TalkBack: zmiana metody, współbrzmienia i instrumentu nie wymienia aktywnej kontrolki. Zakładki są stałe; poprawiono etykiety pól liczbowych i synchronizację oktaw. Na telefonie przeszło 198 asercji fokusu PL/EN. Wcześniejsze ostrzeżenie Play Protect pozostaje niewyjaśnione.",
+    "notesEn":  "Improved TalkBack focus retention: method, consonance and instrument changes do not replace the focused control. Tabs keep their identity; numeric labels and octave synchronization are improved. 198 PL/EN focus assertions passed on the phone. The earlier Play Protect warning remains unexplained."
 }
