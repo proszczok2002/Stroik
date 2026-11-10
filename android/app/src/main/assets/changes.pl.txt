@@ -2,4 +2,4 @@ Stroik Android 1.01
 
 Wydanie do testu aktualizatora z wersji 1.0. Numer wersji został podniesiony do 101, a podpis aplikacji pozostaje ten sam. Aktualizacja ma zachować ustawienia, profile lokalne i zgodę na mikrofon. Instalację potwierdza system Android.
 
-Funkcje strojenia i dostępny interfejs są takie jak w 1.0. Ta wersja pokazuje również nowy opis w przycisku Ostatnie zmiany.
+Funkcje strojenia pozostają zgodne z 1.0. Dolne zakładki są w dwóch rzędach, żeby ich nazwy lepiej mieściły się przy dużej czcionce. Poprawiono też odmianę nazw oktaw w liście. Przycisk Ostatnie zmiany pokazuje opis 1.01.

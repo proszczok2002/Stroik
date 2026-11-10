@@ -2,4 +2,4 @@ Stroik Android 1.01
 
 Updater test release from 1.0. Version code is now 101 and the signing certificate is unchanged. Updating retains settings, local app data and microphone permission. Android asks for installation confirmation.
 
-Tuning features and the accessible interface are the same as 1.0. Latest changes now shows this release description.
+Tuning features remain compatible with 1.0. Bottom tabs use two rows so their names fit better at large text sizes. Polish octave dropdown labels were corrected. Latest changes shows the 1.01 description.

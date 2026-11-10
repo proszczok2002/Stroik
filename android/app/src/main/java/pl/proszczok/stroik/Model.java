@@ -64,7 +64,18 @@ public final class Model {
   }
 
   public String octave(int o) {
-    return english ? OCT_EN[o] + " octave" : "Oktawa " + OCT_PL[o];
+    String[] nominative = {
+      "subkontra",
+      "kontra",
+      "wielka",
+      "mała",
+      "razkreślna",
+      "dwukreślna",
+      "trzykreślna",
+      "czterokreślna",
+      "pięciokreślna"
+    };
+    return english ? OCT_EN[o] + " octave" : "Oktawa " + nominative[o];
   }
 
   public static double hz(int midi, double a) {

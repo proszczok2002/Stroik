@@ -255,8 +255,14 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     else if (page == 2) settings();
     else help();
     nav = new LinearLayout(this);
-    nav.setOrientation(0);
+    nav.setOrientation(1);
+    LinearLayout navigationRow = null;
     for (int i = 0; i < 4; i++) {
+      if (i % 2 == 0) {
+        navigationRow = new LinearLayout(this);
+        navigationRow.setOrientation(0);
+        nav.addView(navigationRow, new LinearLayout.LayoutParams(-1, -2));
+      }
       final int at = i;
       Button b = new Button(this);
       b.setText(pages[i]);
@@ -272,7 +278,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         page = at;
         render();
       });
-      nav.addView(b, new LinearLayout.LayoutParams(0, -2, 1));
+      navigationRow.addView(b, new LinearLayout.LayoutParams(0, -2, 1));
     }
     root.addView(nav);
     root.requestApplyInsets();

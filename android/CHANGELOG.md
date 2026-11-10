@@ -3,7 +3,8 @@
 ## 1.01 / 101
 
 - Updater test release, signed with the same production key as 1.0.
-- Updated installed release notes. No tuning algorithm or UI behavior changes.
+- Updated installed release notes; tuning algorithms remain compatible.
+- Two-row bottom navigation fits large text better; corrected Polish octave dropdown grammar.
 
 ## 1.0 / 100
 
