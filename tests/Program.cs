@@ -389,6 +389,8 @@ var uiThread = new Thread(() =>
         var processCmdKey = typeof(TunerForm).GetMethod("ProcessCmdKey", flags)!;
         instrument.SelectedIndex = 0;
         pianoOrder.SelectedIndex = 0;
+        method.SelectedIndex = 0;
+        ((System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_consonance", flags)!.GetValue(form)!).SelectedIndex = 0;
         typeof(TunerForm).GetMethod("SelectTarget", flags)!.Invoke(form, [67]);
         object?[] nextArgs = [System.Windows.Forms.Message.Create(IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero), System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.N];
         if ((bool)processCmdKey.Invoke(form, nextArgs)! != true || (int)typeof(TunerForm).GetField("_targetMidi", flags)!.GetValue(form)! != 68)
