@@ -1,4 +1,12 @@
-# Stroik Android 1.03
+# Stroik Android 1.04 — test candidate
+
+Three bottom tabs in one row: Tuner, Settings and Help; Instrument is a list on Tuner. Adds one microphone toggle, an Hz slider with numeric entry, visual-mode speech, keep-screen-awake and foreground capture for screen-off use.
+
+[Test APK 1.04](https://github.com/proszczok2002/Stroik/releases/download/android-v1.04/Stroik-Android-1.04.apk) · [Prerelease](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.04).
+
+**The phone is currently unavailable.** Source, APK and device tests compile; signal and note-logic checks pass. New background microphone, TalkBack, slider and updater paths have not been device-tested. The automatic manifest remains on 1.03 pending phone testing. The earlier Play Protect classification remains unexplained. [Test scope](DEVICE_TESTS.md).
+
+## Previous release 1.03
 
 Native Android 11+ tuner for blind, partially sighted and sighted musicians, using standard controls and Polish/English UI. [Polski](README.md).
 

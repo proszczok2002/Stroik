@@ -9,7 +9,7 @@ $root=$PSScriptRoot
 [xml]$manifest=Get-Content -LiteralPath (Join-Path $root 'app\src\main\AndroidManifest.xml')
 $version=$manifest.manifest.GetAttribute('versionName','http://schemas.android.com/apk/res/android')
 $code=$manifest.manifest.GetAttribute('versionCode','http://schemas.android.com/apk/res/android')
-& (Join-Path $root 'test-core.ps1') -JavaBin $JavaBin
+& (Join-Path $root 'test-core.ps1') -JavaBin $JavaBin -Sdk $Sdk
 if($LASTEXITCODE -ne 0){throw 'Core tests failed'}
 $output=Join-Path $root 'releases'
 $name="Stroik-Android-$version.apk"

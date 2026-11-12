@@ -33,4 +33,7 @@ internal static class NoteCatalog
         }
         return current;
     }
+
+    internal static string Spoken(int midi, bool english) => english ? Label(midi, true) :
+        PolishPitch[midi % 12] + " " + new[] { "subkontra", "kontra", "wielkie", "małe", "razkreślne", "dwukreślne", "trzykreślne", "czterokreślne", "pięciokreślne" }[Octave(midi)];
 }

@@ -13,7 +13,9 @@ public final class Model {
       forkTap = false,
       monitor = false,
       updates = true,
-      swapped = false;
+      swapped = false,
+      voiceInVisual = true,
+      keepScreenOn = false;
   public int method = 0,
       instrument = 0,
       target = 67,
@@ -76,6 +78,24 @@ public final class Model {
       "pięciokreślna"
     };
     return english ? OCT_EN[o] + " octave" : "Oktawa " + nominative[o];
+  }
+
+  public String spokenNote(int midi) {
+    if (english) return note(midi);
+    return PL[midi % 12]
+        + " "
+        + new String[] {
+              "subkontra",
+              "kontra",
+              "wielkie",
+              "małe",
+              "razkreślne",
+              "dwukreślne",
+              "trzykreślne",
+              "czterokreślne",
+              "pięciokreślne"
+            }
+            [midi / 12 - 1];
   }
 
   public static double hz(int midi, double a) {

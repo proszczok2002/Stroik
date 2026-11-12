@@ -54,14 +54,16 @@ internal sealed class TuningFork : IDisposable
                 double attack = Math.Min(1, time / 0.012);
                 double envelope = attack * Math.Exp(-1.6 * time);
                 double phase = 2 * Math.PI * frequency * time;
-                double sample = 0.24 * envelope * (Math.Sin(phase) + 0.015 * Math.Sin(2 * phase));
-                if (upper is double second) sample = (sample + 0.24 * envelope * Math.Sin(2 * Math.PI * second * time)) / 2;
+                double sample = Level(frequency) * envelope * (Math.Sin(phase) + 0.015 * Math.Sin(2 * phase));
+                if (upper is double second) sample = (sample + Level(second) * envelope * Math.Sin(2 * Math.PI * second * time)) / 2;
                 writer.Write((short)Math.Round(Math.Clamp(sample, -1, 1) * short.MaxValue));
             }
         }
         stream.Position = 0;
         return stream;
     }
+
+    internal static double Level(double frequency) => Math.Clamp(0.14 * Math.Sqrt(440 / frequency), 0.045, 0.34);
 
     public void Dispose() => Stop();
 }

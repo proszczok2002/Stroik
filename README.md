@@ -1,4 +1,4 @@
-# Stroik 1.14
+# Stroik 1.15
 
 [Natywna wersja Android 1.03](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.03) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
@@ -126,3 +126,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build-release.ps1
 Skrypt tworzy najnowsze EXE, SHA-256 i ZIP w głównym katalogu `dist`. Po pomyślnym zbudowaniu nowej wersji przenosi poprzednie pliki wydania oraz starsze katalogi kompilacji i weryfikacji do `niepotrzebne` w głównym folderze projektu (`F:\stroik\niepotrzebne`); niczego z tego archiwum automatycznie nie usuwa. Przed następnym wydaniem zwiększ wersję w `Stroik.csproj`. Skrypt chroni istniejące wydanie przed przypadkowym przebudowaniem z tym samym numerem. Parametr `-RebuildSameVersion` służy wyłącznie do świadomego ponownego buildu przed publikacją. Kod źródłowy, testy i lokalny SDK pozostają na miejscu.
 
 Detekcja wysokości używa metody YIN, wejście audio — Windows waveIn, a komunikaty dostępności — UI Automation. Kod jest dostępny na [licencji MIT](LICENSE). Błędy można zgłaszać przez [Issues](https://github.com/proszczok2002/Stroik/issues).
+
+
+
+
+## Zmiany w 1.15
+- Naprawiono napis „Wyłączone” w liście współbrzmień.
+- Alt+N oraz Ctrl+N przechodzą do następnego dźwięku w kamertonie; nowy cel jest od razu odtwarzany. Komunikat aplikacji zawiera samą nazwę nuty, np. „g razkreślne”. Czytnik ekranu nadal opisuje kontrolki przy nawigacji.
+- Wybór widoku jest przed metodą strojenia. Na zamkniętej liście dźwięków strzałki góra/dół zmieniają cel o cały ton (2 półtony), lewo/prawo o półton; otwarta lista zachowuje zwykłą nawigację.
+- W Ustawieniach dodano domyślnie włączony „Odczyt głosowy w trybie wizualnym”. Odznaczenie wycisza komunikaty aplikacji w widoku graficznym, bez wyłączania nawigacji NVDA.
+- Kamerton ma ograniczoną korektę poziomu zależną od częstotliwości: mocniejszy dół, łagodniejsza góra. Nie zmienia wysokości tonów ani częstotliwości interwałów. Efekt akustyczny zależy od głośnika; nie obiecujemy identycznej odczuwanej głośności.
+- Opisy położenia klawiszy pozostają dostępne przy pianinie. Kwinty są budowane o 7 półtonów w górę od wskazanej nuty, oktawy o 12: C4–G4 oraz C4–C5. G4–D5 jest również kwintą; para przekracza granicę nazwanych oktaw. Nie zastępujemy jej kwartą przez zawijanie nut.
+
+Testy programowe i kontrole okna Windows przeszły. Odsłuch kamertonu, rzeczywiste instrumenty i NVDA nie były ponownie testowane w tym wydaniu. Android ma osobny kanał; kandydat Android 1.04 wymaga testu telefonu, którego obecnie nie ma.

@@ -1,25 +1,23 @@
-# Stroik 1.14 / Stroik 1.14
+# Stroik 1.15
 
 ## Polski
 
-- Wersja 1.14 zawiera funkcje 1.13 opisane poniżej oraz poprawkę: wczytanie profilu zatrzymuje poprzedni mikrofon i cykl hybrydowy. Po zmianie profilu naciśnij „Włącz mikrofon”, aby rozpocząć pracę z jego ustawieniami.
-- Przywrócono stale widoczną listę oktaw w pianinie i trybie chromatycznym, także w widoku klasycznym. Przy gotowych listach pustych strun wybiera się strunę; inne oktawy są w trybie chromatycznym.
-- Dodano listę „Sprawdź współbrzmienie”: wyłączone, kwinty, oktawy, budowane od wybranego dźwięku w górę. Kamerton gra parę jednocześnie. Mikrofon porównuje nuty osobno lub mierzy dwie składowe naraz w trybie eksperymentalnym. Wyniki podają centy i szacowane dudnienia idealnych harmonicznych, bez gwarancji braku dudnień całego instrumentu. Przy oktawie harmoniczna dolnej nuty może udawać drugą nutę; sprawdź także osobno.
-- Kamerton i tryby hybrydowe mają opcję przejścia do następnego celu po dwóch stuknięciach według wybranej kolejności. To gest akustyczny bez sprawdzania wysokości; przypadkowe hałasy również mogą go wywołać.
-- Dodano hybrydę głośnikową: kamerton, przerwa na wybrzmienie, pomiar instrumentu, wynik i kolejny wzorzec. Hybryda słuchawkowa łączy kamerton z pomiarem; opcjonalny odsłuch mikrofonu działa w aplikacji bez zmiany ustawień Windows. Najpierw załóż słuchawki, aby uniknąć sprzężenia. Opóźnienie zależy od sprzętu.
-- W Ustawieniach można wyłączyć automatyczne aktualizacje i ustawić odstęp 1–1440 minut, domyślnie 5. Ręczne sprawdzanie nadal działa. Nowe ustawienia zapisują się w profilach JSON.
-- Widok dla początkujących i instrukcja ostrzegają, że zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty.
+- Naprawiono napis „Wyłączone” w liście współbrzmień.
+- Alt+N oraz Ctrl+N przechodzą do następnego dźwięku w kamertonie; nowy cel jest od razu odtwarzany. Komunikat aplikacji zawiera samą nazwę nuty, np. „g razkreślne”. Czytnik ekranu nadal opisuje kontrolki przy nawigacji.
+- Wybór widoku jest przed metodą strojenia. Na zamkniętej liście dźwięków strzałki góra/dół zmieniają cel o cały ton (2 półtony), lewo/prawo o półton; otwarta lista zachowuje zwykłą nawigację.
+- W Ustawieniach dodano domyślnie włączony „Odczyt głosowy w trybie wizualnym”. Odznaczenie wycisza komunikaty aplikacji w widoku graficznym, bez wyłączania nawigacji NVDA.
+- Kamerton ma ograniczoną korektę poziomu zależną od częstotliwości: mocniejszy dół, łagodniejsza góra. Nie zmienia wysokości tonów ani częstotliwości interwałów. Efekt akustyczny zależy od głośnika; nie obiecujemy identycznej odczuwanej głośności.
+- Opisy położenia klawiszy pozostają dostępne przy pianinie. Kwinty są budowane o 7 półtonów w górę od wskazanej nuty, oktawy o 12: C4–G4 oraz C4–C5. G4–D5 jest również kwintą; para przekracza granicę nazwanych oktaw. Nie zastępujemy jej kwartą przez zawijanie nut.
 
-Nowe funkcje przetestowano programowo na sygnałach syntetycznych i kontrolkach Windows. Rzeczywiste współbrzmienia, opóźnienie odsłuchu, pogłos, mikrofon, instrument i NVDA wymagają próby na sprzęcie użytkownika.
+Testy programowe i kontrole okna Windows przeszły. Odsłuch kamertonu, rzeczywiste instrumenty i NVDA nie były ponownie testowane w tym wydaniu. Android ma osobny kanał; kandydat Android 1.04 wymaga testu telefonu, którego obecnie nie ma.
 
 ## English
 
-- Version 1.14 includes the 1.13 features below and fixes profile loading: the previous microphone capture and hybrid cycle stop first. Press Start microphone after loading a profile to begin with its settings.
-- Restored an always-visible octave list in piano and chromatic modes, including Classic view. Open-string presets use their string list; other octaves are available in chromatic mode.
-- Added Check consonance: Off, Fifths, Octaves, built upward from the selected note. The fork plays both notes together. Microphone mode compares separate notes or estimates two simultaneous components experimentally. Results show cents and estimated ideal-harmonic beats, not a guarantee of no beating across the instrument. A lower note's harmonic can mimic the upper octave; also check separately.
-- Fork and hybrid modes can advance to the next target in the selected order after two taps. This acoustic gesture does not validate pitch; incidental noises can trigger it.
-- Added speaker hybrid practice: reference, decay pause, instrument reading, result, then the next reference. Headphone hybrid combines reference playback and measurement, with optional in-app microphone monitoring that changes no Windows settings. Put headphones on first to avoid feedback. Latency depends on hardware.
-- Settings can disable automatic updates or change the interval to 1–1440 minutes, default 5. Manual checks remain available. New settings are saved in JSON profiles.
-- Beginner view and documentation explain that strikes that are too weak or too strong can cause inaccurate readings.
+- Fixed the corrupted Polish Off label in the consonance list.
+- Alt+N and Ctrl+N advance in fork mode and immediately play the new target. The app announces just the note name. Screen reader navigation still describes controls.
+- View selection precedes tuning method. On the closed note list, Up/Down move a whole tone (2 semitones), Left/Right one semitone. The open dropdown retains normal list navigation.
+- Added Spoken feedback in visual mode, enabled by default, under Settings. Clearing it suppresses app announcements in graphics mode without disabling NVDA navigation.
+- Bounded frequency-dependent fork levels strengthen low notes and soften high notes without shifting pitch or interval frequencies. Actual loudness depends on the speaker; equal perceived loudness is not guaranteed.
+- Piano key-position descriptions remain available. Fifths are 7 semitones upward and octaves 12: C4–G4 and C4–C5. G4–D5 is also a fifth, crossing named octaves; wrapping notes must not turn it into a fourth.
 
-The new features were checked programmatically with synthetic signals and Windows controls. Real consonance, monitoring latency, reverberation, microphone, instrument and NVDA behavior still require hardware testing.
+Programmatic checks and Windows window tests passed. Fork listening, real instruments and NVDA were not retested for this release. Android uses a separate channel; Android 1.04 is a candidate awaiting a currently unavailable phone.

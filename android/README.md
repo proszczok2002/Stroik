@@ -1,4 +1,12 @@
-# Stroik Android 1.03
+# Stroik Android 1.04 — wersja testowa
+
+Trzy zakładki w jednej linii na dole: Stroik, Ustawienia i Pomoc; instrument jest listą na stronie Stroik. Dodano jeden przełącznik mikrofonu, suwak Hz z edycją liczbową, głos w grafice, utrzymywanie ekranu i usługę nasłuchu przy wygaszonym ekranie.
+
+[Testowy APK 1.04](https://github.com/proszczok2002/Stroik/releases/download/android-v1.04/Stroik-Android-1.04.apk) · [Wydanie testowe](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.04).
+
+**Telefon jest obecnie niedostępny.** Kod, APK i testy urządzenia skompilowano; testy sygnałów i logiki przeszły. Nowych ścieżek mikrofonu w tle, TalkBack, suwaka i aktualizatora nie sprawdzono na urządzeniu. Automatyczny manifest pozostaje na 1.03 do testu telefonu. Wcześniejsze ostrzeżenie Play Protect pozostaje niewyjaśnione. [Zakres prób](DEVICE_TESTS.md).
+
+## Poprzednie wydanie 1.03
 
 Natywna aplikacja Android 11+ dla osób niewidomych, słabowidzących i widzących. Interfejs PL/EN oparty na standardowych kontrolkach Androida. [English](README.en.md).
 

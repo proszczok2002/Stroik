@@ -132,11 +132,15 @@ public final class Dsp {
       double t = i / (double) rate,
           phase = 2 * Math.PI * lower * t,
           env = Math.min(1, t / .012) * Math.exp(-1.6 * t),
-          v = .24 * env * (Math.sin(phase) + .015 * Math.sin(2 * phase));
-      if (upper > 0) v = (v + .24 * env * Math.sin(2 * Math.PI * upper * t)) / 2;
+          v = level(lower) * env * (Math.sin(phase) + .015 * Math.sin(2 * phase));
+      if (upper > 0) v = (v + level(upper) * env * Math.sin(2 * Math.PI * upper * t)) / 2;
       samples[i] = (short) Math.round(v * 32767);
     }
     return samples;
+  }
+
+  public static double level(double frequency) {
+    return Math.max(.045, Math.min(.34, .14 * Math.sqrt(440 / frequency)));
   }
 
   // Targeted FFT for two expected spectral components. Not proof of two independent strings.

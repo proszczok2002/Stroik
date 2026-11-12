@@ -21,6 +21,7 @@ internal sealed class Preferences
     public int DoubleStrikeWindowMilliseconds { get; set; } = 1200;
     public decimal MicrophoneCorrectionCents { get; set; }
     public bool? VisualMode { get; set; }
+    public bool VoiceInVisualMode { get; set; } = true;
     public double ConcertA { get; set; } = 440;
     public int SensitivityIndex { get; set; } = 1;
     public int ToleranceCents { get; set; } = 5;

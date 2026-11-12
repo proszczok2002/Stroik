@@ -1,11 +1,11 @@
 Stroik Android — guide
 
 Accessibility
-Bottom buttons open Tuner, Instrument, Settings and Help. Use TalkBack gestures to navigate standard buttons, checkboxes, dropdowns and labelled fields. Controls have large touch targets. Android announces checkbox state. Only final readings are announced, not every audio sample. Without TalkBack, system speech may read results. Graphics are optional and off by default. Polish/English and dark theme are in Settings.
+Bottom buttons open Tuner, Settings and Help in one row. Use TalkBack gestures to navigate standard buttons, checkboxes, dropdowns and labelled fields. Controls have large touch targets. Android announces checkbox state. Only final readings are announced, not every audio sample. Without TalkBack, system speech may read results. Graphics are optional and off by default. Polish/English and dark theme are in Settings.
 
 Methods
 Tuning fork plays a decaying reference. Enable automatic strikes and set an interval or use Strike tuning fork. Pause/resume controls automatic playback.
-Electronic tuner requires microphone permission. Start microphone, play one note and mute it. The result gives note, direction and deviation. Stop microphone ends listening. Leaving the app stops capture and playback; start again after returning. Audio is not saved or uploaded.
+Electronic tuner requires microphone permission. Start microphone, play one note and mute it. The result gives note, direction and deviation. Stop microphone ends listening. Active capture uses a foreground service when the screen turns off or another app opens. Stop it with the same toggle or notification action; removing the app from Recents stops the service. Audio is not saved or uploaded.
 Speaker hybrid plays a 3-second reference, ignores capture for 3.4 seconds, listens to your instrument, announces the reading, waits about 5 seconds and repeats. Long screen reader speech or room reverberation may require stopping and retrying.
 Headphone hybrid listens while the reference plays. Optional microphone monitoring requires connected headphones. Do not monitor through speakers: feedback can occur. Latency depends on hardware. Default Android devices are used without changing system settings.
 
@@ -18,7 +18,7 @@ Select the lower target, then Fifths or Octaves. C4 pairs with G4 or C5. Fork mo
 Together mode is experimental: play near the selected target for about 2 seconds. A lower note's harmonic may mimic a second note, especially an octave. Confirm separately. This cannot certify no audible beating. Equal-tempered fifths can naturally beat, and piano inharmonicity can require stretched octaves.
 
 Reliable readings
-Strikes that are too weak or too strong can cause inaccurate readings. Play evenly and avoid clipping. Change sensitivity in Instrument. Manual correction ±100 cents requires comparison with a known reference. Displaying tenths of a Hz does not guarantee that accuracy. A=440 Hz is standard. Have old pianos assessed before raising tension; age alone does not determine safe pitch. Practise aural tuning on a modest instrument first; broken strings can still injure.
+Strikes that are too weak or too strong can cause inaccurate readings. Play evenly and avoid clipping. Change sensitivity on Tuner beside the instrument list. Manual correction ±100 cents requires comparison with a known reference. Displaying tenths of a Hz does not guarantee that accuracy. A=440 Hz is standard. Have old pianos assessed before raising tension; age alone does not determine safe pitch. Practise aural tuning on a modest instrument first; broken strings can still injure.
 
 Profiles and updates
 Save/Open settings file use Android's document picker for JSON profiles. Profiles include method, instrument, language, theme and update settings. Loading stops the current measurement. Automatic checks run on entry and at the selected interval while the app is open. They can be disabled. No-update and network failure checks are silent in the background. Manual checking is in Settings.
@@ -26,3 +26,19 @@ A new release shows notes and asks to download. SHA-256, package name, increasin
 
 Project: https://github.com/proszczok2002/Stroik
 MIT license. Created by Proszczok with Codex; original idea by Witold.
+
+
+Interaction changes in 1.04
+Stroik Android 1.04 — test candidate
+
+Three bottom tabs in one row: Tuner, Settings, Help. Instrument is a list on the Tuner page. View selection precedes tuning method.
+
+One microphone toggle changes Start/Stop and exposes its state. Collapsed dropdowns expose their selected value; separate labels are skipped during TalkBack traversal. Check consonance remains present when changing methods.
+
+Spoken feedback in visual mode is enabled by default and can be disabled in Settings. A first-use graphics hint points to the option. Keep screen awake applies only to the visible window. User-started capture uses a foreground service with a stop notification; screen-off readings use system speech. Removing the app from Recents stops the service. Switching to another app does not by itself stop capture: use the toggle or notification.
+
+A reference uses a 390–466 Hz slider, 0.1 Hz accessibility adjustments, and numeric entry on double tap or Enter. Alt+N / Ctrl+N advances. On the note list, Up/Down move a whole tone and Left/Right one semitone. App feedback contains the note name alone. Bounded fork gain strengthens low notes and softens high ones; speaker response still matters.
+
+The phone is unavailable. Source/APK compilation and DSP/note-logic checks passed; new TalkBack, slider, foreground microphone, screen-off and updater paths have not been device-tested. Previous 1.03 results are not evidence for 1.04. The earlier Play Protect warning remains unexplained.
+Permissions and background use (1.04)
+Start listening while the app is visible. Android can request microphone and notification permissions. If notifications are denied, the service is still subject to Android's active-app panel; stop capture in the app or system panel. Capture never starts on reboot. With the screen off, system speech reads results even if visual-mode speech was disabled. Competing capture, calls, battery restrictions and TTS output can interrupt or interfere with readings. Keep screen awake does not prevent the physical power button from locking the phone. This path still needs a physical phone test.

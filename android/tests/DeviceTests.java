@@ -17,8 +17,8 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
-  private int expectedCode = 103;
-  private String expectedName = "1.03";
+  private int expectedCode = 104;
+  private String expectedName = "1.04";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
@@ -26,8 +26,8 @@ public final class DeviceTests extends Instrumentation {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
     if (args != null) {
-      expectedCode = args.getInt("expectedCode", 103);
-      expectedName = args.getString("expectedName", "1.03");
+      expectedCode = args.getInt("expectedCode", 104);
+      expectedName = args.getString("expectedName", "1.04");
     }
     start();
   }
@@ -182,6 +182,10 @@ public final class DeviceTests extends Instrumentation {
       focusScenario();
       return;
     }
+    if (scenario.equals("interaction")) {
+      interactionScenario();
+      return;
+    }
     if (scenario.equals("lifecycle")) {
       lifecycleScenario();
       return;
@@ -282,7 +286,7 @@ public final class DeviceTests extends Instrumentation {
                         ? "Automatically check for updates"
                         : "Automatycznie sprawdzaj aktualizacje")
                 .performClick());
-        page(instrument);
+        page(tuner);
         inspect((english ? "EN" : "PL") + " instrument");
         page(help);
         inspect((english ? "EN" : "PL") + " help");
@@ -345,6 +349,137 @@ public final class DeviceTests extends Instrumentation {
       restoreSettings(saved);
       finish(Activity.RESULT_CANCELED, result);
     }
+  }
+
+  private void interactionScenario() {
+    Bundle result = new Bundle();
+    String saved = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      waitForIdleSync();
+      for (boolean english : new boolean[] {false, true}) {
+        main(() -> {
+          activity.model.english = english;
+          activity.model.updates = false;
+          activity.model.method = 1;
+          activity.model.instrument = 0;
+          invokeRender();
+        });
+        page(english ? "Tuner" : "Stroik");
+        List<Button> micButtons = new ArrayList<>();
+        SeekBar reference = null;
+        for (View view : views()) {
+          if (view instanceof Button
+              && (((Button) view)
+                      .getText()
+                      .toString()
+                      .equals(english ? "Start microphone" : "Włącz mikrofon")
+                  || ((Button) view)
+                      .getText()
+                      .toString()
+                      .equals(english ? "Stop microphone" : "Wyłącz mikrofon")))
+            micButtons.add((Button) view);
+          if (view instanceof SeekBar) reference = (SeekBar) view;
+          if (view instanceof Spinner && view.isShown()) {
+            Spinner list = (Spinner) view;
+            require(
+                list.createAccessibilityNodeInfo()
+                    .getContentDescription()
+                    .toString()
+                    .contains(list.getSelectedItem().toString()),
+                "Collapsed list omits current value");
+          }
+        }
+        require(micButtons.size() == 1, "Microphone is not one toggle button");
+        require(micButtons.get(0).getStateDescription() != null, "Microphone state is unnamed");
+        require(reference != null, "Missing frequency slider");
+        SeekBar slider = reference;
+        Bundle value = new Bundle();
+        value.putFloat(AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE, 435.2f);
+        main(() ->
+            require(
+                slider.performAccessibilityAction(
+                    AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.getId(), value),
+                "Slider rejects Hz action"));
+        require(Math.abs(activity.model.reference - 435.2) < .01, "Slider progress is not in Hz");
+        Bundle invalid = new Bundle();
+        invalid.putFloat(AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE, 900);
+        main(() ->
+            require(
+                !slider.performAccessibilityAction(
+                    AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.getId(), invalid),
+                "Slider accepted invalid Hz"));
+        main(() ->
+            slider.performAccessibilityAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, null));
+        require(
+            Math.abs(activity.model.reference - 435.3) < .01, "Slider adjustment is not 0.1 Hz");
+        page(english ? "Settings" : "Ustawienia");
+        CheckBox awake =
+            findCheck(english ? "Keep screen awake" : "Nie pozwalaj na autoblokadę ekranu");
+        main(() -> {
+          if (!awake.isChecked()) awake.performClick();
+        });
+        require(
+            (activity.getWindow().getAttributes().flags
+                    & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                != 0,
+            "Keep-screen flag missing");
+        main(awake::performClick);
+        require(
+            (activity.getWindow().getAttributes().flags
+                    & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                == 0,
+            "Keep-screen flag remains");
+        page(english ? "Tuner" : "Stroik");
+        main(() -> {
+          activity.model.method = 0;
+          activity.model.target = 67;
+          activity.model.order = 0;
+          invokeRender();
+          activity.onKeyDown(
+              KeyEvent.KEYCODE_N,
+              new KeyEvent(
+                  0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_N, 0, KeyEvent.META_ALT_ON));
+        });
+        require(activity.model.target == 68, "Alt+N fork navigation failed");
+        List<Button> tabs = new ArrayList<>();
+        for (View view : views())
+          if (view instanceof Button && view.getId() >= 10000 && view.getId() <= 10002)
+            tabs.add((Button) view);
+        require(tabs.size() == 3, "Expected three bottom tabs");
+        require(
+            tabs.get(0).getParent() == tabs.get(1).getParent()
+                && tabs.get(1).getParent() == tabs.get(2).getParent(),
+            "Tabs use different rows");
+        for (int method = 0; method < 4; method++) {
+          int choice = method;
+          main(() ->
+              findSpinner(english ? "Tuning method" : "Metoda strojenia").setSelection(choice));
+          require(
+              findSpinner(english ? "Check consonance" : "Sprawdź współbrzmienie").isShown(),
+              "Consonance disappeared");
+        }
+      }
+      log(
+          "Interaction assertions="
+              + assertions
+              + "; slider/list/toggle/tab/shortcut checks PASS. Screen-off capture and speech need"
+              + " a separate physical test.");
+      restoreSettings(saved);
+      result.putString("result", "PASS");
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      restoreSettings(saved);
+      result.putString("result", "FAIL");
+    }
+    result.putString("stream", report.toString());
+    finish(Activity.RESULT_OK, result);
   }
 
   private void focus(View view) {
@@ -478,15 +613,15 @@ public final class DeviceTests extends Instrumentation {
         require(octave.getSelectedItemPosition() == 5, "Octave list did not follow next note");
         String[] pages =
             english
-                ? new String[] {"Instrument", "Settings", "Help", "Tuner"}
-                : new String[] {"Instrument", "Ustawienia", "Pomoc", "Stroik"};
+                ? new String[] {"Settings", "Help", "Tuner"}
+                : new String[] {"Ustawienia", "Pomoc", "Stroik"};
         for (String name : pages) {
           Button tab = findButton(name);
           keepsFocus(tab, tab::performClick, "Tab " + name);
           require(tab.isSelected(), "Tab selected state missing");
           keepsFocus(tab, tab::performClick, "Selected tab " + name);
         }
-        page("Instrument");
+        page(english ? "Tuner" : "Stroik");
         Spinner instrument = findSpinner("Instrument");
         for (int at : new int[] {2, 1, 0, 5, 2})
           keepsFocus(instrument, () -> instrument.setSelection(at), "Instrument " + at);
@@ -602,8 +737,8 @@ public final class DeviceTests extends Instrumentation {
         });
         String[] pages =
             english
-                ? new String[] {"Tuner", "Instrument", "Settings", "Help"}
-                : new String[] {"Stroik", "Instrument", "Ustawienia", "Pomoc"};
+                ? new String[] {"Tuner", "Settings", "Help"}
+                : new String[] {"Stroik", "Ustawienia", "Pomoc"};
         for (int cycle = 0; cycle < 3; cycle++)
           for (int at = 0; at < pages.length; at++) {
             page(pages[at]);
@@ -717,7 +852,7 @@ public final class DeviceTests extends Instrumentation {
       page.setAccessible(true);
       main(() -> {
         try {
-          page.setInt(activity, 2);
+          page.setInt(activity, 1);
         } catch (Exception e) {
           throw new IllegalStateException(e);
         }
@@ -818,7 +953,7 @@ public final class DeviceTests extends Instrumentation {
           fork != null && fork.getPlayState() == android.media.AudioTrack.PLAYSTATE_PLAYING,
           "Fork output did not start");
       log("Actual AudioTrack fork playback started");
-      main(engine::stop);
+      main(() -> TuningSession.get(activity).stop());
       require(!engine.running() && recordField.get(engine) == null, "Stop left recording active");
       main(() -> {
         activity.model.method = 2;
@@ -837,7 +972,7 @@ public final class DeviceTests extends Instrumentation {
           engine.running() && mute.getLong(engine) <= SystemClock.elapsedRealtime(),
           "Speaker hybrid did not reopen listening");
       log("Speaker hybrid ignored reference and reopened listening");
-      main(engine::stop);
+      main(() -> TuningSession.get(activity).stop());
       boolean headphones =
           AudioEngine.headphones(
               (android.media.AudioManager) activity.getSystemService(Context.AUDIO_SERVICE));
@@ -866,6 +1001,7 @@ public final class DeviceTests extends Instrumentation {
   private void restoreSettings(String saved) {
     if (activity == null) return;
     main(() -> {
+      TuningSession.get(activity).stop();
       try {
         activity.model = Model.from(new org.json.JSONObject(saved == null ? "{}" : saved));
       } catch (Exception ignored) {

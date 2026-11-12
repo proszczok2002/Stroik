@@ -1,4 +1,4 @@
-# Stroik 1.14
+# Stroik 1.15
 
 [Native Android 1.03](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.03) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
@@ -126,3 +126,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build-release.ps1
 The script keeps the latest EXE, SHA-256 file and ZIP at the top level of `dist`. After a successful new-version build, it moves previous release files and older build and verification directories into `niepotrzebne` at the project root (`F:\stroik\niepotrzebne`) without automatically deleting them. Increase the version in `Stroik.csproj` before the next release. The script blocks an accidental rebuild of an existing version; use `-RebuildSameVersion` only for an intentional rebuild before publication. Source code, tests and the local SDK remain available.
 
 Pitch detection uses YIN, audio input uses Windows waveIn, and accessibility announcements use UI Automation. The project uses the [MIT license](LICENSE). Please report bugs through [Issues](https://github.com/proszczok2002/Stroik/issues).
+
+
+## Changes in 1.15
+
+
+- Fixed the corrupted Polish Off label in the consonance list.
+- Alt+N and Ctrl+N advance in fork mode and immediately play the new target. The app announces just the note name. Screen reader navigation still describes controls.
+- View selection precedes tuning method. On the closed note list, Up/Down move a whole tone (2 semitones), Left/Right one semitone. The open dropdown retains normal list navigation.
+- Added Spoken feedback in visual mode, enabled by default, under Settings. Clearing it suppresses app announcements in graphics mode without disabling NVDA navigation.
+- Bounded frequency-dependent fork levels strengthen low notes and soften high notes without shifting pitch or interval frequencies. Actual loudness depends on the speaker; equal perceived loudness is not guaranteed.
+- Piano key-position descriptions remain available. Fifths are 7 semitones upward and octaves 12: C4–G4 and C4–C5. G4–D5 is also a fifth, crossing named octaves; wrapping notes must not turn it into a fourth.
+
+Programmatic checks and Windows window tests passed. Fork listening, real instruments and NVDA were not retested for this release. Android uses a separate channel; Android 1.04 is a candidate awaiting a currently unavailable phone.

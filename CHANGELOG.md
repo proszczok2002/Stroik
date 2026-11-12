@@ -1,5 +1,10 @@
 # Changelog / Historia zmian
 
+## 1.0.15 (Stroik 1.15) — 2026-11-12
+
+- PL: Naprawa Alt+N, napisu Wyłączone, nowy cel odtwarzany w kamertonie, krótsza wypowiedź, widok przed metodą, nawigacja ton/półton, opcja głosu w grafice i ograniczona korekta poziomu tonów.
+- EN: Fix Alt+N and Polish Off text; play the next fork target; concise announcements, view before method, tone/semitone keys, visual-mode voice preference and bounded pitch-dependent gain.
+
 ## 1.0.14 (Stroik 1.14) — 2026-11-10
 
 - Retain the consonance, hybrid practice, octave visibility and update settings introduced in 1.13.

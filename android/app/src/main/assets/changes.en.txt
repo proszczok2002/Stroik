@@ -1,7 +1,11 @@
-Stroik Android 1.03
+Stroik Android 1.04 — test candidate
 
-Improved screen reader focus retention. Changing method, consonance, instrument or tap listening updates the relevant fields without recreating the whole screen. Tab buttons keep their identity; choosing the current tab again does not refresh the form. Language and theme changes restore the corresponding control.
+Three bottom tabs in one row: Tuner, Settings, Help. Instrument is a list on the Tuner page. View selection precedes tuning method.
 
-Numeric fields use labels and hints so their description does not mask the entered value. Note/octave synchronization no longer repeats user actions. Added real accessibility-focus retention tests in PL/EN.
+One microphone toggle changes Start/Stop and exposes its state. Collapsed dropdowns expose their selected value; separate labels are skipped during TalkBack traversal. Check consonance remains present when changing methods.
 
-The APK uses the existing signing key. Android confirms installation; the earlier Play Protect warning and test scope are documented.
+Spoken feedback in visual mode is enabled by default and can be disabled in Settings. A first-use graphics hint points to the option. Keep screen awake applies only to the visible window. User-started capture uses a foreground service with a stop notification; screen-off readings use system speech. Removing the app from Recents stops the service. Switching to another app does not by itself stop capture: use the toggle or notification.
+
+A reference uses a 390–466 Hz slider, 0.1 Hz accessibility adjustments, and numeric entry on double tap or Enter. Alt+N / Ctrl+N advances. On the note list, Up/Down move a whole tone and Left/Right one semitone. App feedback contains the note name alone. Bounded fork gain strengthens low notes and softens high ones; speaker response still matters.
+
+The phone is unavailable. Source/APK compilation and DSP/note-logic checks passed; new TalkBack, slider, foreground microphone, screen-off and updater paths have not been device-tested. Previous 1.03 results are not evidence for 1.04. The earlier Play Protect warning remains unexplained.

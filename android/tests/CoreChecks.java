@@ -8,6 +8,24 @@ public final class CoreChecks {
   }
 
   public static void main(String[] args) {
+    Model navigation = new Model();
+    navigation.english = false;
+    require(navigation.voiceInVisual && !navigation.keepScreenOn, "Speech and screen defaults");
+    require(navigation.spokenNote(67).equals("g razkreślne"), "Concise next-note name");
+    navigation.target = navigation.anchor = 67;
+    for (int next = 68; next <= 108; next++) {
+      require(navigation.next() == next, "Ascending fork navigation skipped a note");
+      navigation.target = next;
+    }
+    require(navigation.next() == 108, "Navigation exceeded piano range");
+    require(
+        Dsp.level(110) > Dsp.level(440) && Dsp.level(440) > Dsp.level(1760),
+        "Bounded pitch-dependent gain");
+    require(Dsp.level(27.5) <= .34 && Dsp.level(4186) >= .045, "Fork gain limits");
+    for (int midi : new int[] {21, 40, 60, 67, 69, 95, 108}) {
+      short[] tone = Dsp.fork(Model.hz(midi, 440), 0, 44100);
+      for (short sample : tone) require(Math.abs((int) sample) < 32767, "Fork clipped");
+    }
     int count = 0;
     for (int rate : new int[] {44100, 48000})
       for (double frequency :

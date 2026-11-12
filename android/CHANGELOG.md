@@ -1,5 +1,10 @@
 # Android changelog / Historia zmian Android
 
+## 1.04 / 104 — candidate, 2026-11-12
+
+- PL: Jeden przycisk mikrofonu, odczyt list, trzy dolne zakładki, instrument na stronie Stroik, suwak Hz, ustawienia głosu i ekranu, usługa do nasłuchu po wygaszeniu ekranu, krótkie nazwy i klawiatura ton/półton. Zmieniony poziom kamertonu. Telefon niedostępny — nowe ścieżki sprzętowe nieprzetestowane.
+- EN: Microphone toggle, dropdown values, three bottom tabs, instrument in Tuner, Hz slider, voice/screen options, foreground capture for screen-off use, concise notes and keyboard navigation, fork gain shaping. Phone unavailable; new device paths untested.
+
 ## 1.03 / 103
 
 - PL: Stałe kontrolki przy zmianie metody, współbrzmienia, instrumentu i nasłuchu stuknięć; stałe zakładki i przywracanie fokusu po zmianie języka/motywu. Poprawiono etykiety pól liczbowych oraz synchronizację nuty/oktawy bez resetowania kolejności.

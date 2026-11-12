@@ -1,6 +1,11 @@
 using Stroik;
 using System.Net;
 
+if (NoteCatalog.Spoken(67, false) != "g razkreślne" || !new Preferences().VoiceInVisualMode)
+    throw new Exception("Nieprawidłowa krótka nazwa lub domyślna opcja głosu.");
+if (!(TuningFork.Level(110) > TuningFork.Level(440) && TuningFork.Level(440) > TuningFork.Level(1760)) || TuningFork.Level(27.5) > 0.34)
+    throw new Exception("Brak ograniczonej korekty głośności kamertonu.");
+
 var checks = new UpdateCheckState();
 var cycle = new PracticeCycle();
 DateTime cycleStart = DateTime.UtcNow;
@@ -206,7 +211,7 @@ try
         TargetMidi = 69, Instrument = InstrumentKind.Ukulele, UkuleleTuning = UkuleleTuning.SwappedAG,
         PianoOrder = PianoOrder.AlternateFiveSemitones, PlanAnchorMidi = 67,
         DoubleStrikeAdvance = false, DoubleStrikeWindowMilliseconds = 1900,
-        MicrophoneCorrectionCents = 12.5M, VisualMode = false,
+        MicrophoneCorrectionCents = 12.5M, VisualMode = false, VoiceInVisualMode = false,
         View = TunerView.Classic, DarkTheme = true, AutoStrike = true,
         AutomaticUpdates = false, UpdateMinutes = 37, Consonance = Consonance.Octave,
         ForkTapAdvance = true, SimultaneousInterval = true, MicrophoneMonitor = true };
@@ -220,7 +225,7 @@ try
         loaded.UkuleleTuning != UkuleleTuning.SwappedAG || loaded.PianoOrder != PianoOrder.AlternateFiveSemitones ||
         loaded.PlanAnchorMidi != 67 || loaded.DoubleStrikeAdvance || loaded.DoubleStrikeWindowMilliseconds != 1900 ||
         loaded.MicrophoneCorrectionCents != 12.5M ||
-        loaded.VisualMode != false || !loaded.DarkTheme || !loaded.AutoStrike)
+        loaded.VisualMode != false || loaded.VoiceInVisualMode || !loaded.DarkTheme || !loaded.AutoStrike)
         throw new Exception("Profil nie zachował ustawień.");
     File.WriteAllText(profile, "{\"ConcertA\":999}");
     try { Preferences.ReadFile(profile); throw new Exception("Zaakceptowano niepoprawny profil."); }
@@ -382,6 +387,18 @@ var uiThread = new Thread(() =>
         var automaticStatus = (System.Windows.Forms.Label)typeof(TunerForm).GetField("_automaticStatus", flags)!.GetValue(form)!;
         var strikeTimer = (System.Windows.Forms.Timer)typeof(TunerForm).GetField("_strikeTimer", flags)!.GetValue(form)!;
         var processCmdKey = typeof(TunerForm).GetMethod("ProcessCmdKey", flags)!;
+        instrument.SelectedIndex = 0;
+        pianoOrder.SelectedIndex = 0;
+        typeof(TunerForm).GetMethod("SelectTarget", flags)!.Invoke(form, [67]);
+        object?[] nextArgs = [System.Windows.Forms.Message.Create(IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero), System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.N];
+        if ((bool)processCmdKey.Invoke(form, nextArgs)! != true || (int)typeof(TunerForm).GetField("_targetMidi", flags)!.GetValue(form)! != 68)
+            throw new Exception("Alt+N nie przechodzi do następnej nuty w kamertonie.");
+        nextArgs = [System.Windows.Forms.Message.Create(IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero), System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N];
+        if ((bool)processCmdKey.Invoke(form, nextArgs)! != true || (int)typeof(TunerForm).GetField("_targetMidi", flags)!.GetValue(form)! != 69)
+            throw new Exception("Ctrl+N nie kontynuuje rosnącej kolejności.");
+        var offText = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_consonance", flags)!.GetValue(form)!;
+        if (!offText.Items[0]!.ToString()!.Equals("Wyłączone", StringComparison.Ordinal) && !offText.Items[0]!.ToString()!.Equals("Off", StringComparison.Ordinal))
+            throw new Exception("Uszkodzony napis Wyłączone.");
         int originalMethod = method.SelectedIndex;
         bool originalAutoStrike = autoStrike.Checked;
         method.SelectedIndex = 0;
@@ -497,6 +514,16 @@ var uiThread = new Thread(() =>
         method.SelectedIndex = 1;
         autoStrike.Checked = false;
         form.Show();
+        tabs.SelectedIndex = 0;
+        instrument.SelectedIndex = 0;
+        typeof(TunerForm).GetMethod("SelectTarget", flags)!.Invoke(form, [67]);
+        target.Focus();
+        foreach (var navigation in new[] { (System.Windows.Forms.Keys.Down, 69), (System.Windows.Forms.Keys.Up, 67), (System.Windows.Forms.Keys.Right, 68), (System.Windows.Forms.Keys.Left, 67) })
+        {
+            object?[] arrowArgs = [System.Windows.Forms.Message.Create(IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero), navigation.Item1];
+            if ((bool)processCmdKey.Invoke(form, arrowArgs)! != true || (int)typeof(TunerForm).GetField("_targetMidi", flags)!.GetValue(form)! != navigation.Item2)
+                throw new Exception("Strzałki nie zachowują kroku ton/półton na zamkniętej liście.");
+        }
         foreach (TunerView mode in Enum.GetValues<TunerView>())
         {
             applySettings.Invoke(form, [new Preferences { Method = TuningMethod.Electronic, View = mode,
@@ -534,6 +561,9 @@ var uiThread = new Thread(() =>
         applySettings.Invoke(form, [originalSettings]);
         form.Hide();
         // Four audio buffers (~0.34 s) must suffice, even at low playing level.
+        // Use electronic mode explicitly: the preceding real fork shortcut test now
+        // correctly opens a reference-decay guard, which must not apply to this input test.
+        applySettings.Invoke(form, [new Preferences { Method = TuningMethod.Electronic, AutomaticUpdates = false }]);
         var processFrame = typeof(TunerForm).GetMethod("ProcessFrameAt", flags)!;
         var resetResult = typeof(TunerForm).GetMethod("ResetResult", flags)!;
         var measuredSession = (NoteSession)typeof(TunerForm).GetField("_session", flags)!.GetValue(form)!;

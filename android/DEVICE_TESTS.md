@@ -89,3 +89,13 @@ Polski: w 1.02 odtworzono usuwanie kontrolki z fokusem po zmianie metody. Końco
 ## Remaining physical checks
 
 Human TalkBack speech/gestures, real instrument accuracy in noise, headphone monitoring/latency, and complete 1.0 → 1.01 installation confirmation remain separate from the passed structural and audio-device checks.
+
+## 1.04 candidate — 12 November 2026, phone unavailable
+
+The new report concerns speech/visual settings, screen-off listening, duplicated microphone actions and labels, list values, focus, consonance visibility, reference-frequency control and bottom tabs. These are implemented in 1.04 source, including a user-started foreground microphone/mediaPlayback service, partial wake lock, stop notification and system TTS with the screen off. The service does not start on reboot, uses START_NOT_STICKY and stops when removed from Recents. Three tabs share one horizontal parent; Instrument is a dropdown on Tuner. The slider exposes Hz range/progress with validation, 0.1 Hz accessibility adjustments and double-tap/Enter numeric entry.
+
+Updated JVM DSP/note checks passed. Android source/APK and the separate device test APK compile. New interaction instrumentation is prepared for selected dropdown values, one microphone button, Hz actions/bounds, keep-screen flags, Alt+N, three tabs and persistent consonance. Focus/lifecycle tests were adapted to three pages. None of these updated device scenarios has been run for 1.04. The 1.03 totals are not 1.04 results.
+
+Device acceptance still required: visible-start microphone and permission dialogs; one button and TalkBack on/off states; selected list values and skipped labels; touch/TalkBack slider and numeric entry; focus across instrument/method/consonance changes; screen off/on and TTS with visual voice on/off; notification/Recents stop releasing recording and wake lock; Activity recreation during capture; hardware keys; service errors; real audio interference/levels; system update persistence. Keep TalkBack enabled and check POCO battery/vendor restrictions.
+
+The candidate is a separate prerelease; android/update.json remains on stable 1.03 pending device testing. The earlier Play Protect classification is unresolved. Polski: mikrofon w tle, TalkBack, suwak, gesty i wygaszony ekran w 1.04 wymagają próby na telefonie; skompilowanie kodu nie jest próbą sprzętową.

@@ -1,11 +1,11 @@
 Stroik Android — instrukcja
 
 Dostępność
-Dolne przyciski otwierają Stroik, Instrument, Ustawienia i Pomoc. Każdy przycisk ma duże pole dotykowe. Przechodź między kontrolkami gestami TalkBack. Listy rozwijają się po dwukrotnym stuknięciu; stan pól wyboru zgłasza Android. Wyniki są wypowiadane po pomiarze, nie przy każdej próbce. Przy wyłączonym TalkBack wyniki może czytać syntezator systemowy. Grafika jest opcjonalna i domyślnie wyłączona. Język polski/angielski i ciemny motyw są w Ustawieniach.
+Dolne przyciski otwierają Stroik, Ustawienia i Pomoc w jednej linii. Każdy przycisk ma duże pole dotykowe. Przechodź między kontrolkami gestami TalkBack. Listy rozwijają się po dwukrotnym stuknięciu; stan pól wyboru zgłasza Android. Wyniki są wypowiadane po pomiarze, nie przy każdej próbce. Przy wyłączonym TalkBack wyniki może czytać syntezator systemowy. Grafika jest opcjonalna i domyślnie wyłączona. Język polski/angielski i ciemny motyw są w Ustawieniach.
 
 Metody
 Kamerton odtwarza gasnący wzorzec wybranej nuty. Wybierz automatyczne uderzenia i odstęp lub naciskaj Uderz kamerton. Przycisk pauzy zatrzymuje lub wznawia automat.
-Stroik elektroniczny wymaga zgody na mikrofon. Naciśnij Włącz mikrofon, zagraj jedną nutę i wycisz instrument. Wynik podaje nazwę nuty, kierunek i odchyłkę. Wyłącz mikrofon kończy nasłuch. Opuszczenie aplikacji zatrzymuje nagrywanie i dźwięk; po powrocie uruchom pomiar ponownie. Nagrania nie są zapisywane ani wysyłane.
+Stroik elektroniczny wymaga zgody na mikrofon. Naciśnij Włącz mikrofon, zagraj jedną nutę i wycisz instrument. Wynik podaje nazwę nuty, kierunek i odchyłkę. Wyłącz mikrofon kończy nasłuch. Włączony nasłuch działa w usłudze także po wygaszeniu ekranu i przełączeniu aplikacji. Wyłącz go tym samym przyciskiem lub akcją w powiadomieniu; usunięcie aplikacji z ostatnich zadań zatrzymuje usługę. Nagrania nie są zapisywane ani wysyłane.
 Hybryda głośnikowa gra wzorzec 3 sekundy, pomija mikrofon przez 3,4 sekundy, słucha instrumentu, podaje wynik, czeka około 5 sekund i powtarza wzorzec. Długi komunikat czytnika lub pogłos mogą zakłócić rytm; wtedy zatrzymaj i powtórz próbę.
 Hybryda słuchawkowa słucha równocześnie z wzorcem. Odsłuch mikrofonu jest opcjonalny i wymaga podłączonych słuchawek. Nie włączaj odsłuchu przez głośniki: grozi sprzężeniem. Opóźnienie zależy od urządzenia. Program używa domyślnych urządzeń Androida i nie zmienia ustawień systemowych.
 
@@ -18,7 +18,7 @@ Wybierz dolną nutę, potem Kwinty lub Oktawy. c razkreślne łączy się z g ra
 Tryb Razem jest eksperymentalny: graj blisko wybranego celu przez około 2 sekundy. Harmoniczna dolnej nuty może udawać drugą nutę, szczególnie w oktawie. Wynik koniecznie potwierdź osobno. Nie jest to gwarancja braku rzeczywistych dudnień. Kwinty temperowane naturalnie mogą dudnić, a pianina potrzebować rozciągniętych oktaw z powodu nieharmoniczności strun.
 
 Poprawny pomiar
-Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty. Graj równomiernie bez przesterowania. Zmień czułość w zakładce Instrument. Ręczna korekta ±100 centów wymaga porównania ze znanym wzorcem. Wyświetlanie dziesiątych części Hz nie gwarantuje takiej dokładności. Standard A to 440 Hz. Przed podniesieniem naciągu starego pianina poproś technika o ocenę; sam wiek nie wyznacza bezpiecznego stroju. Na słuch warto najpierw ćwiczyć na niedrogim instrumencie; zerwana struna nadal może zranić.
+Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty. Graj równomiernie bez przesterowania. Zmień czułość na stronie Stroik obok listy instrumentów. Ręczna korekta ±100 centów wymaga porównania ze znanym wzorcem. Wyświetlanie dziesiątych części Hz nie gwarantuje takiej dokładności. Standard A to 440 Hz. Przed podniesieniem naciągu starego pianina poproś technika o ocenę; sam wiek nie wyznacza bezpiecznego stroju. Na słuch warto najpierw ćwiczyć na niedrogim instrumencie; zerwana struna nadal może zranić.
 
 Profile i aktualizacje
 Zapisz plik ustawień i Wczytaj plik ustawień używają systemowego wyboru pliku JSON. Profil obejmuje metodę, instrument, język, motyw i ustawienia aktualizacji. Wczytanie kończy bieżący pomiar. Automatyczne sprawdzanie odbywa się przy wejściu i co ustawioną liczbę minut, tylko gdy aplikacja jest otwarta. Można je wyłączyć. Brak nowej wersji lub błąd sieci nie powoduje komunikatu w tle. Ręczne sprawdzenie jest w Ustawieniach.
@@ -26,3 +26,19 @@ Nowe wydanie pokazuje zmiany i pytanie o pobranie. APK jest sprawdzany przez SHA
 
 Projekt: https://github.com/proszczok2002/Stroik
 Licencja MIT. Wykonawca Proszczok z Codex; pomysłodawca Witold.
+
+
+Zmiany obsługi w 1.04
+Stroik Android 1.04 — kandydat do testów
+
+Trzy zakładki w jednej linii na dole: Stroik, Ustawienia, Pomoc. Instrument wybierasz z listy na stronie Stroik. Widok jest przed metodą strojenia.
+
+Jeden przycisk mikrofonu przełącza Włącz/Wyłącz i podaje stan czytnikowi. Listy udostępniają bieżący wybór także po zwinięciu, a ich osobne etykiety nie są powtarzane w nawigacji TalkBack. „Sprawdź współbrzmienie” pozostaje w tym samym miejscu przy zmianie metody.
+
+Domyślnie włączony odczyt głosowy w trybie wizualnym można odznaczyć w Ustawieniach. Przy pierwszym włączeniu grafiki pojawia się wskazówka ze strzałką. Opcja „Nie pozwalaj na autoblokadę ekranu” działa tylko dla otwartego okna. Włączony przez użytkownika nasłuch jest obsługiwany przez usługę z powiadomieniem i przyciskiem zatrzymania; po wygaszeniu ekranu wyniki odczytuje syntezator. Usunięcie aplikacji z ostatnich zadań zatrzymuje usługę. Wyjście do innej aplikacji samo nie kończy nasłuchu — zatrzymaj go przyciskiem lub w powiadomieniu.
+
+Częstotliwość A ma suwak 390–466 Hz, krok dostępności 0,1 Hz i wpis liczbowy po dwukrotnym stuknięciu. Z klawiatury Enter otwiera edycję. Alt+N / Ctrl+N to następna nuta; na liście nut góra/dół zmieniają cel o cały ton, lewo/prawo o półton. Aplikacja ogłasza samą nazwę nuty. Kamerton ma mocniejszy dół i łagodniejszą górę; skuteczność zależy od głośnika.
+
+Telefon jest obecnie niedostępny. Kod i APK skompilowano, testy DSP oraz logiki nut przeszły; nowych testów TalkBack, suwaka, usługi mikrofonu, wygaszonego ekranu ani aktualizatora nie wykonano. Wyniki 1.03 nie są wynikami 1.04. Wcześniejsze ostrzeżenie Play Protect pozostaje niewyjaśnione.
+Uprawnienia i praca w tle (1.04)
+Uruchom nasłuch, kiedy aplikacja jest widoczna. Android może zapytać o mikrofon i zgodę na powiadomienia. Po odmowie powiadomienia usługa nadal podlega systemowej liście aktywnych aplikacji; zatrzymaj mikrofon w aplikacji lub z systemowego panelu. Nie uruchamiamy nasłuchu po restarcie telefonu. Przy wygaszonym ekranie wyniki odczytuje syntezator systemowy nawet po wyłączeniu głosu w grafice. Inne aplikacje przechwytujące mikrofon, rozmowy, oszczędzanie baterii i odtwarzanie TTS mogą przerwać lub zakłócić pomiar. Opcja utrzymania ekranu nie blokuje ręcznego przycisku zasilania. Ta ścieżka wymaga jeszcze testu fizycznego telefonu.
