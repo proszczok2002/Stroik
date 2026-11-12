@@ -139,10 +139,10 @@ internal sealed partial class TunerForm : Form
         Add(content, _sensitivityTitle); Add(content, _sensitivity);
         Add(content, _toleranceTitle); Add(content, _tolerance);
         Add(content, _showOctave); Add(content, _octaveTitle); Add(content, _octave);
-        Add(content, _targetTitle); Add(content, _target); Add(content, _noteHelp);
+        Add(content, _targetTitle); Add(content, _target); Add(content, _guideText); Add(content, _noteHelp);
         Add(content, _orderTitle); Add(content, _pianoOrder); Add(content, _orderHelp);
         Add(content, _doubleStrike); Add(content, _doubleStrikeWindowTitle); Add(content, _doubleStrikeWindow); Add(content, _strikeHelp);
-        Add(content, _guideText); Add(content, _keyboard);
+        Add(content, _keyboard);
         var profileButtons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
         profileButtons.Controls.AddRange([_saveProfile, _loadProfile]);
         Add(content, profileButtons);
