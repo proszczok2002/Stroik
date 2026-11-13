@@ -1,21 +1,19 @@
-# Stroik 1.16
+# Stroik 1.17
 
 ## Polski
 
-- Góra/dół na liście pianina i w trybie chromatycznym wybiera kolejne białe klawisze: C–D–E–F–G–A–H–C. Naprawiono E→Fis oraz H→Cis. Lewo/prawo przechodzi o półton, po wszystkich dźwiękach. Działa także na rozwiniętej liście i podczas automatycznego kamertonu.
-- Po strzałce oraz Alt+N / Ctrl+N program zgłasza samą nazwę wybranej nuty przez obiekt dostępności listy. Kamerton natychmiast odtwarza nowy cel. Rosnący plan „Następny dźwięk” zachowuje wszystkie półtony; nie jest tym samym co nawigacja po białych klawiszach.
-- Gdy górna nuta kwinty lub oktawy wykracza poza zakres, kamerton wstrzymuje automat i podaje wskazówkę zamiast wielokrotnie otwierać dialog błędu. Plan kończy się na ostatniej dostępnej parze. Wybierz niższy cel albo wyłącz współbrzmienia.
-- Aktualizator ogranicza czas bezczynnego pobierania, ponawia chwilowe blokady plików i sprawdza SHA-256. Nowy pomocnik przygotowuje EXE przed zamknięciem programu, podmienia plik i czeka na okno nowej wersji. Nieudany restart przywraca poprzedni plik; stara kopia jest usuwana dopiero po udanym uruchomieniu. Szczegóły awarii trafiają do `%LOCALAPPDATA%\Stroik\update.log`.
-- Numer wersji w nagłówku i „O programie” jest zgodny z wydaniem.
+- Naprawiono pozostawianie starego dźwięku po zmianie współbrzmienia kamertonu. Wybranie kwinty lub oktawy od razu odtwarza oba dźwięki razem, także przy wyłączonym automacie i mikrofonie. Wybranie „Wyłączone” natychmiast wraca do pojedynczej nuty.
+- Zmiana nuty bezpośrednio na liście, zmiana oktawy i częstotliwości odniesienia również od razu odświeżają wzorzec. Zachowano obsługę strzałek i „Następnego dźwięku” bez podwójnego uderzania.
+- Opis przy współbrzmieniu oraz opis dostępności listy wskazują obie nuty. Wybrana nuta jest dolną nutą pary: dla c razkreślnego kwinta to c razkreślne + g razkreślne (261,63 + 392,00 Hz przy A=440). Dla g razkreślnego kwinta w górę to g razkreślne + d dwukreślne.
+- Aby ponownie uderzyć tę samą nutę, odznacz automat i naciśnij Alt+U lub „Uderz kamerton”. Pomysł osobnej zakładki do grania melodii zapisano do późniejszego zaprojektowania; nie dodano jej w tej poprawce.
 
-Sprawdzono programowo nawigację natywnej listy PL/EN, częstotliwości generowanych tonów, granice współbrzmień oraz podmianę, wycofanie po błędzie i ponawianie blokady pliku. NVDA, odsłuch na instrumencie i komputery zgłaszające problem aktualizacji wymagają osobnego sprawdzenia. Wydanie dotyczy Windows.
+Testy sygnału PCM po rzeczywistych zdarzeniach interfejsu obejmują kwinty, oktawy, wyłączenie współbrzmienia, A=435/440 i ręczny/automatyczny kamerton. Nie wykonano odsłuchu na komputerze zgłaszającym problem ani testu NVDA. Poprawka dotyczy Windows.
 
 ## English
 
-- Up/Down on piano and chromatic note lists select consecutive white keys: C–D–E–F–G–A–B–C. Fixed E→F-sharp and B→C-sharp. Left/Right move one semitone through all notes. This works on open dropdowns and during automatic fork playback.
-- Arrows and Alt+N / Ctrl+N announce just the selected note through the list accessibility object and immediately play its fork tone. The ascending Next note plan still includes every semitone; it is separate from white-key navigation.
-- If the upper fifth/octave note exceeds the range, the fork pauses automatic playback and gives guidance instead of repeatedly opening error dialogs. The plan stops at its last valid pair. Choose a lower target or turn consonance off.
-- The updater bounds stalled downloads, retries temporary file locks and verifies SHA-256. The new helper stages the EXE before closing the app, replaces it and waits for the new window. Failed restarts restore the previous file; the old backup is removed only after successful startup. Diagnostics: `%LOCALAPPDATA%\Stroik\update.log`.
-- Window headings and About now show the actual release version.
+- Fixed stale fork audio after changing consonance. Selecting fifths or octaves immediately plays both notes together, including manual mode without microphone capture. Selecting Off immediately restores a single note.
+- Direct note-list selection, octave changes and concert-A changes also refresh playback immediately. Arrow and Next note navigation remain supported without duplicate strikes.
+- Consonance help and the list accessibility description name both notes. The selected note is the lower note: C4 gives C4 + G4 (261.63 + 392.00 Hz at A=440); G4 gives G4 + D5 for an upward fifth.
+- To repeat the same note, clear automatic strikes and press Alt+U or Strike tuning fork. The separate piano-tab suggestion has been recorded for later design; it is not part of this fix.
 
-Programmatic checks cover native PL/EN list navigation, generated tone frequencies, interval boundaries, replacement, failed-start rollback and sharing-lock retries. NVDA, instrument listening and the affected remote computers require separate validation. This release is for Windows.
+PCM tests after actual UI events cover fifths, octaves, Off, A=435/440 and manual/automatic fork modes. Listening on the affected computer and NVDA were not tested. This is a Windows fix.

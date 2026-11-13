@@ -1,5 +1,11 @@
 # Changelog / Historia zmian
 
+## 1.0.17 (Stroik 1.17) — 2026-11-13
+
+- PL: Zmiana kwinty/oktawy, nuty na liście, oktawy lub A odniesienia od razu zastępuje poprzedni dźwięk kamertonu, również bez mikrofonu i bez automatu. Poprzednio lista mogła wskazywać kwintę, gdy wciąż brzmiała pojedyncza nuta. Opis dostępności wskazuje obie nuty i dolny cel.
+- EN: Changing consonance, target, octave or concert A immediately replaces the fork reference, including manual mode without microphone capture. Previously the list could show a fifth while a single old note was still playing. Accessible help names both notes and the lower target.
+- PL/EN: Added UI-event-to-PCM regression checks for C4–G4, G4–D5, octaves, A=435/440, direct list/octave changes and Off. Synthetic arrow checks no longer depend on the user's physical Ctrl key. Separate piano-tab idea recorded in POMYSLY.md.
+
 ## 1.0.16 (Stroik 1.16) — 2026-11-13
 
 - PL: Białe klawisze pod strzałkami góra/dół, półtony lewo/prawo także na otwartej liście; odczyt celu i test częstotliwości kamertonu. Zakończenie planu na granicy współbrzmień bez powtarzanych dialogów błędu.

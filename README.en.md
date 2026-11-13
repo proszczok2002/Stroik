@@ -1,4 +1,4 @@
-# Stroik 1.16
+# Stroik 1.17
 
 [Native Android 1.03](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.03) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
@@ -128,12 +128,11 @@ The script keeps the latest EXE, SHA-256 file and ZIP at the top level of `dist`
 Pitch detection uses YIN, audio input uses Windows waveIn, and accessibility announcements use UI Automation. The project uses the [MIT license](LICENSE). Please report bugs through [Issues](https://github.com/proszczok2002/Stroik/issues).
 
 
-## Changes in 1.16
+## Changes in 1.17
 
-- Up/Down on piano and chromatic note lists select consecutive white keys: C–D–E–F–G–A–B–C. Fixed E→F-sharp and B→C-sharp. Left/Right move one semitone through all notes. This works on open dropdowns and during automatic fork playback.
-- Arrows and Alt+N / Ctrl+N announce just the selected note through the list accessibility object and immediately play its fork tone. The ascending Next note plan still includes every semitone; it is separate from white-key navigation.
-- If the upper fifth/octave note exceeds the range, the fork pauses automatic playback and gives guidance instead of repeatedly opening error dialogs. The plan stops at its last valid pair. Choose a lower target or turn consonance off.
-- The updater bounds stalled downloads, retries temporary file locks and verifies SHA-256. The new helper stages the EXE before closing the app, replaces it and waits for the new window. Failed restarts restore the previous file; the old backup is removed only after successful startup. Diagnostics: `%LOCALAPPDATA%\Stroik\update.log`.
-- Window headings and About now show the actual release version.
+- Fixed stale fork audio after changing consonance. Selecting fifths or octaves immediately plays both notes together, including manual mode without microphone capture. Selecting Off immediately restores a single note.
+- Direct note-list selection, octave changes and concert-A changes also refresh playback immediately. Arrow and Next note navigation remain supported without duplicate strikes.
+- Consonance help and the list accessibility description name both notes. The selected note is the lower note: C4 gives C4 + G4 (261.63 + 392.00 Hz at A=440); G4 gives G4 + D5 for an upward fifth.
+- To repeat the same note, clear automatic strikes and press Alt+U or Strike tuning fork. The separate piano-tab suggestion has been recorded for later design; it is not part of this fix.
 
-Programmatic checks cover native PL/EN list navigation, generated tone frequencies, interval boundaries, replacement, failed-start rollback and sharing-lock retries. NVDA, instrument listening and the affected remote computers require separate validation. This release is for Windows.
+PCM tests after actual UI events cover fifths, octaves, Off, A=435/440 and manual/automatic fork modes. Listening on the affected computer and NVDA were not tested. This is a Windows fix.

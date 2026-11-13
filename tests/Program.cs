@@ -557,6 +557,7 @@ var uiThread = new Thread(() =>
                 throw new Exception("Strzałki nie zachowują kroku ton/półton na zamkniętej liście.");
         }
         ReleaseRegression.Navigation(form);
+        ReleaseRegression.ForkConfiguration(form);
         foreach (TunerView mode in Enum.GetValues<TunerView>())
         {
             applySettings.Invoke(form, [new Preferences { Method = TuningMethod.Electronic, View = mode,

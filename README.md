@@ -1,4 +1,4 @@
-# Stroik 1.16
+# Stroik 1.17
 
 [Natywna wersja Android 1.03](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.03) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
@@ -130,12 +130,11 @@ Detekcja wysokości używa metody YIN, wejście audio — Windows waveIn, a komu
 
 
 
-## Zmiany w 1.16
+## Zmiany w 1.17
 
-- Góra/dół na liście pianina i w trybie chromatycznym wybiera kolejne białe klawisze: C–D–E–F–G–A–H–C. Naprawiono E→Fis oraz H→Cis. Lewo/prawo przechodzi o półton, po wszystkich dźwiękach. Działa także na rozwiniętej liście i podczas automatycznego kamertonu.
-- Po strzałce oraz Alt+N / Ctrl+N program zgłasza samą nazwę wybranej nuty przez obiekt dostępności listy. Kamerton natychmiast odtwarza nowy cel. Rosnący plan „Następny dźwięk” zachowuje wszystkie półtony; nie jest tym samym co nawigacja po białych klawiszach.
-- Gdy górna nuta kwinty lub oktawy wykracza poza zakres, kamerton wstrzymuje automat i podaje wskazówkę zamiast wielokrotnie otwierać dialog błędu. Plan kończy się na ostatniej dostępnej parze. Wybierz niższy cel albo wyłącz współbrzmienia.
-- Aktualizator ogranicza czas bezczynnego pobierania, ponawia chwilowe blokady plików i sprawdza SHA-256. Nowy pomocnik przygotowuje EXE przed zamknięciem programu, podmienia plik i czeka na okno nowej wersji. Nieudany restart przywraca poprzedni plik; stara kopia jest usuwana dopiero po udanym uruchomieniu. Szczegóły awarii trafiają do `%LOCALAPPDATA%\Stroik\update.log`.
-- Numer wersji w nagłówku i „O programie” jest zgodny z wydaniem.
+- Naprawiono pozostawianie starego dźwięku po zmianie współbrzmienia kamertonu. Wybranie kwinty lub oktawy od razu odtwarza oba dźwięki razem, także przy wyłączonym automacie i mikrofonie. Wybranie „Wyłączone” natychmiast wraca do pojedynczej nuty.
+- Zmiana nuty bezpośrednio na liście, zmiana oktawy i częstotliwości odniesienia również od razu odświeżają wzorzec. Zachowano obsługę strzałek i „Następnego dźwięku” bez podwójnego uderzania.
+- Opis przy współbrzmieniu oraz opis dostępności listy wskazują obie nuty. Wybrana nuta jest dolną nutą pary: dla c razkreślnego kwinta to c razkreślne + g razkreślne (261,63 + 392,00 Hz przy A=440). Dla g razkreślnego kwinta w górę to g razkreślne + d dwukreślne.
+- Aby ponownie uderzyć tę samą nutę, odznacz automat i naciśnij Alt+U lub „Uderz kamerton”. Pomysł osobnej zakładki do grania melodii zapisano do późniejszego zaprojektowania; nie dodano jej w tej poprawce.
 
-Sprawdzono programowo nawigację natywnej listy PL/EN, częstotliwości generowanych tonów, granice współbrzmień oraz podmianę, wycofanie po błędzie i ponawianie blokady pliku. NVDA, odsłuch na instrumencie i komputery zgłaszające problem aktualizacji wymagają osobnego sprawdzenia. Wydanie dotyczy Windows.
+Testy sygnału PCM po rzeczywistych zdarzeniach interfejsu obejmują kwinty, oktawy, wyłączenie współbrzmienia, A=435/440 i ręczny/automatyczny kamerton. Nie wykonano odsłuchu na komputerze zgłaszającym problem ani testu NVDA. Poprawka dotyczy Windows.

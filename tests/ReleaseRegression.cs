@@ -9,6 +9,51 @@ internal static class ReleaseRegression
     private static T Field<T>(TunerForm form, string name) => (T)typeof(TunerForm).GetField(name, Hidden)!.GetValue(form)!;
     private static object? Call(TunerForm form, string method, params object[] args) => typeof(TunerForm).GetMethod(method, Hidden)!.Invoke(form, args);
 
+    internal static void ForkConfiguration(TunerForm form)
+    {
+        var saved = (Preferences)Call(form, "ReadSettings")!;
+        try
+        {
+            foreach (bool automatic in new[] {false, true})
+            foreach (int midi in new[] {60, 67})
+            {
+                Call(form, "ApplySettings", new Preferences {Method = TuningMethod.TuningFork, TargetMidi = midi,
+                    AutoStrike = automatic, AutomaticUpdates = false, Consonance = Consonance.Off});
+                Call(form, "Strike");
+                Field<ComboBox>(form, "_consonance").SelectedIndex = (int)Consonance.Fifth;
+                CheckPair(midi, Consonance.Fifth, 440);
+                Field<ComboBox>(form, "_consonance").SelectedIndex = (int)Consonance.Octave;
+                CheckPair(midi, Consonance.Octave, 440);
+                Field<NumericUpDown>(form, "_concertA").Value = 435;
+                CheckPair(midi, Consonance.Octave, 435);
+                // Direct list and octave changes must work without arrow/Next handlers.
+                Call(form, "SelectTarget", midi + 2);
+                CheckPair(midi + 2, Consonance.Octave, 435);
+                Field<ComboBox>(form, "_octave").SelectedIndex++;
+                CheckPair(midi + 14, Consonance.Octave, 435);
+                Field<ComboBox>(form, "_consonance").SelectedIndex = (int)Consonance.Off;
+                using var single = TuningFork.BuildWave(PitchDetector.NoteFromMidi(midi + 14, 435).Frequency);
+                var actual = (MemoryStream)typeof(TuningFork).GetField("_wave", Hidden)!.GetValue(Field<TuningFork>(form, "_fork"))!;
+                if (!actual.ToArray().SequenceEqual(single.ToArray())) throw new Exception("Off left the previous interval playing.");
+            }
+
+            void CheckPair(int midi, Consonance kind, double reference)
+            {
+                var wave = (MemoryStream?)typeof(TuningFork).GetField("_wave", Hidden)!.GetValue(Field<TuningFork>(form, "_fork"));
+                if (wave is null) throw new Exception("Fork configuration was not played.");
+                var samples = new short[65536];
+                Buffer.BlockCopy(wave.ToArray(), 44, samples, 0, samples.Length * 2);
+                double lower = PitchDetector.NoteFromMidi(midi, reference).Frequency;
+                double upper = PitchDetector.NoteFromMidi(midi + IntervalAnalysis.Semitones(kind), reference).Frequency;
+                var measured = IntervalAnalysis.Together(samples, 44100, lower, kind);
+                if (measured is null || Math.Abs(measured.Value.Lower - lower) > 0.15 || Math.Abs(measured.Value.Upper - upper) > 0.15)
+                    throw new Exception($"Changing consonance/reference left stale audio: MIDI {midi}, {kind}, A={reference}; expected simultaneous {lower:F3} and {upper:F3} Hz.");
+            }
+        }
+        finally { Call(form, "ApplySettings", saved); }
+        Console.WriteLine("Changing fork consonance/reference immediately replaces actual PCM: OK");
+    }
+
     internal static void Navigation(TunerForm form)
     {
         var saved = (Preferences)Call(form, "ReadSettings")!;
@@ -42,7 +87,7 @@ internal static class ReleaseRegression
                 void Key(Keys key, int expected)
                 {
                     var message = Message.Create(window, 0x100, (IntPtr)key, IntPtr.Zero);
-                    if (!Application.FilterMessage(ref message)) throw new Exception($"Native arrow {key} was not handled (open={open}, modifiers={Control.ModifierKeys}).");
+                    if (!Field<NoteKeyFilter>(form, "_noteKeyFilter").FilterKey(ref message, Keys.None)) throw new Exception($"Native arrow {key} was not handled (open={open}).");
                     CheckTone(expected);
                     if (target.AccessibleDescription != NoteCatalog.Spoken(expected, english)) throw new Exception("Missing immediate selected-note description.");
                     if (target.DroppedDown != open) throw new Exception("Arrow changed dropdown state.");
@@ -77,6 +122,8 @@ internal static class ReleaseRegression
             }
             var unrelated = Message.Create(Field<ComboBox>(form, "_method").Handle, 0x100, (IntPtr)Keys.Down, IntPtr.Zero);
             if (Application.FilterMessage(ref unrelated)) throw new Exception("Note navigation intercepted another control.");
+            var modified = Message.Create(target.Handle, 0x100, (IntPtr)Keys.Down, IntPtr.Zero);
+            if (Field<NoteKeyFilter>(form, "_noteKeyFilter").FilterKey(ref modified, Keys.Control)) throw new Exception("Note navigation intercepted Ctrl+Down.");
         }
         finally { target.DroppedDown = false; Call(form, "ApplySettings", saved); }
         Console.WriteLine("Native note-list arrows, PL/EN, open/closed, manual/automatic fork, ascending wave frequencies and interval bounds: OK");

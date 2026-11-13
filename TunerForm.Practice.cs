@@ -14,7 +14,7 @@ internal sealed partial class TunerForm
     private void UpdateIntervalHelp()
     {
         _forkHelp.AccessibleDescription = T("W trybie hybrydowym głośnikowym po wzorcu czekaj na jego wybrzmienie. Odsłuch mikrofonu włączaj tylko w słuchawkach. Przy nasłuchiwaniu dwóch stuków automatyczny kamerton ma co najmniej 6,5 sekundy odstępu. Stuki mogą też wykryć dwa przypadkowe hałasy.", "In speaker hybrid mode, wait for the reference to decay. Enable microphone monitoring only with headphones. When listening for two taps, automatic fork strikes are at least 6.5 seconds apart. Two accidental noises can also trigger navigation.");
-        if (_consonanceKind == Consonance.Off) { _consonanceHelp.Text = ""; return; }
+        if (_consonanceKind == Consonance.Off) { _consonanceHelp.Text = ""; _consonance.AccessibleDescription = null; return; }
         int lower = _targetMidi < 0 ? InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind) : _targetMidi;
         int upper = lower + IntervalAnalysis.Semitones(_consonanceKind);
         _consonanceHelp.Text = upper > NoteCatalog.HighestMidi
@@ -23,7 +23,8 @@ internal sealed partial class TunerForm
               (_together ? T("Zagraj razem przez około 2 sekundy. Wynik eksperymentalny: harmoniczna może udawać drugi dźwięk. Sprawdź także osobno.", "Play together for about 2 seconds. Experimental: a harmonic can mimic a second note. Also check separately.")
               : T("Zagraj dolny dźwięk, wycisz, potem górny i wycisz. Dudnienia są szacowane dla idealnych harmonicznych; pianino może wymagać rozciągnięcia oktaw.", "Play lower, mute, then upper and mute. Beats are estimated for ideal harmonics; a piano may need stretched octaves."));
         if (_activeMethod == TuningMethod.TuningFork && upper <= NoteCatalog.HighestMidi)
-            _consonanceHelp.Text = T($"Kamerton zagra razem: {NoteCatalog.Label(lower, false)} i {NoteCatalog.Label(upper, false)}. Odstęp równomiernie temperowany.", $"The fork plays together: {NoteCatalog.Label(lower, true)} and {NoteCatalog.Label(upper, true)}. Equal-tempered interval.");
+            _consonanceHelp.Text = T($"Kamerton zagra razem: {NoteCatalog.Label(lower, false)} i {NoteCatalog.Label(upper, false)}. Wybrany dźwięk jest dolnym dźwiękiem pary. Odstęp równomiernie temperowany.", $"The fork plays together: {NoteCatalog.Label(lower, true)} and {NoteCatalog.Label(upper, true)}. The selected note is the lower note of the pair. Equal-tempered interval.");
+        _consonance.AccessibleDescription = _consonanceHelp.Text;
     }
     private void ReceiveIntervalNote(double frequency)
     {

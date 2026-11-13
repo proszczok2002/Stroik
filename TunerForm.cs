@@ -217,9 +217,9 @@ internal sealed partial class TunerForm : Form
         _view.SelectedIndexChanged += (_, _) => { if (_initializing) return; ApplyViewUI(); Persist(); };
         _showOctave.CheckedChanged += (_, _) => { if (_initializing) return; ApplyViewUI(); Persist(); };
         _octave.SelectedIndexChanged += (_, _) => { if (_initializing || _changingOctave || _octave.SelectedIndex < 0) return; int selected = _targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi; int midi = Math.Clamp((_octave.SelectedIndex + 1) * 12 + selected % 12, NoteCatalog.LowestMidi, NoteCatalog.HighestMidi); if (NoteCatalog.Octave(midi) != _octave.SelectedIndex) midi = _octave.SelectedIndex == 0 ? NoteCatalog.LowestMidi : NoteCatalog.HighestMidi; SelectTarget(midi); Persist(); };
-        _target.SelectedIndexChanged += (_, _) => { if (_initializing || _target.SelectedItem is not Choice choice) return; lock (_navigationLock) _strikeNavigator.Reset(); _targetMidi = choice.Id; if (!_advancingTarget && _instrumentKind == InstrumentKind.Piano && _targetMidi >= 0) _planAnchorMidi = _targetMidi; SyncOctave(); UpdateGuide(); ResetResult(); Persist(); };
+        _target.SelectedIndexChanged += (_, _) => { if (_initializing || _target.SelectedItem is not Choice choice) return; lock (_navigationLock) _strikeNavigator.Reset(); _targetMidi = choice.Id; if (!_advancingTarget && _instrumentKind == InstrumentKind.Piano && _targetMidi >= 0) _planAnchorMidi = _targetMidi; SyncOctave(); UpdateGuide(); ResetResult(); RefreshForkAfterSelection(); Persist(); };
         _target.KeyPress += (_, e) => { if (!InstrumentCatalog.HasStrings(_instrumentKind) && char.ToLowerInvariant(e.KeyChar) is 'i' or 's') { SelectTarget(NoteCatalog.NextSharp(_targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi)); e.Handled = true; } };
-        _concertA.ValueChanged += (_, _) => { _reference = (double)_concertA.Value; ResetResult(); Persist(); };
+        _concertA.ValueChanged += (_, _) => { _reference = (double)_concertA.Value; ResetResult(); RefreshForkAfterSelection(); Persist(); };
         _tolerance.ValueChanged += (_, _) => { _toleranceCents = (double)_tolerance.Value; Persist(); };
         _sensitivity.SelectedIndexChanged += (_, _) => { if (_sensitivity.SelectedItem is Choice choice) _minimumRms = choice.Value; ResetResult(); Persist(); };
         _language.SelectedIndexChanged += (_, _) => { if (_initializing) return; _english = _language.SelectedIndex == 1; var current = ReadSettings(); PopulateChoices(current); ApplyLanguage(); ApplyViewUI(); ApplyMethodUI(); SetContextMenu(); Persist(); };
@@ -230,7 +230,7 @@ internal sealed partial class TunerForm : Form
         _doubleStrikeWindow.ValueChanged += (_, _) => { Volatile.Write(ref _doubleStrikeWindowMilliseconds, (int)(_doubleStrikeWindow.Value * 1000)); Persist(); };
         _visualMode.CheckedChanged += (_, _) => { _visualEnabled = _visualMode.Checked; ApplyViewUI(); Persist(); };
         _voiceInVisual.CheckedChanged += (_, _) => Persist();
-        _consonance.SelectedIndexChanged += (_, _) => { if (_initializing) return; _consonanceKind = (Consonance)Math.Max(0, _consonance.SelectedIndex); ResetResult(); ApplyViewUI(); UpdateIntervalHelp(); Persist(); };
+        _consonance.SelectedIndexChanged += (_, _) => { if (_initializing) return; _consonanceKind = (Consonance)Math.Max(0, _consonance.SelectedIndex); ResetResult(); ApplyViewUI(); UpdateIntervalHelp(); RefreshForkAfterSelection(); Persist(); };
         _intervalInput.SelectedIndexChanged += (_, _) => { if (_initializing) return; _together = _intervalInput.SelectedIndex == 1; ResetResult(); UpdateIntervalHelp(); Persist(); };
         _forkTap.CheckedChanged += (_, _) => { _forkTapEnabled = _forkTap.Checked; if (!_initializing) { StopMicrophone(false); ApplyMethodUI(); ResetResult(); if (_forkTap.Checked && Visible && _activeMethod != TuningMethod.Electronic) StartMicrophone(); } Persist(); };
         _monitor.CheckedChanged += (_, _) => { _monitorEnabled = _monitor.Checked; if (!_monitor.Checked) { _audioMonitor?.Dispose(); _audioMonitor = null; } else if (_microphone is not null && _activeMethod == TuningMethod.HybridHeadphones) _audioMonitor = new AudioMonitor(); Persist(); };
@@ -286,7 +286,7 @@ internal sealed partial class TunerForm : Form
             : Math.Clamp(current + (key == Keys.Left ? -1 : 1), NoteCatalog.LowestMidi, NoteCatalog.HighestMidi);
         SelectTarget(next);
         AnnounceTarget();
-        if (_activeMethod == TuningMethod.TuningFork && _microphone is null) { Strike(); UpdateStrikeTimer(); }
+        if (next == current) RefreshForkAfterSelection();
         return true;
     }
 
@@ -491,6 +491,13 @@ internal sealed partial class TunerForm : Form
             UpdateAutomaticStatus();
             MessageBox.Show(this, error.Message, T("Błąd kamertonu", "Tuning fork error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+    private void RefreshForkAfterSelection()
+    {
+        if (_initializing || _activeMethod != TuningMethod.TuningFork) return;
+        // ResetResult already plays the new reference when tap-listening is active.
+        if (_microphone is null) Strike();
+        UpdateStrikeTimer();
     }
     private void ApplyLanguage()
     {
@@ -765,7 +772,6 @@ internal sealed partial class TunerForm : Form
         UpdateGuide();
         Persist();
         AnnounceTarget();
-        if (_activeMethod == TuningMethod.TuningFork && _microphone is null) Strike();
     }
 
     private void StopOutOfRangeFork()
