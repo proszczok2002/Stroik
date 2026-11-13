@@ -1,6 +1,33 @@
 using Stroik;
 using System.Net;
 
+// An isolated apphost renamed Stroik.exe can exercise the real helper handshake,
+// replacement and restart without replacing the owner's working installation.
+if (args.Length == 2 && args[0] == "--replacement-probe")
+{
+    await Updater.LaunchReplacementAsync(args[1]);
+    Console.WriteLine("Helper ready; probe client exits normally.");
+    return;
+}
+
+int natural = 60;
+foreach (int expectedNatural in new[] {62, 64, 65, 67, 69, 71, 72})
+{
+    natural = NoteCatalog.NextNatural(natural, 1);
+    if (natural != expectedNatural) throw new Exception("Nawigacja białych klawiszy nie daje C D E F G A H C.");
+}
+foreach (int expectedNatural in new[] {71, 69, 67, 65, 64, 62, 60})
+{
+    natural = NoteCatalog.NextNatural(natural, -1);
+    if (natural != expectedNatural) throw new Exception("Nawigacja białych klawiszy wstecz jest błędna.");
+}
+if (NoteCatalog.NextNatural(61, 1) != 62 || NoteCatalog.NextNatural(61, -1) != 60 ||
+    NoteCatalog.NextNatural(108, 1) != 108 || NoteCatalog.NextNatural(21, -1) != 21)
+    throw new Exception("Błędne granice lub przejście z czarnego klawisza.");
+if (TuningPlan.Next(100, 101, PianoOrder.AlternateFiveSemitones, 101) != 99 ||
+    TuningPlan.Next(100, 101, PianoOrder.Ascending, 101) is not null)
+    throw new Exception("Plan współbrzmień nie pomija niedostępnych par lub nie kończy zakresu rosnącego.");
+
 if (NoteCatalog.Spoken(67, false) != "g razkreślne" || !new Preferences().VoiceInVisualMode)
     throw new Exception("Nieprawidłowa krótka nazwa lub domyślna opcja głosu.");
 if (!(TuningFork.Level(110) > TuningFork.Level(440) && TuningFork.Level(440) > TuningFork.Level(1760)) || TuningFork.Level(27.5) > 0.34)
@@ -317,6 +344,9 @@ using (var wave = TuningFork.BuildWave(440))
         throw new Exception("Kamerton nie wygenerował pliku RIFF.");
 }
 Exception? uiError = null;
+// UI regression checks exercise persistence; restore the user's exact file even on failure.
+string preferencesFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroik", "settings.json");
+byte[]? preferencesBefore = File.Exists(preferencesFile) ? File.ReadAllBytes(preferencesFile) : null;
 var uiThread = new Thread(() =>
 {
     try
@@ -526,6 +556,7 @@ var uiThread = new Thread(() =>
             if ((bool)processCmdKey.Invoke(form, arrowArgs)! != true || (int)typeof(TunerForm).GetField("_targetMidi", flags)!.GetValue(form)! != navigation.Item2)
                 throw new Exception("Strzałki nie zachowują kroku ton/półton na zamkniętej liście.");
         }
+        ReleaseRegression.Navigation(form);
         foreach (TunerView mode in Enum.GetValues<TunerView>())
         {
             applySettings.Invoke(form, [new Preferences { Method = TuningMethod.Electronic, View = mode,
@@ -603,11 +634,17 @@ var uiThread = new Thread(() =>
         if (networkCalledAfterClose) throw new Exception("Sprawdzanie ruszyło po zamknięciu programu.");
     }
     catch (Exception error) { uiError = error; }
+    finally
+    {
+        if (preferencesBefore is not null) File.WriteAllBytes(preferencesFile, preferencesBefore);
+        else if (File.Exists(preferencesFile)) File.Delete(preferencesFile);
+    }
 });
 uiThread.SetApartmentState(ApartmentState.STA);
 uiThread.Start();
 uiThread.Join();
 if (uiError is not null) throw new Exception("Kontrola interfejsu nie powiodła się.", uiError);
+await ReleaseRegression.UpdateFiles();
 if (args.Contains("--github-probe", StringComparer.Ordinal))
 {
     ReleaseInfo? release = await Updater.FindNewReleaseAsync();

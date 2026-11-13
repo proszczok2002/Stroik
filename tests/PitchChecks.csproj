@@ -14,10 +14,12 @@
     <Compile Include="../AudioMonitor.cs" Link="AudioMonitor.cs" />
     <Compile Include="../TunerForm.Practice.cs" Link="TunerForm.Practice.cs" />
     <Compile Include="../Updater.cs" Link="Updater.cs" />
+    <Compile Include="../UpdateInstaller.cs" Link="UpdateInstaller.cs" />
     <Compile Include="../UpdateCheckState.cs" Link="UpdateCheckState.cs" />
     <Compile Include="../ReleaseNotes.cs" Link="ReleaseNotes.cs" />
     <Compile Include="../ReleaseNotesDialog.cs" Link="ReleaseNotesDialog.cs" />
     <Compile Include="../NoteCatalog.cs" Link="NoteCatalog.cs" />
+    <Compile Include="../NoteKeyFilter.cs" Link="NoteKeyFilter.cs" />
     <Compile Include="../InstrumentCatalog.cs" Link="InstrumentCatalog.cs" />
     <Compile Include="../TuningPlan.cs" Link="TuningPlan.cs" />
     <Compile Include="../DoubleStrikeNavigator.cs" Link="DoubleStrikeNavigator.cs" />

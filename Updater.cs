@@ -21,7 +21,7 @@ internal static class Updater
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Stroik-Updater/1.0.14");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Stroik-Updater/" + Assembly.GetExecutingAssembly().GetName().Version);
         client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true };
         client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
         return client;
@@ -114,6 +114,7 @@ internal static class Updater
         string destination = Path.Combine(directory, ExecutableName);
         try
         {
+            UpdateInstaller.Log($"Downloading release {release.Version}");
             using var checksumResponse = await GetWithRetryAsync(Client, release.Checksum);
             string expected = ParseChecksum(await checksumResponse.Content.ReadAsStringAsync());
             for (int attempt = 0; attempt < 3; attempt++)
@@ -124,7 +125,9 @@ internal static class Updater
                     {
                         await using var source = await response.Content.ReadAsStreamAsync();
                         await using var target = new FileStream(destination, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                        await source.CopyToAsync(target);
+                        long copied = await CopyWithDeadlineAsync(source, target);
+                        if (response.Content.Headers.ContentLength is long length && copied != length)
+                            throw new IOException("Incomplete EXE download.");
                     }
                     await using var file = File.OpenRead(destination);
                     string actual = Convert.ToHexString(await SHA256.HashDataAsync(file));
@@ -132,20 +135,40 @@ internal static class Updater
                         throw new InvalidDataException("Downloaded EXE does not match the release SHA-256 checksum.");
                     if (new FileInfo(destination).Length < 1_000_000)
                         throw new InvalidDataException("Downloaded EXE is unexpectedly small.");
+                    UpdateInstaller.Log($"Download and SHA-256 verified: {new FileInfo(destination).Length} bytes");
                     return destination;
                 }
                 catch (Exception error) when (attempt < 2 && IsRetryableDownloadFailure(error))
                 {
+                    UpdateInstaller.Log($"Download retry {attempt + 1}", error);
                     if (File.Exists(destination)) File.Delete(destination);
                     await Task.Delay(RetryDelay(attempt));
                 }
             }
             throw new InvalidOperationException("Update download retries exhausted.");
         }
-        catch
+        catch (Exception error)
         {
-            try { Directory.Delete(directory, true); } catch (IOException) { }
+            UpdateInstaller.Log("Download failed", error);
+            try { Directory.Delete(directory, true); } catch (Exception cleanup) when (cleanup is IOException or UnauthorizedAccessException) { }
             throw;
+        }
+    }
+
+    // ResponseHeadersRead does not apply HttpClient.Timeout to the response body.
+    internal static async Task<long> CopyWithDeadlineAsync(Stream source, Stream target, TimeSpan? idleTimeout = null)
+    {
+        using var overall = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        var buffer = new byte[81920];
+        long total = 0;
+        while (true)
+        {
+            using var readTimeout = CancellationTokenSource.CreateLinkedTokenSource(overall.Token);
+            readTimeout.CancelAfter(idleTimeout ?? TimeSpan.FromSeconds(45));
+            int read = await source.ReadAsync(buffer.AsMemory(), readTimeout.Token);
+            if (read == 0) return total;
+            await target.WriteAsync(buffer.AsMemory(0, read), overall.Token);
+            total += read;
         }
     }
 
@@ -161,91 +184,11 @@ internal static class Updater
         return fields[0];
     }
 
-    internal static void LaunchReplacement(string downloaded)
-    {
-        string current = Environment.ProcessPath ?? throw new InvalidOperationException("Cannot locate the running EXE.");
-        if (!Path.GetFileName(current).Equals(ExecutableName, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Automatic update requires Stroik.exe.");
-        string probe = Path.Combine(Path.GetDirectoryName(current)!, ".stroik-update-check-" + Guid.NewGuid().ToString("N"));
-        using (new FileStream(probe, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose)) { }
-        _ = Process.Start(new ProcessStartInfo(downloaded)
-        {
-            UseShellExecute = false,
-            Arguments = $"--apply-update {Quote(current)} {Environment.ProcessId}"
-        }) ?? throw new InvalidOperationException("Cannot start the update helper.");
-    }
+    internal static Task LaunchReplacementAsync(string downloaded) => UpdateInstaller.LaunchAsync(downloaded);
 
-    internal static void ApplyReplacement(string current, int oldProcessId)
-    {
-        string helper = Environment.ProcessPath ?? throw new InvalidOperationException("Cannot locate the update helper.");
-        if (!Path.GetFileName(current).Equals(ExecutableName, StringComparison.OrdinalIgnoreCase) ||
-            Path.GetFullPath(current).Equals(Path.GetFullPath(helper), StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Invalid update destination.");
-        try
-        {
-            using var oldProcess = Process.GetProcessById(oldProcessId);
-            if (!oldProcess.WaitForExit(30000)) throw new TimeoutException("The old Stroik process did not close.");
-        }
-        catch (ArgumentException) { /* Old process already closed. */ }
-        string backup = current + ".old-" + Guid.NewGuid().ToString("N");
-        bool moved = false, started = false;
-        try
-        {
-            for (int attempt = 0; ; attempt++)
-            {
-                try { File.Move(current, backup); moved = true; break; }
-                catch (IOException) when (attempt < 20) { Thread.Sleep(500); }
-            }
-            File.Copy(helper, current);
-            _ = Process.Start(new ProcessStartInfo(current)
-            {
-                UseShellExecute = false,
-                Arguments = $"--cleanup-update {Quote(Path.GetDirectoryName(helper)!)} {Environment.ProcessId} {Quote(backup)}"
-            }) ?? throw new InvalidOperationException("Cannot start the updated app.");
-            started = true;
-            try { File.Delete(backup); }
-            catch (IOException) { /* New process retries cleanup. */ }
-            catch (UnauthorizedAccessException) { /* New process retries cleanup. */ }
-        }
-        catch
-        {
-            if (moved && !started)
-            {
-                try { if (File.Exists(current)) File.Delete(current); File.Move(backup, current); }
-                catch (IOException) { /* Keep backup for manual recovery. */ }
-            }
-            throw;
-        }
-    }
+    internal static void ApplyReplacement(string current, int oldProcessId, string? ready = null) => UpdateInstaller.Apply(current, oldProcessId, ready);
 
-    internal static void CleanupAfterUpdate(string directory, int helperProcessId, string? backup = null)
-    {
-        _ = Task.Run(() =>
-        {
-            try { Process.GetProcessById(helperProcessId).WaitForExit(30000); }
-            catch (ArgumentException) { }
-            string updates = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroik", "updates");
-            string current = Environment.ProcessPath ?? "";
-            if (backup is not null && IsOwnedBackup(current, backup))
-            {
-                for (int attempt = 0; attempt < 20 && File.Exists(backup); attempt++)
-                {
-                    try { File.Delete(backup); }
-                    catch (IOException) { Thread.Sleep(500); }
-                    catch (UnauthorizedAccessException) { Thread.Sleep(500); }
-                }
-            }
-            if (Path.GetDirectoryName(Path.GetFullPath(directory))?.Equals(Path.GetFullPath(updates), StringComparison.OrdinalIgnoreCase) == true)
-            {
-                for (int attempt = 0; attempt < 10; attempt++)
-                {
-                    try { Directory.Delete(directory, true); break; }
-                    catch (IOException) { Thread.Sleep(500); }
-                }
-            }
-        });
-    }
-
+    internal static void CleanupAfterUpdate(string directory, int helperProcessId, string? backup = null) => UpdateInstaller.InstalledWindowReady(directory, helperProcessId, backup);
     internal static bool IsOwnedBackup(string current, string backup)
     {
         if (!Path.GetFileName(current).Equals(ExecutableName, StringComparison.OrdinalIgnoreCase)) return false;
@@ -257,5 +200,4 @@ internal static class Updater
             name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
             Guid.TryParseExact(name[prefix.Length..], "N", out _);
     }
-    private static string Quote(string value) => "\"" + value.Replace("\"", "") + "\"";
 }

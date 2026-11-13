@@ -36,4 +36,12 @@ internal static class NoteCatalog
 
     internal static string Spoken(int midi, bool english) => english ? Label(midi, true) :
         PolishPitch[midi % 12] + " " + new[] { "subkontra", "kontra", "wielkie", "małe", "razkreślne", "dwukreślne", "trzykreślne", "czterokreślne", "pięciokreślne" }[Octave(midi)];
+
+    internal static int NextNatural(int current, int direction)
+    {
+        if (direction is not (-1 or 1)) throw new ArgumentOutOfRangeException(nameof(direction));
+        for (int midi = current + direction; midi >= LowestMidi && midi <= HighestMidi; midi += direction)
+            if (midi % 12 is 0 or 2 or 4 or 5 or 7 or 9 or 11) return midi;
+        return current;
+    }
 }

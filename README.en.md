@@ -1,4 +1,4 @@
-# Stroik 1.15
+# Stroik 1.16
 
 [Native Android 1.03](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.03) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
@@ -85,7 +85,7 @@ When checked, the fork strikes repeatedly at the selected interval. **Alt+U** pa
 
 Version 1.05 introduced Alt+U for the tuning fork. Its current behavior is described in the 1.06 section above. The automatic-mode choice is saved in settings and profiles.
 
-The updater retries transient network errors and interrupted EXE downloads. The startup check result or error is shown in **Settings**; **Check for updates** retries manually. Before closing the app, it checks write access to the EXE folder. After a successful replacement, the new version retries removing the old copy if it was briefly locked. SHA-256 verification remains mandatory.
+The updater retries transient network errors and interrupted EXE downloads. Startup and periodic checks do not show connection errors; **Check for updates** retries manually. Before closing the app, it checks write access to the EXE folder. After a successful replacement, the new version retries removing the old copy if it was briefly locked. SHA-256 verification remains mandatory. Since 1.16 diagnostics are stored in `%LOCALAPPDATA%\Stroik\update.log`.
 ## New in 1.04
 
 **Hands-free navigation.** In electronic mode, after an in-tune result, wait for the announcement to finish. Two distinct strikes of the same string or key, each recognized at the target pitch, select the next note. Their allowed time can be changed as described in the 1.07 section above. **Ctrl+N** or **Next note** advances manually. Detection depends on the microphone, playing level and instrument; check the selected note before moving a tuning lever.
@@ -128,14 +128,12 @@ The script keeps the latest EXE, SHA-256 file and ZIP at the top level of `dist`
 Pitch detection uses YIN, audio input uses Windows waveIn, and accessibility announcements use UI Automation. The project uses the [MIT license](LICENSE). Please report bugs through [Issues](https://github.com/proszczok2002/Stroik/issues).
 
 
-## Changes in 1.15
+## Changes in 1.16
 
+- Up/Down on piano and chromatic note lists select consecutive white keys: C–D–E–F–G–A–B–C. Fixed E→F-sharp and B→C-sharp. Left/Right move one semitone through all notes. This works on open dropdowns and during automatic fork playback.
+- Arrows and Alt+N / Ctrl+N announce just the selected note through the list accessibility object and immediately play its fork tone. The ascending Next note plan still includes every semitone; it is separate from white-key navigation.
+- If the upper fifth/octave note exceeds the range, the fork pauses automatic playback and gives guidance instead of repeatedly opening error dialogs. The plan stops at its last valid pair. Choose a lower target or turn consonance off.
+- The updater bounds stalled downloads, retries temporary file locks and verifies SHA-256. The new helper stages the EXE before closing the app, replaces it and waits for the new window. Failed restarts restore the previous file; the old backup is removed only after successful startup. Diagnostics: `%LOCALAPPDATA%\Stroik\update.log`.
+- Window headings and About now show the actual release version.
 
-- Fixed the corrupted Polish Off label in the consonance list.
-- Alt+N and Ctrl+N advance in fork mode and immediately play the new target. The app announces just the note name. Screen reader navigation still describes controls.
-- View selection precedes tuning method. On the closed note list, Up/Down move a whole tone (2 semitones), Left/Right one semitone. The open dropdown retains normal list navigation.
-- Added Spoken feedback in visual mode, enabled by default, under Settings. Clearing it suppresses app announcements in graphics mode without disabling NVDA navigation.
-- Bounded frequency-dependent fork levels strengthen low notes and soften high notes without shifting pitch or interval frequencies. Actual loudness depends on the speaker; equal perceived loudness is not guaranteed.
-- Piano key-position descriptions now sit directly below the note list. Fifths are 7 semitones upward and octaves 12: C4–G4 and C4–C5. G4–D5 is also a fifth, crossing named octaves; wrapping notes must not turn it into a fourth.
-
-Programmatic checks and Windows window tests passed. Fork listening, real instruments and NVDA were not retested for this release. Android uses a separate channel; Android 1.04 is a candidate awaiting a currently unavailable phone.
+Programmatic checks cover native PL/EN list navigation, generated tone frequencies, interval boundaries, replacement, failed-start rollback and sharing-lock retries. NVDA, instrument listening and the affected remote computers require separate validation. This release is for Windows.

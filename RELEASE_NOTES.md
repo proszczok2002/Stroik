@@ -1,23 +1,21 @@
-# Stroik 1.15
+# Stroik 1.16
 
 ## Polski
 
-- Naprawiono napis „Wyłączone” w liście współbrzmień.
-- Alt+N oraz Ctrl+N przechodzą do następnego dźwięku w kamertonie; nowy cel jest od razu odtwarzany. Komunikat aplikacji zawiera samą nazwę nuty, np. „g razkreślne”. Czytnik ekranu nadal opisuje kontrolki przy nawigacji.
-- Wybór widoku jest przed metodą strojenia. Na zamkniętej liście dźwięków strzałki góra/dół zmieniają cel o cały ton (2 półtony), lewo/prawo o półton; otwarta lista zachowuje zwykłą nawigację.
-- W Ustawieniach dodano domyślnie włączony „Odczyt głosowy w trybie wizualnym”. Odznaczenie wycisza komunikaty aplikacji w widoku graficznym, bez wyłączania nawigacji NVDA.
-- Kamerton ma ograniczoną korektę poziomu zależną od częstotliwości: mocniejszy dół, łagodniejsza góra. Nie zmienia wysokości tonów ani częstotliwości interwałów. Efekt akustyczny zależy od głośnika; nie obiecujemy identycznej odczuwanej głośności.
-- Opis położenia klawisza przeniesiono bezpośrednio pod listę dźwięków pianina. Kwinty są budowane o 7 półtonów w górę od wskazanej nuty, oktawy o 12: C4–G4 oraz C4–C5. G4–D5 jest również kwintą; para przekracza granicę nazwanych oktaw. Nie zastępujemy jej kwartą przez zawijanie nut.
+- Góra/dół na liście pianina i w trybie chromatycznym wybiera kolejne białe klawisze: C–D–E–F–G–A–H–C. Naprawiono E→Fis oraz H→Cis. Lewo/prawo przechodzi o półton, po wszystkich dźwiękach. Działa także na rozwiniętej liście i podczas automatycznego kamertonu.
+- Po strzałce oraz Alt+N / Ctrl+N program zgłasza samą nazwę wybranej nuty przez obiekt dostępności listy. Kamerton natychmiast odtwarza nowy cel. Rosnący plan „Następny dźwięk” zachowuje wszystkie półtony; nie jest tym samym co nawigacja po białych klawiszach.
+- Gdy górna nuta kwinty lub oktawy wykracza poza zakres, kamerton wstrzymuje automat i podaje wskazówkę zamiast wielokrotnie otwierać dialog błędu. Plan kończy się na ostatniej dostępnej parze. Wybierz niższy cel albo wyłącz współbrzmienia.
+- Aktualizator ogranicza czas bezczynnego pobierania, ponawia chwilowe blokady plików i sprawdza SHA-256. Nowy pomocnik przygotowuje EXE przed zamknięciem programu, podmienia plik i czeka na okno nowej wersji. Nieudany restart przywraca poprzedni plik; stara kopia jest usuwana dopiero po udanym uruchomieniu. Szczegóły awarii trafiają do `%LOCALAPPDATA%\Stroik\update.log`.
+- Numer wersji w nagłówku i „O programie” jest zgodny z wydaniem.
 
-Testy programowe i kontrole okna Windows przeszły. Odsłuch kamertonu, rzeczywiste instrumenty i NVDA nie były ponownie testowane w tym wydaniu. Android ma osobny kanał; kandydat Android 1.04 wymaga testu telefonu, którego obecnie nie ma.
+Sprawdzono programowo nawigację natywnej listy PL/EN, częstotliwości generowanych tonów, granice współbrzmień oraz podmianę, wycofanie po błędzie i ponawianie blokady pliku. NVDA, odsłuch na instrumencie i komputery zgłaszające problem aktualizacji wymagają osobnego sprawdzenia. Wydanie dotyczy Windows.
 
 ## English
 
-- Fixed the corrupted Polish Off label in the consonance list.
-- Alt+N and Ctrl+N advance in fork mode and immediately play the new target. The app announces just the note name. Screen reader navigation still describes controls.
-- View selection precedes tuning method. On the closed note list, Up/Down move a whole tone (2 semitones), Left/Right one semitone. The open dropdown retains normal list navigation.
-- Added Spoken feedback in visual mode, enabled by default, under Settings. Clearing it suppresses app announcements in graphics mode without disabling NVDA navigation.
-- Bounded frequency-dependent fork levels strengthen low notes and soften high notes without shifting pitch or interval frequencies. Actual loudness depends on the speaker; equal perceived loudness is not guaranteed.
-- Piano key-position descriptions now sit directly below the note list. Fifths are 7 semitones upward and octaves 12: C4–G4 and C4–C5. G4–D5 is also a fifth, crossing named octaves; wrapping notes must not turn it into a fourth.
+- Up/Down on piano and chromatic note lists select consecutive white keys: C–D–E–F–G–A–B–C. Fixed E→F-sharp and B→C-sharp. Left/Right move one semitone through all notes. This works on open dropdowns and during automatic fork playback.
+- Arrows and Alt+N / Ctrl+N announce just the selected note through the list accessibility object and immediately play its fork tone. The ascending Next note plan still includes every semitone; it is separate from white-key navigation.
+- If the upper fifth/octave note exceeds the range, the fork pauses automatic playback and gives guidance instead of repeatedly opening error dialogs. The plan stops at its last valid pair. Choose a lower target or turn consonance off.
+- The updater bounds stalled downloads, retries temporary file locks and verifies SHA-256. The new helper stages the EXE before closing the app, replaces it and waits for the new window. Failed restarts restore the previous file; the old backup is removed only after successful startup. Diagnostics: `%LOCALAPPDATA%\Stroik\update.log`.
+- Window headings and About now show the actual release version.
 
-Programmatic checks and Windows window tests passed. Fork listening, real instruments and NVDA were not retested for this release. Android uses a separate channel; Android 1.04 is a candidate awaiting a currently unavailable phone.
+Programmatic checks cover native PL/EN list navigation, generated tone frequencies, interval boundaries, replacement, failed-start rollback and sharing-lock retries. NVDA, instrument listening and the affected remote computers require separate validation. This release is for Windows.

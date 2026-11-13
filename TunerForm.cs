@@ -14,6 +14,7 @@ internal sealed partial class TunerForm : Form
     internal const string PayPalUrl = "https://paypal.me/proszczok";
     internal const string RevolutUrl = "https://revolut.me/r_rosiejka";
     internal const string WebsiteUrl = "https://proszczok.pl/";
+    internal static string DisplayVersion => "1." + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.Build ?? 0).ToString("00", CultureInfo.InvariantCulture);
     private readonly TabControl _tabs = new() { Dock = DockStyle.Fill, DrawMode = TabDrawMode.OwnerDrawFixed };
     private readonly TabPage _tunerTab = new(), _settingsTab = new();
     private readonly Label _preferencesIntro = MakeLabel();
@@ -59,6 +60,7 @@ internal sealed partial class TunerForm : Form
     private readonly ComboBox _view = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _octave = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _target = new() { DropDownStyle = ComboBoxStyle.DropDownList };
+    private NoteKeyFilter? _noteKeyFilter;
     private readonly ComboBox _sensitivity = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _language = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly CheckBox _dark = new() { AutoSize = true }, _showOctave = new() { AutoSize = true }, _autoStrike = new() { AutoSize = true };
@@ -111,6 +113,8 @@ internal sealed partial class TunerForm : Form
         StartPosition = FormStartPosition.CenterScreen;
         AutoScaleMode = AutoScaleMode.Dpi;
         KeyPreview = true;
+        _noteKeyFilter = new NoteKeyFilter(_target, NavigateTargetKey);
+        Application.AddMessageFilter(_noteKeyFilter);
 
         var content = new TableLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, ColumnCount = 1, Padding = new Padding(18) };
         content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -251,14 +255,7 @@ internal sealed partial class TunerForm : Form
             AdvanceTarget(_targetMidi < 0 ? _lastResolvedTarget : _targetMidi);
             return true;
         }
-        if (_target.Focused && !_target.DroppedDown && !InstrumentCatalog.HasStrings(_instrumentKind)
-            && keyData is Keys.Up or Keys.Down or Keys.Left or Keys.Right)
-        {
-            int delta = keyData switch { Keys.Up => -2, Keys.Down => 2, Keys.Left => -1, _ => 1 };
-            SelectTarget(Math.Clamp((_targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi) + delta, NoteCatalog.LowestMidi, NoteCatalog.HighestMidi));
-            Announce(NoteCatalog.Label(_targetMidi, _english));
-            return true;
-        }
+        if ((_target.Focused || _target.DroppedDown) && NavigateTargetKey(keyData)) return true;
         if (keyData == (Keys.Control | Keys.Q))
         {
             Close();
@@ -279,6 +276,26 @@ internal sealed partial class TunerForm : Form
             return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    private bool NavigateTargetKey(Keys key)
+    {
+        if (InstrumentCatalog.HasStrings(_instrumentKind) || key is not (Keys.Up or Keys.Down or Keys.Left or Keys.Right)) return false;
+        int current = _targetMidi < 0 ? NoteCatalog.DefaultMidi : _targetMidi;
+        int next = key is Keys.Up or Keys.Down ? NoteCatalog.NextNatural(current, key == Keys.Up ? -1 : 1)
+            : Math.Clamp(current + (key == Keys.Left ? -1 : 1), NoteCatalog.LowestMidi, NoteCatalog.HighestMidi);
+        SelectTarget(next);
+        AnnounceTarget();
+        if (_activeMethod == TuningMethod.TuningFork && _microphone is null) { Strike(); UpdateStrikeTimer(); }
+        return true;
+    }
+
+    private void AnnounceTarget()
+    {
+        string name = NoteCatalog.Spoken(_targetMidi, _english);
+        _target.AccessibleDescription = name;
+        _target.AccessibilityObject.RaiseAutomationNotification(AutomationNotificationKind.ActionCompleted,
+            AutomationNotificationProcessing.ImportantMostRecent, name);
     }
 
     internal static ForkShortcutAction DecideForkShortcut(bool automaticSelected, bool running) =>
@@ -388,6 +405,7 @@ internal sealed partial class TunerForm : Form
     }
     private void SyncOctave()
     {
+        _target.AccessibleDescription = _targetMidi < 0 ? null : NoteCatalog.Spoken(_targetMidi, _english);
         if (_targetMidi < 0) return;
         _changingOctave = true;
         _octave.SelectedIndex = NoteCatalog.Octave(_targetMidi);
@@ -452,8 +470,11 @@ internal sealed partial class TunerForm : Form
         {
             int midi = _targetMidi < 0 ? InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind) : _targetMidi;
             double frequency = PitchDetector.NoteFromMidi(midi, _reference).Frequency;
-            if (_consonanceKind != Consonance.Off && midi + IntervalAnalysis.Semitones(_consonanceKind) > NoteCatalog.HighestMidi)
-                throw new InvalidOperationException(T("Górny dźwięk przekracza zakres instrumentu. Wybierz niższą nutę.", "The upper note exceeds the instrument range. Choose a lower note."));
+            if (midi > IntervalAnalysis.HighestTarget(_consonanceKind))
+            {
+                StopOutOfRangeFork();
+                return;
+            }
             double? upper = _consonanceKind == Consonance.Off ? null : PitchDetector.NoteFromMidi(midi + IntervalAnalysis.Semitones(_consonanceKind), _reference).Frequency;
             _fork.Strike(frequency, upper);
             _forkQuietUntil = DateTime.UtcNow.AddMilliseconds(3400);
@@ -473,8 +494,8 @@ internal sealed partial class TunerForm : Form
     }
     private void ApplyLanguage()
     {
-        Text = T("Stroik 1.14 — dostępny stroiciel", "Stroik 1.14 — accessible tuner");
-        _heading.Text = "Stroik 1.14";
+        Text = T($"Stroik {DisplayVersion} — dostępny stroiciel", $"Stroik {DisplayVersion} — accessible tuner");
+        _heading.Text = "Stroik " + DisplayVersion;
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
         _tunerTab.AccessibleName = _tunerTab.Text;
@@ -722,7 +743,8 @@ internal sealed partial class TunerForm : Form
         {
             PianoOrder order = (PianoOrder)Math.Max(0, _pianoOrder.SelectedIndex);
             if (!TuningPlan.Build(_planAnchorMidi, order).Contains(current)) _planAnchorMidi = current;
-            next = TuningPlan.Next(_planAnchorMidi, current, order);
+            next = TuningPlan.Next(_planAnchorMidi, current, order,
+                _activeMethod == TuningMethod.Electronic ? NoteCatalog.HighestMidi : IntervalAnalysis.HighestTarget(_consonanceKind));
         }
         else if (InstrumentCatalog.HasStrings(_instrumentKind))
         {
@@ -732,7 +754,7 @@ internal sealed partial class TunerForm : Form
             next = index >= 0 && index + 1 < strings.Count ? strings[index + 1].Midi : null;
         }
         else next = current < NoteCatalog.HighestMidi ? current + 1 : null;
-        if (next is null)
+        if (next is null || (_activeMethod != TuningMethod.Electronic && next > IntervalAnalysis.HighestTarget(_consonanceKind)))
         {
             Announce(T("To koniec wybranej kolejności strojenia.", "End of the selected tuning order."));
             return;
@@ -742,8 +764,21 @@ internal sealed partial class TunerForm : Form
         finally { _advancingTarget = false; }
         UpdateGuide();
         Persist();
-        Announce(NoteCatalog.Spoken(next.Value, _english));
+        AnnounceTarget();
         if (_activeMethod == TuningMethod.TuningFork && _microphone is null) Strike();
+    }
+
+    private void StopOutOfRangeFork()
+    {
+        _fork.Stop();
+        _automaticStrikesRunning = false;
+        _strikeTimer.Stop();
+        _practiceTimer.Stop();
+        _practice.Stop();
+        UpdateAutomaticStatus();
+        _status.Text = T("Kamerton wstrzymany: dla tego współbrzmienia wybierz niższy dźwięk albo wyłącz współbrzmienia.",
+            "Fork paused: choose a lower target for this interval, or turn consonance off.");
+        Announce(_status.Text);
     }
 
     private void StartMicrophone()
@@ -1024,8 +1059,8 @@ internal sealed partial class TunerForm : Form
         MessageBox.Show(this, AboutText(_english), T("O programie", "About Stroik"), MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
     internal static string AboutText(bool english) => english
-        ? "Stroik 1.14 — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
-        : "Stroik 1.14 — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
+        ? $"Stroik {DisplayVersion} — an accessible instrument tuner for blind, partially sighted and sighted musicians. It helps tune piano, guitar, ukulele and other instruments using a microphone or a tuning fork tone.\n\nCreated by: Proszczok with Codex.\nOriginal idea: Witold."
+        : $"Stroik {DisplayVersion} — dostępny stroiciel instrumentów dla osób niewidomych, słabowidzących i widzących. Pomaga stroić pianino, gitarę, ukulele i inne instrumenty za pomocą mikrofonu lub dźwięku kamertonu.\n\nWykonawca: Proszczok z Codex.\nPomysłodawca: Witold.";
     private void OpenExternal(string url)
     {
         try
@@ -1074,17 +1109,18 @@ internal sealed partial class TunerForm : Form
             string downloaded = await Updater.DownloadVerifiedAsync(release);
             if (_closing || IsDisposed) return;
             UseWaitCursor = false;
-            Updater.LaunchReplacement(downloaded);
+            await Updater.LaunchReplacementAsync(downloaded);
             SetUpdateStatus("Instalowanie aktualizacji…", "Installing the update…");
             Close();
         }
         catch (Exception error)
         {
+            UpdateInstaller.Log("Update check/install failed", error);
             if (_closing || IsDisposed || (quiet && !prompted)) return;
             UseWaitCursor = false;
             SetUpdateStatus("Nie udało się sprawdzić lub zainstalować aktualizacji. Spróbuj ponownie przyciskiem Sprawdź aktualizacje. Szczegóły: " + error.Message,
                 "Could not check or install the update. Retry with Check for updates. Details: " + error.Message);
-            if (!quiet || prompted) MessageBox.Show(this, error.Message, T("Błąd aktualizacji", "Update error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!quiet || prompted) MessageBox.Show(this, error.Message + "\n\n" + T("Dziennik: ", "Log: ") + UpdateInstaller.LogPath, T("Błąd aktualizacji", "Update error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally
         {
@@ -1094,7 +1130,7 @@ internal sealed partial class TunerForm : Form
     }
     protected override void Dispose(bool disposing)
     {
-        if (disposing) { _closing = true; _updateTimer.Dispose(); _practiceTimer.Dispose(); _audioMonitor?.Dispose(); }
+        if (disposing) { if (_noteKeyFilter is not null) { Application.RemoveMessageFilter(_noteKeyFilter); _noteKeyFilter = null; } _closing = true; _updateTimer.Dispose(); _practiceTimer.Dispose(); _audioMonitor?.Dispose(); }
         base.Dispose(disposing);
     }
     [DllImport("dwmapi.dll")]

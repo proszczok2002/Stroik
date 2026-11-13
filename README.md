@@ -1,4 +1,4 @@
-# Stroik 1.15
+# Stroik 1.16
 
 [Natywna wersja Android 1.03](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.03) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
@@ -85,7 +85,7 @@ Gdy pole jest zaznaczone, kamerton uderza cyklicznie w ustawionym odstępie. **A
 
 W wersji 1.05 dodano skrót Alt+U do kamertonu. Jego obecne działanie opisuje sekcja 1.06 powyżej. Wybór trybu automatycznego jest zapisywany w ustawieniach i profilach.
 
-Aktualizator ponawia chwilowe błędy połączenia i pobieranie przerwane w trakcie przesyłania. Przy starcie wynik sprawdzenia lub błąd jest widoczny w zakładce **Ustawienia**; przycisk **Sprawdź aktualizacje** pozwala ponowić próbę. Przed zamknięciem programu sprawdza prawo zapisu w folderze EXE. Po udanej podmianie nowa wersja ponawia usunięcie starej kopii, jeśli plik był chwilowo zablokowany. Weryfikacja SHA-256 pozostaje obowiązkowa.
+Aktualizator ponawia chwilowe błędy połączenia i pobieranie przerwane w trakcie przesyłania. Sprawdzenia startowe i okresowe nie pokazują błędów połączenia; przycisk **Sprawdź aktualizacje** pozwala ponowić próbę ręcznie. Przed zamknięciem programu sprawdza prawo zapisu w folderze EXE. Po udanej podmianie nowa wersja ponawia usunięcie starej kopii, jeśli plik był chwilowo zablokowany. Weryfikacja SHA-256 pozostaje obowiązkowa. Od 1.16 szczegóły błędów zapisywane są w `%LOCALAPPDATA%\Stroik\update.log`.
 ## Nowości w 1.04
 
 **Sterowanie bez dotykania komputera.** W stroiku elektronicznym, po uzyskaniu wyniku „dobrze”, odczekaj aż komunikat się skończy. Dwa osobne uderzenia w tę samą strunę lub klawisz, rozpoznane jako ten sam dźwięk, wybierają następny cel. Czas pomiędzy nimi można ustawić zgodnie z opisem wersji 1.07 powyżej. **Ctrl+N** lub przycisk **Następny dźwięk** działa ręcznie. Rozpoznawanie zależy od mikrofonu, głośności i charakteru instrumentu; nie przestawiaj klucza stroikowego bez sprawdzenia wybranej nuty.
@@ -130,12 +130,12 @@ Detekcja wysokości używa metody YIN, wejście audio — Windows waveIn, a komu
 
 
 
-## Zmiany w 1.15
-- Naprawiono napis „Wyłączone” w liście współbrzmień.
-- Alt+N oraz Ctrl+N przechodzą do następnego dźwięku w kamertonie; nowy cel jest od razu odtwarzany. Komunikat aplikacji zawiera samą nazwę nuty, np. „g razkreślne”. Czytnik ekranu nadal opisuje kontrolki przy nawigacji.
-- Wybór widoku jest przed metodą strojenia. Na zamkniętej liście dźwięków strzałki góra/dół zmieniają cel o cały ton (2 półtony), lewo/prawo o półton; otwarta lista zachowuje zwykłą nawigację.
-- W Ustawieniach dodano domyślnie włączony „Odczyt głosowy w trybie wizualnym”. Odznaczenie wycisza komunikaty aplikacji w widoku graficznym, bez wyłączania nawigacji NVDA.
-- Kamerton ma ograniczoną korektę poziomu zależną od częstotliwości: mocniejszy dół, łagodniejsza góra. Nie zmienia wysokości tonów ani częstotliwości interwałów. Efekt akustyczny zależy od głośnika; nie obiecujemy identycznej odczuwanej głośności.
-- Opis położenia klawisza przeniesiono bezpośrednio pod listę dźwięków pianina. Kwinty są budowane o 7 półtonów w górę od wskazanej nuty, oktawy o 12: C4–G4 oraz C4–C5. G4–D5 jest również kwintą; para przekracza granicę nazwanych oktaw. Nie zastępujemy jej kwartą przez zawijanie nut.
+## Zmiany w 1.16
 
-Testy programowe i kontrole okna Windows przeszły. Odsłuch kamertonu, rzeczywiste instrumenty i NVDA nie były ponownie testowane w tym wydaniu. Android ma osobny kanał; kandydat Android 1.04 wymaga testu telefonu, którego obecnie nie ma.
+- Góra/dół na liście pianina i w trybie chromatycznym wybiera kolejne białe klawisze: C–D–E–F–G–A–H–C. Naprawiono E→Fis oraz H→Cis. Lewo/prawo przechodzi o półton, po wszystkich dźwiękach. Działa także na rozwiniętej liście i podczas automatycznego kamertonu.
+- Po strzałce oraz Alt+N / Ctrl+N program zgłasza samą nazwę wybranej nuty przez obiekt dostępności listy. Kamerton natychmiast odtwarza nowy cel. Rosnący plan „Następny dźwięk” zachowuje wszystkie półtony; nie jest tym samym co nawigacja po białych klawiszach.
+- Gdy górna nuta kwinty lub oktawy wykracza poza zakres, kamerton wstrzymuje automat i podaje wskazówkę zamiast wielokrotnie otwierać dialog błędu. Plan kończy się na ostatniej dostępnej parze. Wybierz niższy cel albo wyłącz współbrzmienia.
+- Aktualizator ogranicza czas bezczynnego pobierania, ponawia chwilowe blokady plików i sprawdza SHA-256. Nowy pomocnik przygotowuje EXE przed zamknięciem programu, podmienia plik i czeka na okno nowej wersji. Nieudany restart przywraca poprzedni plik; stara kopia jest usuwana dopiero po udanym uruchomieniu. Szczegóły awarii trafiają do `%LOCALAPPDATA%\Stroik\update.log`.
+- Numer wersji w nagłówku i „O programie” jest zgodny z wydaniem.
+
+Sprawdzono programowo nawigację natywnej listy PL/EN, częstotliwości generowanych tonów, granice współbrzmień oraz podmianę, wycofanie po błędzie i ponawianie blokady pliku. NVDA, odsłuch na instrumencie i komputery zgłaszające problem aktualizacji wymagają osobnego sprawdzenia. Wydanie dotyczy Windows.

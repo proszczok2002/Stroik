@@ -30,12 +30,15 @@ internal static class TuningPlan
         return notes;
     }
 
-    internal static int? Next(int anchor, int current, PianoOrder order)
+    internal static int? Next(int anchor, int current, PianoOrder order, int highest = NoteCatalog.HighestMidi)
     {
         IReadOnlyList<int> notes = Build(anchor, order);
         int index = -1;
         for (int i = 0; i < notes.Count; i++) if (notes[i] == current) { index = i; break; }
-        return index >= 0 && index + 1 < notes.Count ? notes[index + 1] : null;
+        if (index >= 0)
+            for (int next = index + 1; next < notes.Count; next++)
+                if (notes[next] <= highest) return notes[next];
+        return null;
     }
 }
 

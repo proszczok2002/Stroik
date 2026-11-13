@@ -1,5 +1,11 @@
 # Changelog / Historia zmian
 
+## 1.0.16 (Stroik 1.16) — 2026-11-13
+
+- PL: Białe klawisze pod strzałkami góra/dół, półtony lewo/prawo także na otwartej liście; odczyt celu i test częstotliwości kamertonu. Zakończenie planu na granicy współbrzmień bez powtarzanych dialogów błędu.
+- EN: White-key Up/Down and chromatic Left/Right on open/closed lists; selected-note notifications and fork-frequency regressions. Stop at valid interval boundaries without recurring error dialogs.
+- PL/EN: Updater: helper readiness before app closure, local staging and SHA-256, file-lock retries, atomic replacement, visible-window startup acknowledgement, rollback on restart failure and diagnostic update.log; stalled response-body timeout. Actual version in the title/About.
+
 ## 1.0.15 (Stroik 1.15) — 2026-11-12
 
 - PL: Naprawa Alt+N, napisu Wyłączone, nowy cel odtwarzany w kamertonie, krótsza wypowiedź, widok przed metodą, nawigacja ton/półton, opcja głosu w grafice i ograniczona korekta poziomu tonów.

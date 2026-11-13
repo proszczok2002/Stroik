@@ -5,6 +5,7 @@ namespace Stroik;
 internal readonly record struct IntervalReading(double Lower, double Upper, double Cents, double Beats);
 internal static class IntervalAnalysis
 {
+    internal static int HighestTarget(Consonance kind) => NoteCatalog.HighestMidi - (kind == Consonance.Off ? 0 : Semitones(kind));
     internal static int Semitones(Consonance kind) => kind == Consonance.Octave ? 12 : 7;
     internal static IntervalReading Compare(double lower, double upper, Consonance kind)
     {
