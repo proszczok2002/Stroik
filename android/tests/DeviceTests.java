@@ -206,7 +206,7 @@ public final class DeviceTests extends Instrumentation {
       lifecycleScenario();
       return;
     }
-    if (scenario.equals("manifest")) {
+    if (scenario.equals("manifest") || scenario.equals("download")) {
       Bundle result = new Bundle();
       try {
         String manifest =
@@ -216,6 +216,23 @@ public final class DeviceTests extends Instrumentation {
         require("pl.proszczok.stroik".equals(parsed.getString("packageName")), "Manifest package");
         log("Device updater manifest versionCode=" + parsed.getInt("versionCode"));
         log("Device updater manifest sha256=" + parsed.getString("sha256"));
+        if (scenario.equals("download")) {
+          byte[] apk = Updater.fetch(parsed.getString("apkUrl"), 40000000);
+          String hash = Updater.hex(java.security.MessageDigest.getInstance("SHA-256").digest(apk));
+          require(hash.equalsIgnoreCase(parsed.getString("sha256")), "Public download SHA-256 mismatch");
+          java.io.File file = new java.io.File(getTargetContext().getCacheDir(), "verified-download.apk");
+          try {
+            try (java.io.OutputStream out = new java.io.FileOutputStream(file)) { out.write(apk); }
+            android.content.pm.PackageManager pm = getTargetContext().getPackageManager();
+            android.content.pm.PackageInfo archive = pm.getPackageArchiveInfo(file.getAbsolutePath(), android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
+            android.content.pm.PackageInfo installed = pm.getPackageInfo(getTargetContext().getPackageName(), android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
+            require(archive != null && archive.packageName.equals(parsed.getString("packageName"))
+                && archive.getLongVersionCode() == parsed.getInt("versionCode")
+                && Updater.sameSignatures(installed, archive), "Downloaded package/version/certificate mismatch");
+          } finally { file.delete(); }
+          log("Production fetch on phone verified public APK bytes=" + apk.length + ", SHA-256=" + hash);
+          log("Download verification only; no higher-version update or installation was simulated.");
+        }
         result.putString("stream", report.toString());
         result.putString("result", "PASS");
         finish(Activity.RESULT_OK, result);
