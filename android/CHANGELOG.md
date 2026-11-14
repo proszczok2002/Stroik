@@ -1,11 +1,12 @@
 # Android changelog / Historia zmian Android
 
-## 1.05 / 105 — device validation, 2026-11-14
+## 1.05 / 105 — 2026-11-14
 
 - PL: Zaległe zmiany 1.04 przetestowano na Pixelu 11 (Android 17, Google TalkBack). Naprawiono utratę fokusu przy zmianie motywu — kolory są aktualizowane bez odtwarzania kontrolek. Wybrana dolna zakładka ma kontrastowy kolor i stan dostępności.
 - EN: Validate the pending 1.04 interaction changes on Pixel 11 (Android 17, Google TalkBack). Fix theme-change focus loss by updating colors without recreating controls. Selected bottom tabs have clear color and accessibility state.
 - PL/EN: White-key Up/Down, chromatic Left/Right, concise explicit note/microphone feedback, immediate fork refresh after consonance/target/reference changes, valid interval range/order, queued-playback cancellation, preserved acoustic decay guard and transient updater retries/logging.
-- Current evidence and remaining locked-device gesture checks are recorded in DEVICE_TESTS.md. The stable manifest is still 1.03 pending the final validation gate; no 1.05 public release yet.
+- PL/EN: Preserve focus when visible sections reflow; group collapsed spinner labels/values into one stop; show Hz beside the slider; fix light/dark system-bar and checkbox-icon contrast without replacing views.
+- Final exact-APK device checks passed: focus 183, lifecycle 983, interface 2185, interaction 48, voice events 14, fork 60, audio 7 and screen-off 6. See DEVICE_TESTS.md; natural gestures/human listening and a higher-version GitHub update remain separate checks.
 
 ## 1.04 / 104 — candidate, 2026-11-12
 

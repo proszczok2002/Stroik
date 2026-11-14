@@ -31,3 +31,9 @@ Concert A: 390–466 Hz slider, 0.1 Hz accessibility adjustment; double tap or E
 A fifth from C4 simultaneously plays C4 and G4; an octave plays C4 and C5. The selected note is the lower note, so a fifth from G4 is G4 and D5. Changing consonance, note, octave or concert A immediately refreshes playback. Invalid upper notes pause the fork instead of repeating errors. Bounded gain strengthens low and softens high notes; speaker response still matters.
 
 The updater retries temporary network failures and verifies SHA-256, package, version and certificate. Android's system installer asks for confirmation. Windows uses a separate channel. Structural accessibility, audio and lifecycle checks are separate from human TalkBack listening and real-instrument accuracy. See android/DEVICE_TESTS.md for the exact evidence.
+
+## Weryfikacja / Verification
+
+PL: Końcowy APK zainstalowano i sprawdzono na Pixelu 11 z Androidem 17 oraz Google TalkBack. Przeszły testy fokusu PL/EN, cyklu życia, dostępności kontrolek i komunikatów, kamertonu, mikrofonu oraz działania i TTS przy wygaszonym ekranie. Naprawiono także fokus po zmianie wysokości sekcji i wizualny znacznik zaznaczenia motywu. Naturalne gesty/odsłuch człowieka, strojenie prawdziwego instrumentu i pełna aktualizacja z GitHuba do wyższej wersji pozostają osobnymi próbami. Szczegóły: android/DEVICE_TESTS.md.
+
+EN: The final APK was installed and checked on Pixel 11 with Android 17 and Google TalkBack. PL/EN focus, lifecycle, accessible controls/events, fork, microphone and screen-off capture/TTS checks passed. This also fixes focus after section reflow and the visible theme checkmark. Natural gestures/human listening, real-instrument tuning and a complete GitHub update to a higher version remain separate validation. See android/DEVICE_TESTS.md.

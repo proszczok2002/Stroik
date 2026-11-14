@@ -1,10 +1,12 @@
-# Stroik Android 1.05 — device validation
+# Stroik Android 1.05
 
-The current candidate brings the pending interaction, accessibility and visual fixes plus Windows 1.16/1.17 fork fixes. Three bottom tabs share one row; Instrument is a dropdown on Tuner. It includes one microphone toggle, an Hz slider with numeric entry, speech and keep-screen options, foreground capture and screen-off TTS. Theme changes preserve controls and focus.
+[Download APK 1.05](https://github.com/proszczok2002/Stroik/releases/download/android-v1.05/Stroik-Android-1.05.apk) · [Release and SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.05) · [Polski](README.md)
 
-Validation is in progress on a Pixel 11 with Android 17 and Google TalkBack enabled. PL/EN focus, recreation, interface structure, actual screen-off microphone capture and TTS have been checked. See [device evidence](DEVICE_TESTS.md) for exact scope and limits. The candidate is local under `android/releases`; no new stable APK has been published yet, and the updater manifest remains on 1.03 until validation finishes.
+This version brings the pending interaction, accessibility and visual fixes plus Windows 1.16/1.17 fork fixes. Three bottom tabs share one row; Instrument is a dropdown on Tuner. It includes one microphone toggle, an Hz slider with a visible value and numeric entry, speech and keep-screen options, foreground capture and screen-off TTS. Theme and section-visibility changes preserve controls and focus.
 
-The older [1.04 prerelease](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.04) remains historical and is not the current test build. The separate Piano-tab idea is recorded in [POMYSLY.md](../POMYSLY.md), outside this fix.
+The exact APK was installed and checked on Pixel 11 with Android 17 and Google TalkBack: 183 PL/EN focus assertions, 983 lifecycle, 2185 interface, 48 interaction, 14 voice events, 60 fork, 7 audio and 6 screen-off checks. Play Protect scanning and system installation passed, retaining settings, data and signing certificate. See [device evidence](DEVICE_TESTS.md) for scope and limits. Natural gestures and human TalkBack listening, real instrument accuracy and headphones remain separate checks. The local installation is not reported as an end-to-end GitHub update.
+
+The 1.04 candidate remains a historical prerelease. The separate Piano-tab suggestion is recorded in [POMYSLY.md](../POMYSLY.md), outside this fix.
 
 ## Previous release 1.03
 

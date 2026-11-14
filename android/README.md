@@ -1,10 +1,12 @@
-# Stroik Android 1.05 — testy urządzenia
+# Stroik Android 1.05
 
-Aktualny kandydat przenosi zaległe poprawki obsługi, dostępności i wyglądu oraz poprawki kamertonu z Windows 1.16/1.17. Trzy dolne zakładki są w jednym rzędzie; instrument to lista na stronie Stroik. Jest jeden przełącznik mikrofonu, suwak Hz z wpisem liczbowym, opcje głosu i utrzymania ekranu, nasłuch w tle i TTS po wygaszeniu ekranu. Zmiana motywu zachowuje kontrolki i fokus.
+[Pobierz APK 1.05](https://github.com/proszczok2002/Stroik/releases/download/android-v1.05/Stroik-Android-1.05.apk) · [Wydanie i suma SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.05) · [English](README.en.md)
 
-Testy na Pixelu 11 z Androidem 17 i włączonym Google TalkBack trwają. Sprawdzono już fokus PL/EN, odtwarzanie ekranów, strukturę interfejsu oraz rzeczywisty mikrofon i TTS przy wygaszonym ekranie. Pełny zakres i ograniczenia opisuje [raport urządzenia](DEVICE_TESTS.md). Kandydat jest lokalnie w `android/releases`; nie opublikowano jeszcze nowego stabilnego APK, a manifest pozostaje na 1.03 do zakończenia kontroli.
+Wersja przenosi zaległe poprawki obsługi, dostępności i wyglądu oraz poprawki kamertonu z Windows 1.16/1.17. Trzy dolne zakładki są w jednym rzędzie; instrument to lista na stronie Stroik. Jest jeden przełącznik mikrofonu, suwak Hz z widoczną wartością i wpisem liczbowym, opcje głosu i utrzymania ekranu, nasłuch w tle oraz TTS po wygaszeniu ekranu. Zmiana motywu i widoczności sekcji zachowuje kontrolki i fokus.
 
-Starszy [kandydat 1.04](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.04) pozostaje w historii i nie jest bieżącym buildem do prób. Pomysł osobnej zakładki Pianino jest zapisany w [POMYSLY.md](../POMYSLY.md), poza zakresem tej poprawki.
+Zainstalowano i sprawdzono dokładny APK na Pixelu 11 z Androidem 17 i Google TalkBack: 183 asercje fokusu PL/EN, 983 cyklu życia, 2185 interfejsu, 48 obsługi, 14 komunikatów, 60 kamertonu, 7 audio i 6 wygaszonego ekranu. Skanowanie Play Protect i systemowa instalacja przeszły; zachowano ustawienia, dane i podpis. Pełny zakres oraz ograniczenia opisuje [raport urządzenia](DEVICE_TESTS.md). Naturalne gesty i odsłuch TalkBack przez człowieka, prawdziwy instrument i słuchawki pozostają osobnymi próbami. Nie przedstawiamy lokalnej instalacji jako pełnej aktualizacji przez GitHub.
+
+Kandydat 1.04 pozostaje historycznym prerelease. Pomysł osobnej zakładki Pianino jest zapisany w [POMYSLY.md](../POMYSLY.md), poza zakresem tej poprawki.
 
 ## Poprzednie wydanie 1.03
 

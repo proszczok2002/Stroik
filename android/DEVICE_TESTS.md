@@ -122,3 +122,30 @@ The first 1.05 candidate separately passed 60 fork assertions (actual AudioTrack
 After the successful screen-off test the phone is locked. An interaction attempt while keyguard was showing reported “Consonance disappeared”; it does not establish a failure in the unlocked app. The owner was asked to unlock the phone. Remaining: rerun fork/interaction/audio, actual TalkBack gestures, final screenshots and crash-buffer review. Human speech listening, real instrument accuracy and headphone monitoring remain separate. No 1.05 release or updater-manifest publication has happened yet.
 
 Polski: bieżąca 1.05 jest zainstalowana przez systemowe potwierdzenie, podpis/ustawienia/hash zgodne. Naprawiono odtworzoną stratę fokusu przy zmianie motywu. Na poprawionej kompilacji przeszły testy fokusu, odtwarzania stron, struktury dostępności i rzeczywistego nasłuchu/TTS przy wygaszonym ekranie. Po tej ostatniej próbie telefon jest zablokowany; dalsze testy wymagają odblokowania. Nie jest to jeszcze zakończone wydanie ani test pełnej aktualizacji z GitHuba.
+
+## Final 1.05 acceptance — 14 November 2026
+
+This section supersedes the earlier in-progress candidate status. The final APK is **78492 bytes**, SHA-256 **EB2ACC14C2DE5CBF9878E885159120DB0CDA92AAC1A22EDB42956832A5093D62**, version 1.05 / 105. The installed APK was pulled and compared byte-for-byte by SHA-256. Its production certificate remains **3a07196ac981d8a1d5dda9f2fb140e1c47226128edc25866e2c37a8f65ab1522**. Earlier 80CED, 45A1, FE47 and F58F hashes identify intermediate local builds, not this release.
+
+The final local candidate passed the actual Android Update confirmation and Play Protect scan. The scan displayed “Ta aplikacja wygląda bezpiecznie”; installation continued through its Install action. No block was overridden. Settings, the certificate and the pre-install marker were preserved. Initial ADB installation on an empty phone and later system-confirmed candidate replacements are distinct; production candidates were not updated with adb install -r. The instrumentation package was updated with ADB as a test harness.
+
+All of these were rerun successfully on the exact final APK with Google TalkBack enabled on Pixel 11 / Android 17 (API 37):
+
+| Scenario | Assertions | Evidence |
+| --- | ---: | --- |
+| PL/EN focus | 183 | Method, interval, targets/octaves, tabs, instruments, language and both in-place theme changes |
+| Lifecycle | 983 | Repeated three-page recreation and both themes |
+| Interface | 2185 | Accessible labels, native roles, states and control geometry; 4 focus events and 14 click events are separate counts |
+| Interaction | 48 | One microphone button, collapsed selected values, slider Hz actions/bounds, awake flag, three bottom tabs and Alt+N |
+| State/voice events | 14 | Immediate microphone-off announcement, muted automatic visual readings, concise explicit Next-note announcements in PL/EN |
+| Fork | 60 | Real AudioTrack replacement after UI selection, expected synthesis components, keyboard white keys and upper-range pause |
+| Audio devices | 7 | AudioRecord/AudioTrack start/stop and alternating-speaker reference guard |
+| Screen off | 6 | Actual sleep, recording maintained, TTS started despite muted visual feedback, microphone released on Stop |
+
+A further focus regression occurred when making the microphone section visible shifted the focused checkbox outside the viewport. The fix captures focus before changing visibility, then restores that still-attached visible control once after layout. It does not repeatedly force focus. A stronger gesture experiment exposed unreliable remote-swipe evidence: earlier six events alternated only between two stops; another attempt hit the post-install dialog. A one-minute requested natural-gesture window received no user interaction. **Natural user gestures and human TalkBack pronunciation/listening are not claimed as passed.** This limitation is separate from the passed actual-focus and accessibility-event checks.
+
+Final screenshots were inspected for one-row bottom navigation, readable light/dark text, selected-tab contrast, system-bar contrast, visible Hz value, the checked theme icon, popup guidance for visual speech and the meter/virtual keyboard. A stale theme checkbox animation was replaced with the current theme's native drawable without replacing its View; spinner arrows are tinted for contrast. The collapsed spinner exposes one labelled accessibility stop while popup rows retain native accessibility.
+
+No headphones were connected. Real instrument/noise accuracy, headphone monitoring and a complete GitHub download-to-higher-version system update remain separate from the passing local installer and audio tests. Logs/screenshots are retained locally under the ignored device-results folder. The stable Android manifest will be updated only after public APK/hash verification; Windows latest stays separate.
+
+Polski: końcowy APK EB2ACC... przeszedł całą powyższą serię na Pixelu 11 z włączonym TalkBackiem, z zachowaniem danych po systemowej instalacji. Naprawiono fokus przy motywie i zmianie wysokości sekcji, podwójne przystanki list, odświeżanie kwint/oktaw, zakres kamertonu oraz kontrast i widoczną wartość Hz. Naturalne gesty/odsłuch człowieka, prawdziwy instrument, słuchawki i pełna aktualizacja GitHub do wyższej wersji nie są uznane za przetestowane.

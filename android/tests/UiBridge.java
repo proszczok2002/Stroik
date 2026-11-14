@@ -32,6 +32,20 @@ public final class UiBridge extends Instrumentation {
       String wanted = arguments.getString("text", "");
       String id = arguments.getString("id", "");
       String expectedPackage = arguments.getString("package", "");
+      if (arguments.containsKey("scroll")) {
+        int count = Integer.parseInt(arguments.getString("scroll"));
+        AccessibilityNodeInfo scroll = null;
+        for (AccessibilityNodeInfo node : nodes)
+          if ("android.widget.ScrollView".contentEquals(node.getClassName()) && node.isScrollable()
+              && expectedPackage.equals(String.valueOf(node.getPackageName()))) { scroll = node; break; }
+        if (scroll == null) throw new IllegalStateException("No visible scroll container in expected package");
+        for (int i = 0; i < count; i++) {
+          if (!scroll.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)) break;
+          SystemClock.sleep(250);
+        }
+        root = ui.getRootInActiveWindow(); nodes.clear();
+        if (root != null) collect(root, nodes);
+      }
       if (arguments.containsKey("checkIndex")) {
         List<AccessibilityNodeInfo> checks = new ArrayList<>();
         for (AccessibilityNodeInfo node : nodes)

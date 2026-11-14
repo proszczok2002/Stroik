@@ -216,6 +216,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     Spinner s = new Spinner(this);
     s.setId(nextId++);
     s.setMinimumHeight(dp(64));
+    s.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+    s.setScreenReaderFocusable(true);
     l.setLabelFor(s.getId());
     s.setContentDescription(label);
     s.setAccessibilityDelegate(
@@ -229,7 +231,15 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 label + ": " + (selected == null ? "" : selected.toString()));
           }
         });
-    ArrayAdapter<String> a = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items);
+    ArrayAdapter<String> a = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items) {
+      @Override public View getView(int position, View reusable, ViewGroup parent) {
+        View selected = super.getView(position, reusable, parent);
+        // The collapsed list is one labelled accessibility stop. Popup rows
+        // still use getDropDownView and retain their ordinary accessibility.
+        selected.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        return selected;
+      }
+    };
     a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     s.setAdapter(a);
     s.setSelection(Math.max(0, Math.min(items.length - 1, value)));
@@ -318,17 +328,22 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   private void updateTunerSections() {
+    // Capture focus before showing/hiding rows: a reflow can temporarily move
+    // the focused control outside the viewport and Android can clear it.
+    View focused = accessibilityFocus(root);
     visible(pairControls, model.interval != 0 && model.method != 0);
     visible(micControls, model.method != 0 || model.forkTap);
     visible(forkControls, model.method != 1);
     visible(monitorControls, model.method == 3);
     visible(advanceControls, model.method == 1);
-    View focused = accessibilityFocus(root);
     if (focused != null)
       focused.post(() -> {
-        if (focused.isAccessibilityFocused() && focused.isShown())
+        if (focused.isAttachedToWindow() && focused.isShown()) {
           focused.requestRectangleOnScreen(
               new Rect(0, 0, focused.getWidth(), focused.getHeight()), true);
+          if (!focused.isAccessibilityFocused()) focused.performAccessibilityAction(
+              android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
+        }
       });
     updateGuide();
   }
@@ -366,11 +381,18 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private void applyScreenPolicy() {
     if (model.keepScreenOn) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    WindowInsetsController bars = getWindow().getInsetsController();
+    if (bars != null) {
+      int light = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+          | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+      bars.setSystemBarsAppearance(model.dark ? 0 : light, light);
+    }
   }
 
   private void referenceControl() {
     String name = t("Częstotliwość odniesienia A, Hz", "A reference frequency, Hz");
     TextView label = text(name, false);
+    label.setText(name + ": " + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
     label.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
     SeekBar slider =
         new SeekBar(this) {
@@ -409,6 +431,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
               model.reference = Math.round(value * 10) / 10.0;
               setProgress((int) Math.round((model.reference - 390) * 10));
               setStateDescription(String.format(Locale.US, "%.1f Hz", model.reference));
+              label.setText(name + ": " + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
               changed();
               return true;
             }
@@ -428,6 +451,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                                   : -.1)));
               setProgress((int) Math.round((model.reference - 390) * 10));
               setStateDescription(String.format(Locale.US, "%.1f Hz", model.reference));
+              label.setText(name + ": " + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
               changed();
               return true;
             }
@@ -435,6 +459,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           }
         };
     slider.setId(nextId++);
+    slider.setTag(label);
     slider.setContentDescription(name);
     label.setLabelFor(slider.getId());
     slider.setMinHeight(dp(64));
@@ -452,6 +477,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           public void onProgressChanged(SeekBar bar, int progress, boolean user) {
             if (!user) return;
             model.reference = 390 + progress / 10.0;
+            label.setText(name + ": " + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
             bar.setStateDescription(
                 String.format(
                     model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
@@ -529,6 +555,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 if (child instanceof SeekBar) {
                   ((SeekBar) child).setProgress((int) Math.round((value - 390) * 10));
                   child.setStateDescription(String.format(Locale.US, "%.1f Hz", value));
+                  if (child.getTag() instanceof TextView) ((TextView) child.getTag()).setText(
+                      t("Częstotliwość odniesienia A, Hz", "A reference frequency, Hz") + ": "
+                      + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", value));
                 }
               }
               dialog.dismiss();
@@ -607,7 +636,13 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       ((EditText) view).setHintTextColor(model.dark ? Color.LTGRAY : Color.DKGRAY);
       view.setBackgroundTintList(android.content.res.ColorStateList.valueOf(accent));
     } else if (view instanceof CompoundButton) {
+      // Replace the old theme's animated icon, not the checkbox View. Keeping
+      // that animation can leave the just-checked theme option looking empty.
+      ((CompoundButton) view).setButtonDrawable(new CheckBox(this).getButtonDrawable());
       ((CompoundButton) view).setButtonTintList(android.content.res.ColorStateList.valueOf(accent));
+      view.jumpDrawablesToCurrentState();
+    } else if (view instanceof Spinner) {
+      view.setBackgroundTintList(android.content.res.ColorStateList.valueOf(accent));
     } else if (view instanceof Button && view.getId() < 10000) {
       view.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
           model.dark ? Color.rgb(64, 64, 64) : Color.rgb(225, 231, 237)));
@@ -1523,7 +1558,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       super.onDraw(c);
       paint.setColor(model.dark ? Color.WHITE : Color.BLACK);
       paint.setTextSize(dp(22));
-      c.drawText(String.format(Locale.US, "%+.1f cents", cents), dp(8), dp(30), paint);
+      c.drawText(String.format(model.english ? Locale.US : new Locale("pl"),
+          model.t("%+.1f centów", "%+.1f cents"), cents), dp(8), dp(30), paint);
       float middle = getWidth() / 2f;
       paint.setStrokeWidth(dp(3));
       c.drawLine(middle, dp(40), middle, dp(95), paint);

@@ -1,6 +1,6 @@
 # Stroik 1.17
 
-[Native Android 1.03](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.03) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
+[Native Android 1.05](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.05) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 

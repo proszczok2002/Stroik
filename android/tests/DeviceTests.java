@@ -932,6 +932,7 @@ public final class DeviceTests extends Instrumentation {
 
   private void gestureScenario() {
     Bundle result = new Bundle();
+    Set<String> stops = java.util.concurrent.ConcurrentHashMap.newKeySet();
     try {
       automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
       automation.setOnAccessibilityEventListener(event -> {
@@ -939,6 +940,7 @@ public final class DeviceTests extends Instrumentation {
             && event.getPackageName() != null
             && event.getPackageName().toString().equals("pl.proszczok.stroik")) {
           focused.incrementAndGet();
+          stops.add(event.getText() + " / " + event.getContentDescription());
           log("TalkBack swipe focus: " + event.getText() + " / " + event.getContentDescription());
         }
       });
@@ -948,8 +950,9 @@ public final class DeviceTests extends Instrumentation {
                   new Intent(getTargetContext(), MainActivity.class)
                       .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
       waitForIdleSync();
-      SystemClock.sleep(15000);
+      SystemClock.sleep(60000);
       require(focused.get() >= 3, "TalkBack swipes did not generate enough focus changes");
+      require(stops.size() >= 3, "TalkBack navigation cycles between fewer than three distinct stops: " + stops);
       log(
           "TalkBack actual swipe navigation PASS; focus events="
               + focused.get()
