@@ -27,18 +27,16 @@ Nowe wydanie pokazuje zmiany i pytanie o pobranie. APK jest sprawdzany przez SHA
 Projekt: https://github.com/proszczok2002/Stroik
 Licencja MIT. Wykonawca Proszczok z Codex; pomysłodawca Witold.
 
+Stroik Android 1.05
 
-Zmiany obsługi w 1.04
-Stroik Android 1.04 — kandydat do testów
+Trzy zakładki w jednym rzędzie na dole: Stroik, Ustawienia i Pomoc. Instrument wybierasz z listy na stronie Stroik. Wybrana zakładka ma wyraźny kolor i stan dostępności. Widok klasyczny lub dla początkujących jest przed metodą strojenia.
 
-Trzy zakładki w jednej linii na dole: Stroik, Ustawienia, Pomoc. Instrument wybierasz z listy na stronie Stroik. Widok jest przed metodą strojenia.
+Jeden przycisk Włącz/Wyłącz mikrofon podaje aktualny stan. Listy udostępniają bieżący wybór bez otwierania; osobne etykiety nie są kolejnymi elementami nawigacji TalkBack. Współbrzmienia pozostają w tym samym miejscu, a zmiana motywu zachowuje istniejące kontrolki i fokus.
 
-Jeden przycisk mikrofonu przełącza Włącz/Wyłącz i podaje stan czytnikowi. Listy udostępniają bieżący wybór także po zwinięciu, a ich osobne etykiety nie są powtarzane w nawigacji TalkBack. „Sprawdź współbrzmienie” pozostaje w tym samym miejscu przy zmianie metody.
+W Ustawieniach można wyłączyć odczyt wyników w trybie wizualnym (domyślnie włączony), włączyć utrzymywanie ekranu oraz ustawić aktualizacje. Pierwsza wskazówka przy grafice pokazuje, gdzie jest opcja głosu. Ręcznie wywołana zmiana nuty lub stanu mikrofonu nadal ma komunikat. Przy wygaszonym ekranie wyniki odczytuje syntezator systemowy. Nasłuch uruchamia użytkownik; działa on w usłudze z powiadomieniem i przyciskiem zatrzymania. Usunięcie aplikacji z ostatnich zadań kończy nasłuch.
 
-Domyślnie włączony odczyt głosowy w trybie wizualnym można odznaczyć w Ustawieniach. Przy pierwszym włączeniu grafiki pojawia się wskazówka ze strzałką. Opcja „Nie pozwalaj na autoblokadę ekranu” działa tylko dla otwartego okna. Włączony przez użytkownika nasłuch jest obsługiwany przez usługę z powiadomieniem i przyciskiem zatrzymania; po wygaszeniu ekranu wyniki odczytuje syntezator. Usunięcie aplikacji z ostatnich zadań zatrzymuje usługę. Wyjście do innej aplikacji samo nie kończy nasłuchu — zatrzymaj go przyciskiem lub w powiadomieniu.
+Częstotliwość A: suwak 390–466 Hz, krok dostępności 0,1 Hz; podwójne stuknięcie lub Enter otwiera pole liczbowe. Z klawiatury na liście nut góra/dół wybiera białe klawisze C D E F G A H C; lewo/prawo wszystkie półtony. Alt+N / Ctrl+N wybiera następny cel według planu. Alt+U powtarza nutę w trybie ręcznym albo wstrzymuje/wznawia zaznaczony automat.
 
-Częstotliwość A ma suwak 390–466 Hz, krok dostępności 0,1 Hz i wpis liczbowy po dwukrotnym stuknięciu. Z klawiatury Enter otwiera edycję. Alt+N / Ctrl+N to następna nuta; na liście nut góra/dół zmieniają cel o cały ton, lewo/prawo o półton. Aplikacja ogłasza samą nazwę nuty. Kamerton ma mocniejszy dół i łagodniejszą górę; skuteczność zależy od głośnika.
+Kwinta od c razkreślnego gra jednocześnie c razkreślne i g razkreślne; oktawa c razkreślne i c dwukreślne. Wybrana nuta jest dolną nutą pary, dlatego kwinta od g razkreślnego to g razkreślne i d dwukreślne. Zmiana współbrzmienia, nuty, oktawy lub A od razu odświeża dźwięk. Poza zakresem kamerton wstrzymuje automat zamiast powtarzać błąd. Korekta głośności wzmacnia dół i łagodzi górę; głośnik nadal ma wpływ na brzmienie.
 
-Telefon jest obecnie niedostępny. Kod i APK skompilowano, testy DSP oraz logiki nut przeszły; nowych testów TalkBack, suwaka, usługi mikrofonu, wygaszonego ekranu ani aktualizatora nie wykonano. Wyniki 1.03 nie są wynikami 1.04. Wcześniejsze ostrzeżenie Play Protect pozostaje niewyjaśnione.
-Uprawnienia i praca w tle (1.04)
-Uruchom nasłuch, kiedy aplikacja jest widoczna. Android może zapytać o mikrofon i zgodę na powiadomienia. Po odmowie powiadomienia usługa nadal podlega systemowej liście aktywnych aplikacji; zatrzymaj mikrofon w aplikacji lub z systemowego panelu. Nie uruchamiamy nasłuchu po restarcie telefonu. Przy wygaszonym ekranie wyniki odczytuje syntezator systemowy nawet po wyłączeniu głosu w grafice. Inne aplikacje przechwytujące mikrofon, rozmowy, oszczędzanie baterii i odtwarzanie TTS mogą przerwać lub zakłócić pomiar. Opcja utrzymania ekranu nie blokuje ręcznego przycisku zasilania. Ta ścieżka wymaga jeszcze testu fizycznego telefonu.
+Aktualizator ponawia chwilowe błędy sieci, sprawdza sumę SHA-256, pakiet, wersję i podpis, a instalację zatwierdzasz w systemowym oknie Androida. Nie zmienia to kanału Windows. Testy dostępności kontrolek, audio i cyklu życia są odrębne od odsłuchu TalkBack przez człowieka oraz strojenia prawdziwego instrumentu. Szczegółowy zakres prób jest w android/DEVICE_TESTS.md.

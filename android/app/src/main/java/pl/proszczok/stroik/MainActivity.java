@@ -30,6 +30,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private LinearLayout targetsBox;
   private int targetIds;
   private Boolean announcedMicState;
+  private String consonanceLabel;
+  private Spinner consonanceList;
   private final Map<Spinner, int[]> selections = new IdentityHashMap<>();
   private View pairControls, micControls, forkControls, monitorControls, advanceControls;
   private View ukuleleControls, orderControls;
@@ -552,6 +554,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     String[] pages = {t("Stroik", "Tuner"), t("Ustawienia", "Settings"), t("Pomoc", "Help")};
     heading.setText("Stroik " + version() + " — " + pages[page]);
     result = guide = status = null;
+    consonanceList = null;
     meter = null;
     targetList = octaveList = null;
     targetsBox = null;
@@ -566,7 +569,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       tabs[i].setText(pages[i]);
       tabs[i].setSelected(i == page);
       tabs[i].setContentDescription(pages[i] + t(", zakładka", ", tab"));
+      tabs[i].setStateDescription(i == page ? t("Wybrana", "Selected") : null);
     }
+    styleTabs();
     renderedPage = page;
     applyScreenPolicy();
     int generation = ++renderGeneration;
@@ -581,6 +586,36 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
             android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
     });
     root.requestApplyInsets();
+  }
+
+  private void styleTabs() {
+    for (int i = 0; i < tabs.length; i++) {
+      tabs[i].setTypeface(null, i == page ? Typeface.BOLD : Typeface.NORMAL);
+      tabs[i].setTextColor(i == page ? Color.WHITE : model.dark ? Color.WHITE : Color.BLACK);
+      android.graphics.drawable.GradientDrawable tabBackground = new android.graphics.drawable.GradientDrawable();
+      tabBackground.setColor(i == page ? Color.rgb(0, 83, 145) : model.dark ? Color.rgb(48, 48, 48) : Color.rgb(235, 240, 245));
+      tabBackground.setCornerRadius(dp(10));
+      tabs[i].setBackground(tabBackground);
+    }
+  }
+
+  private void applyThemeInPlace(View view) {
+    int foreground = model.dark ? Color.WHITE : Color.BLACK;
+    int accent = model.dark ? Color.rgb(130, 200, 255) : Color.rgb(0, 83, 145);
+    if (view instanceof TextView) ((TextView) view).setTextColor(foreground);
+    if (view instanceof EditText) {
+      ((EditText) view).setHintTextColor(model.dark ? Color.LTGRAY : Color.DKGRAY);
+      view.setBackgroundTintList(android.content.res.ColorStateList.valueOf(accent));
+    } else if (view instanceof CompoundButton) {
+      ((CompoundButton) view).setButtonTintList(android.content.res.ColorStateList.valueOf(accent));
+    } else if (view instanceof Button && view.getId() < 10000) {
+      view.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+          model.dark ? Color.rgb(64, 64, 64) : Color.rgb(225, 231, 237)));
+    }
+    if (view instanceof ViewGroup)
+      for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++)
+        applyThemeInPlace(((ViewGroup) view).getChildAt(i));
+    view.invalidate();
   }
 
   private void createShell() {
@@ -623,7 +658,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         page = at;
         render();
       });
-      nav.addView(b, new LinearLayout.LayoutParams(0, -2, 1));
+      LinearLayout.LayoutParams tabLayout = new LinearLayout.LayoutParams(0, -2, 1);
+      tabLayout.setMargins(dp(3), dp(4), dp(3), dp(4));
+      nav.addView(b, tabLayout);
     }
     root.addView(nav);
   }
@@ -634,7 +671,17 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   @Override
+  public boolean dispatchKeyEvent(KeyEvent event) {
+    if (event.getAction() == KeyEvent.ACTION_DOWN && handleKey(event.getKeyCode(), event)) return true;
+    return super.dispatchKeyEvent(event);
+  }
+
+  @Override
   public boolean onKeyDown(int key, KeyEvent event) {
+    return handleKey(key, event) || super.onKeyDown(key, event);
+  }
+
+  private boolean handleKey(int key, KeyEvent event) {
     if (event.isCtrlPressed()) {
       if (key == KeyEvent.KEYCODE_Q) {
         session.stop();
@@ -667,15 +714,13 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
             || key == KeyEvent.KEYCODE_DPAD_DOWN
             || key == KeyEvent.KEYCODE_DPAD_LEFT
             || key == KeyEvent.KEYCODE_DPAD_RIGHT)) {
-      int delta =
-          key == KeyEvent.KEYCODE_DPAD_UP
-              ? -2
-              : key == KeyEvent.KEYCODE_DPAD_DOWN ? 2 : key == KeyEvent.KEYCODE_DPAD_LEFT ? -1 : 1;
-      model.target = Math.max(21, Math.min(108, model.base() + delta));
+      model.target = key == KeyEvent.KEYCODE_DPAD_UP || key == KeyEvent.KEYCODE_DPAD_DOWN
+          ? Model.nextNatural(model.base(), key == KeyEvent.KEYCODE_DPAD_UP ? -1 : 1)
+          : Math.max(21, Math.min(108, model.base() + (key == KeyEvent.KEYCODE_DPAD_LEFT ? -1 : 1)));
       model.anchor = model.target;
       changed();
       syncTarget();
-      say(model.note(model.target));
+      sayAction(model.spokenNote(model.target), targetList);
       return true;
     }
     if (event.isAltPressed() && key == KeyEvent.KEYCODE_U && model.method != 1) {
@@ -697,11 +742,13 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         if (pitch == 1 || pitch == 3 || pitch == 6 || pitch == 8) break;
       }
       model.target = next;
+      model.anchor = next;
       changed();
       syncTarget();
+      sayAction(model.spokenNote(next), targetList);
       return true;
     }
-    return super.onKeyDown(key, event);
+    return false;
   }
 
   private void tuner() {
@@ -730,8 +777,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           if (model.target < 0 && v != 1) model.target = model.base();
           updateTunerSections();
         });
-    choice(
-        t("Sprawdź współbrzmienie", "Check consonance"),
+    consonanceLabel = t("Sprawdź współbrzmienie", "Check consonance");
+    consonanceList = choice(
+        consonanceLabel,
         new String[] {t("Wyłączone", "Off"), t("Kwinty", "Fifths"), t("Oktawy", "Octaves")},
         model.interval,
         v -> {
@@ -797,6 +845,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
               v -> {
                 model.autoFork = v;
                 autoPaused = false;
+                audio.setPaused(false);
+                if (!v) audio.stopFork();
               });
           button(
               t("Wstrzymaj lub wznów automat kamertonu", "Pause or resume automatic fork"),
@@ -942,7 +992,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     if (targetList != null) {
       int[] options = (int[]) targetList.getTag();
       for (int i = 0; i < options.length; i++)
-        if (options[i] == model.target) {
+              if (options[i] == model.target) {
           selectSilently(targetList, i);
           break;
         }
@@ -965,7 +1015,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       value +=
           "\n"
               + (model.method == 0
-                  ? t("Kamerton gra oba dźwięki razem.", "The fork plays both notes together.")
+                  ? t("Kamerton gra oba dźwięki razem. Wybrana nuta jest dolnym dźwiękiem pary.", "The fork plays both notes together. The selected note is the lower note of the pair.")
                   : model.pairMode == 0
                       ? t(
                           "Zagraj dolny, wycisz, potem górny i wycisz.",
@@ -976,6 +1026,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                           "Experimental: play together about 2 seconds. A harmonic may mimic a"
                               + " second note — also check separately."));
     }
+    if (consonanceList != null) consonanceList.setStateDescription(model.interval == 0 ? null
+        : model.spokenNote(model.base()) + " + " + model.note(model.base() + model.semitones()));
     if (!value.contentEquals(guide.getText())) guide.setText(value);
   }
 
@@ -1068,10 +1120,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         model.dark,
         v -> {
           model.dark = v;
-          View focused = accessibilityFocus(root);
-          focusBeforeRecreate = focused == null ? View.NO_ID : focused.getId();
-          persist();
-          recreate();
+          setTheme(model.dark ? android.R.style.Theme_Material_NoActionBar
+              : android.R.style.Theme_Material_Light_NoActionBar);
+          applyThemeInPlace(root);
+          root.setBackgroundColor(model.dark ? Color.rgb(30, 30, 30) : Color.WHITE);
+          styleTabs();
         });
     check(
         t("Widok dla początkujących z podpowiedziami", "Beginner view with guidance"),
@@ -1287,14 +1340,22 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   private void say(String text) {
+    speak(text, root, true);
+  }
+
+  private void sayAction(String text, View source) {
+    speak(text, source == null ? root : source, false);
+  }
+
+  private void speak(String text, View source, boolean respectVisualVoice) {
     if (text == null || text.isEmpty()) return;
     if (session.screenOff()) {
       session.speak(text);
       return;
     }
-    if (!active || (model.graphics && !model.voiceInVisual)) return;
+    if (!active || (respectVisualVoice && model.graphics && !model.voiceInVisual)) return;
     AccessibilityManager a = (AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE);
-    if (a.isEnabled() && a.isTouchExplorationEnabled()) root.announceForAccessibility(text);
+    if (a.isEnabled() && a.isTouchExplorationEnabled()) source.announceForAccessibility(text);
     else session.speak(text);
   }
 
@@ -1323,8 +1384,14 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     model.target = next;
     changed();
     syncTarget();
-    say(model.spokenNote(next));
-    if (model.method != 1) audio.strike();
+    sayAction(model.spokenNote(next), targetList);
+  }
+
+  public void forkPaused(String text) {
+    autoPaused = true;
+    audio.setPaused(true);
+    if (status != null) status.setText(text);
+    sayAction(text, status);
   }
 
   public void failed(String text) {
@@ -1345,7 +1412,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       microphoneButton.setStateDescription(value);
     }
     if (status != null) status.setText(value);
-    if (announcedMicState == null || announcedMicState != audio.running()) say(value);
+    if (announcedMicState != null && announcedMicState != audio.running()) sayAction(value, microphoneButton);
     announcedMicState = audio.running();
   }
 

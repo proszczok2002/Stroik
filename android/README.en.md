@@ -1,10 +1,10 @@
-# Stroik Android 1.04 — test candidate
+# Stroik Android 1.05 — device validation
 
-Three bottom tabs in one row: Tuner, Settings and Help; Instrument is a list on Tuner. Adds one microphone toggle, an Hz slider with numeric entry, visual-mode speech, keep-screen-awake and foreground capture for screen-off use.
+The current candidate brings the pending interaction, accessibility and visual fixes plus Windows 1.16/1.17 fork fixes. Three bottom tabs share one row; Instrument is a dropdown on Tuner. It includes one microphone toggle, an Hz slider with numeric entry, speech and keep-screen options, foreground capture and screen-off TTS. Theme changes preserve controls and focus.
 
-[Test APK 1.04](https://github.com/proszczok2002/Stroik/releases/download/android-v1.04/Stroik-Android-1.04.apk) · [Prerelease](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.04).
+Validation is in progress on a Pixel 11 with Android 17 and Google TalkBack enabled. PL/EN focus, recreation, interface structure, actual screen-off microphone capture and TTS have been checked. See [device evidence](DEVICE_TESTS.md) for exact scope and limits. The candidate is local under `android/releases`; no new stable APK has been published yet, and the updater manifest remains on 1.03 until validation finishes.
 
-**The phone is currently unavailable.** Source, APK and device tests compile; signal and note-logic checks pass. New background microphone, TalkBack, slider and updater paths have not been device-tested. The automatic manifest remains on 1.03 pending phone testing. The earlier Play Protect classification remains unexplained. [Test scope](DEVICE_TESTS.md).
+The older [1.04 prerelease](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.04) remains historical and is not the current test build. The separate Piano-tab idea is recorded in [POMYSLY.md](../POMYSLY.md), outside this fix.
 
 ## Previous release 1.03
 

@@ -3,6 +3,7 @@ package pl.proszczok.stroik;
 import android.media.*;
 import android.os.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class AudioEngine implements AutoCloseable {
   public interface Listener {
@@ -13,6 +14,8 @@ public final class AudioEngine implements AutoCloseable {
     void advance();
 
     void failed(String text);
+
+    default void forkPaused(String text) { result(text); }
   }
 
   private final Listener listener;
@@ -25,6 +28,7 @@ public final class AudioEngine implements AutoCloseable {
   private Thread worker;
   private volatile long muteUntil, repeatAt;
   private volatile int generation;
+  private final AtomicInteger playbackEpoch = new AtomicInteger();
   private int rate = 48000;
   private final AudioManager manager;
 
@@ -39,10 +43,18 @@ public final class AudioEngine implements AutoCloseable {
   }
 
   public void configure(Model m) {
+    Model previous = config;
+    boolean referenceChanged = previous.method != m.method || previous.base() != m.base()
+        || previous.reference != m.reference || previous.interval != m.interval;
+    boolean measurementChanged = referenceChanged || previous.sensitivity != m.sensitivity
+        || previous.correction != m.correction || previous.pairMode != m.pairMode
+        || previous.forkTap != m.forkTap || previous.advance != m.advance || previous.gap != m.gap
+        || previous.instrument != m.instrument || previous.swapped != m.swapped;
     config = m.copy();
-    muteUntil = 0;
-    generation++;
-    if (running && m.method == 2) strike();
+    if (measurementChanged) generation++;
+    // Preserve the reference-decay guard when only appearance/voice/update options change.
+    if (referenceChanged && m.method != 1 && (m.method == 0 || running)) strike();
+    else if (referenceChanged && m.method == 1) stopFork();
   }
 
   public void setPaused(boolean p) {
@@ -87,7 +99,8 @@ public final class AudioEngine implements AutoCloseable {
     if (recorder == null) {
       throw new IllegalStateException("Cannot open microphone / Nie można otworzyć mikrofonu");
     }
-    recorder.startRecording();
+    try { recorder.startRecording(); }
+    catch (RuntimeException error) { recorder.release(); recorder = null; throw error; }
     running = true;
     worker = new Thread(this::capture, "Stroik microphone");
     worker.start();
@@ -346,22 +359,27 @@ public final class AudioEngine implements AutoCloseable {
     Model m = config;
     int base = m.base();
     if (m.interval != 0 && base + m.semitones() > 108) {
-      ui.post(() -> listener.failed(m.t("Górna nuta poza zakresem.", "Upper note out of range.")));
+      setPaused(true);
+      post(generation, () -> listener.forkPaused(m.t(
+          "Kamerton wstrzymany: wybierz niższy dźwięk albo wyłącz współbrzmienia.",
+          "Fork paused: choose a lower target or turn consonance off.")));
       return;
     }
     long now = SystemClock.elapsedRealtime();
     if (m.method == 0 || m.method == 2) muteUntil = now + 3400;
     int playbackGeneration = generation;
+    int request = playbackEpoch.incrementAndGet();
     player.execute(() -> {
-      if (closed || generation != playbackGeneration) return;
+      if (closed || generation != playbackGeneration || request != playbackEpoch.get()) return;
+      try {
       short[] data =
           Dsp.fork(
               Model.hz(base, m.reference),
               m.interval == 0 ? 0 : Model.hz(base + m.semitones(), m.reference),
               44100);
       synchronized (this) {
-        if (closed || generation != playbackGeneration) return;
-        stopFork();
+        if (closed || generation != playbackGeneration || request != playbackEpoch.get()) return;
+        releaseFork();
         fork =
             new AudioTrack.Builder()
                 .setAudioAttributes(
@@ -378,8 +396,12 @@ public final class AudioEngine implements AutoCloseable {
                 .setBufferSizeInBytes(data.length * 2)
                 .setTransferMode(AudioTrack.MODE_STATIC)
                 .build();
-        fork.write(data, 0, data.length);
+        if (fork.write(data, 0, data.length) != data.length) throw new IllegalStateException("Incomplete fork buffer");
         fork.play();
+      }
+      } catch (RuntimeException error) {
+        setPaused(true);
+        post(playbackGeneration, () -> listener.forkPaused(m.t("Błąd odtwarzania kamertonu: ", "Fork playback failed: ") + error.getMessage()));
       }
     });
   }
@@ -417,6 +439,11 @@ public final class AudioEngine implements AutoCloseable {
   }
 
   public synchronized void stopFork() {
+    playbackEpoch.incrementAndGet();
+    releaseFork();
+  }
+
+  private void releaseFork() {
     if (fork != null) {
       try {
         fork.stop();

@@ -43,6 +43,24 @@ public final class Updater {
   }
 
   static byte[] fetch(String url, int max) throws Exception {
+    for (int attempt = 0; ; attempt++) {
+      try { return fetchOnce(url, max); }
+      catch (IOException error) {
+        if (attempt >= 2 || Thread.currentThread().isInterrupted()
+            || error instanceof HttpError && !((HttpError) error).temporary()) throw error;
+        Thread.sleep(400L << attempt);
+      }
+    }
+  }
+
+  private static final class HttpError extends IOException {
+    final int status;
+    HttpError(int value) { super("HTTP " + value); status = value; }
+    boolean temporary() { return status == 408 || status == 429 || status >= 500; }
+  }
+
+  private static byte[] fetchOnce(String url, int max) throws Exception {
+    long started = SystemClock.elapsedRealtime();
     URL u = new URL(url);
     for (int redirects = 0; redirects < 6; redirects++) {
       String host = u.getHost();
@@ -56,6 +74,7 @@ public final class Updater {
       c.setConnectTimeout(20000);
       c.setReadTimeout(30000);
       c.setInstanceFollowRedirects(false);
+      c.setUseCaches(false);
       c.setRequestProperty("User-Agent", "Stroik-Android/1.0");
       c.setRequestProperty("Cache-Control", "no-cache");
       try {
@@ -64,15 +83,18 @@ public final class Updater {
           u = new URL(u, c.getHeaderField("Location"));
           continue;
         }
-        if (status != 200) throw new IOException("HTTP " + status);
+        if (status != 200) throw new HttpError(status);
         try (InputStream in = c.getInputStream();
             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
           byte[] buffer = new byte[16384];
           int n;
           while ((n = in.read(buffer)) != -1) {
+            if (Thread.currentThread().isInterrupted() || SystemClock.elapsedRealtime() - started > 600000)
+              throw new java.io.InterruptedIOException("Download interrupted or timed out");
             if (out.size() + n > max) throw new IOException("Download too large");
             out.write(buffer, 0, n);
           }
+          if (c.getContentLengthLong() >= 0 && c.getContentLengthLong() != out.size()) throw new EOFException("Incomplete download");
           return out.toByteArray();
         }
       } finally {
@@ -80,6 +102,20 @@ public final class Updater {
       }
     }
     throw new IOException("Too many redirects");
+  }
+
+  private void log(String text, Exception error) {
+    try {
+      File file = new File(activity.getFilesDir(), "update.log");
+      if (file.length() > 1000000) {
+        File old = new File(activity.getFilesDir(), "update.previous.log");
+        if (old.exists()) old.delete();
+        file.renameTo(old);
+      }
+      try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true), java.nio.charset.StandardCharsets.UTF_8))) {
+        writer.println(new java.util.Date() + " " + text + (error == null ? "" : ": " + error));
+      }
+    } catch (IOException ignored) { }
   }
 
   public void check(boolean quiet) {
@@ -128,6 +164,7 @@ public final class Updater {
               () -> download(j));
         });
       } catch (Exception e) {
+        log("Update check failed", e);
         activity.runOnUiThread(() -> {
           busy = false;
           if (!quiet && activity.active)
@@ -182,6 +219,7 @@ public final class Updater {
             || archive.getLongVersionCode() <= installed.getLongVersionCode()
             || !sameSignatures(installed, archive))
           throw new IOException("APK package, version or certificate mismatch");
+        log("APK verified: version=" + archive.getLongVersionCode() + ", bytes=" + data.length + ", SHA-256=" + actual, null);
         activity.runOnUiThread(() -> {
           busy = false;
           if (!activity.active) return;
@@ -192,6 +230,7 @@ public final class Updater {
           }
         });
       } catch (Exception e) {
+        log("Download/install failed", e);
         file.delete();
         activity.runOnUiThread(() -> {
           busy = false;

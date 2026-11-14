@@ -146,12 +146,15 @@ public final class Model {
   }
 
   public int next() {
+    int highest = method == 1 || interval == 0 ? 108 : 108 - semitones();
     if (strings()) {
       int[] n = stringsMidi();
-      for (int i = 0; i < n.length - 1; i++) if (n[i] == base()) return n[i + 1];
+      for (int i = 0; i < n.length - 1; i++)
+        if (n[i] == base())
+          for (int j = i + 1; j < n.length; j++) if (n[j] <= highest) return n[j];
       return base();
     }
-    if (order == 0) return Math.min(108, base() + 1);
+    if (order == 0) return base() < highest ? base() + 1 : base();
     List<Integer> p = new ArrayList<>();
     p.add(anchor);
     int step = order == 2 ? 2 : 1;
@@ -162,7 +165,17 @@ public final class Model {
           if (v >= 21 && v <= 108) p.add(v);
         }
     int at = p.indexOf(base());
-    return at >= 0 && at + 1 < p.size() ? p.get(at + 1) : base();
+    if (at >= 0) for (int i = at + 1; i < p.size(); i++) if (p.get(i) <= highest) return p.get(i);
+    return base();
+  }
+
+  public static int nextNatural(int current, int direction) {
+    if (direction != -1 && direction != 1) throw new IllegalArgumentException("Direction");
+    for (int midi = current + direction; midi >= 21 && midi <= 108; midi += direction) {
+      int pitch = midi % 12;
+      if (pitch == 0 || pitch == 2 || pitch == 4 || pitch == 5 || pitch == 7 || pitch == 9 || pitch == 11) return midi;
+    }
+    return current;
   }
 
   public String guide() {

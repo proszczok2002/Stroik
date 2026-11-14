@@ -18,6 +18,22 @@ public final class CoreChecks {
       navigation.target = next;
     }
     require(navigation.next() == 108, "Navigation exceeded piano range");
+    int natural = 60;
+    for (int next : new int[] {62, 64, 65, 67, 69, 71, 72}) {
+      natural = Model.nextNatural(natural, 1);
+      require(natural == next, "White keys must include E-F and B-C");
+    }
+    for (int next : new int[] {71, 69, 67, 65, 64, 62, 60}) {
+      natural = Model.nextNatural(natural, -1);
+      require(natural == next, "Descending white keys");
+    }
+    require(Model.nextNatural(21, -1) == 21 && Model.nextNatural(108, 1) == 108, "White-key bounds");
+    navigation.interval = 1;
+    navigation.target = 101;
+    require(navigation.next() == 101, "Fifth exceeds C8");
+    navigation.anchor = 100;
+    navigation.order = 1;
+    require(navigation.next() == 99, "Alternate plan must skip invalid upper pairs");
     require(
         Dsp.level(110) > Dsp.level(440) && Dsp.level(440) > Dsp.level(1760),
         "Bounded pitch-dependent gain");

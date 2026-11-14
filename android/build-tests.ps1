@@ -12,5 +12,11 @@ function Check([string]$step){if($LASTEXITCODE -ne 0){throw "$step failed $LASTE
 & (Join-Path $JavaBin 'jar.exe') cf (Join-Path $stage 'classes.jar') -C (Join-Path $stage 'classes') .; Check 'Test jar'
 & (Join-Path $toolsDir 'd8.bat') --min-api 30 --lib $jar --classpath (Join-Path $main.FullName 'classes.jar') --output (Join-Path $stage 'dex') (Join-Path $stage 'classes.jar'); Check 'Test dex'
 & (Join-Path $JavaBin 'jar.exe') uf (Join-Path $stage 'unsigned.apk') -C (Join-Path $stage 'dex') classes.dex; Check 'Test package'
+$candidate=Get-ChildItem -LiteralPath (Join-Path $root 'releases') -File -Filter '*.apk' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if($candidate){
+    New-Item -ItemType Directory -Force -Path (Join-Path $stage 'assets') | Out-Null
+    Copy-Item -LiteralPath $candidate.FullName -Destination (Join-Path $stage 'assets\candidate.apk')
+    & (Join-Path $JavaBin 'jar.exe') uf (Join-Path $stage 'unsigned.apk') -C $stage assets; Check 'Local candidate test asset'
+}
 & (Join-Path $toolsDir 'zipalign.exe') -f 4 (Join-Path $stage 'unsigned.apk') (Join-Path $stage 'aligned.apk'); Check 'Test align'
 & (Join-Path $toolsDir 'apksigner.bat') sign --ks (Join-Path $root '.signing\stroik-release.jks') --ks-key-alias stroik --ks-pass ("file:"+(Join-Path $root '.signing\password.txt')) --out (Join-Path $root 'build\device-tests.apk') (Join-Path $stage 'aligned.apk'); Check 'Test sign'

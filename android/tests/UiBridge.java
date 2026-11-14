@@ -32,6 +32,17 @@ public final class UiBridge extends Instrumentation {
       String wanted = arguments.getString("text", "");
       String id = arguments.getString("id", "");
       String expectedPackage = arguments.getString("package", "");
+      if (arguments.containsKey("checkIndex")) {
+        List<AccessibilityNodeInfo> checks = new ArrayList<>();
+        for (AccessibilityNodeInfo node : nodes)
+          if (node.isCheckable() && (expectedPackage.isEmpty() || expectedPackage.equals(String.valueOf(node.getPackageName())))) checks.add(node);
+        int index = Integer.parseInt(arguments.getString("checkIndex"));
+        if (index < 0 || index >= checks.size() || !checks.get(index).performAction(AccessibilityNodeInfo.ACTION_CLICK))
+          throw new IllegalStateException("Visible checkable action refused");
+        SystemClock.sleep(700);
+        root = ui.getRootInActiveWindow(); nodes.clear();
+        if (root != null) collect(root, nodes);
+      }
       if (!wanted.isEmpty() || !id.isEmpty()) {
         List<AccessibilityNodeInfo> matches = new ArrayList<>();
         for (AccessibilityNodeInfo node : nodes) {

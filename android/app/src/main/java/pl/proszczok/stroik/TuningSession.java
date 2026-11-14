@@ -116,7 +116,13 @@ final class TuningSession implements AudioEngine.Listener {
         .putString("settings", model.json().toString())
         .apply();
     speak(model.spokenNote(next));
-    if (model.method != 1) audio.strike();
+  }
+
+  public void forkPaused(String text) {
+    audio.setPaused(true);
+    MainActivity activity = screen.get();
+    if (activity != null && activity.active) activity.forkPaused(text);
+    else speak(text);
   }
 
   public void failed(String text) {

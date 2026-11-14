@@ -1,29 +1,33 @@
-# Stroik Android 1.04 — candidate / kandydat
+# Stroik Android 1.05
 
 ## Polski
 
-Stroik Android 1.04 — kandydat do testów
+Stroik Android 1.05
 
-Trzy zakładki w jednej linii na dole: Stroik, Ustawienia, Pomoc. Instrument wybierasz z listy na stronie Stroik. Widok jest przed metodą strojenia.
+Trzy zakładki w jednym rzędzie na dole: Stroik, Ustawienia i Pomoc. Instrument wybierasz z listy na stronie Stroik. Wybrana zakładka ma wyraźny kolor i stan dostępności. Widok klasyczny lub dla początkujących jest przed metodą strojenia.
 
-Jeden przycisk mikrofonu przełącza Włącz/Wyłącz i podaje stan czytnikowi. Listy udostępniają bieżący wybór także po zwinięciu, a ich osobne etykiety nie są powtarzane w nawigacji TalkBack. „Sprawdź współbrzmienie” pozostaje w tym samym miejscu przy zmianie metody.
+Jeden przycisk Włącz/Wyłącz mikrofon podaje aktualny stan. Listy udostępniają bieżący wybór bez otwierania; osobne etykiety nie są kolejnymi elementami nawigacji TalkBack. Współbrzmienia pozostają w tym samym miejscu, a zmiana motywu zachowuje istniejące kontrolki i fokus.
 
-Domyślnie włączony odczyt głosowy w trybie wizualnym można odznaczyć w Ustawieniach. Przy pierwszym włączeniu grafiki pojawia się wskazówka ze strzałką. Opcja „Nie pozwalaj na autoblokadę ekranu” działa tylko dla otwartego okna. Włączony przez użytkownika nasłuch jest obsługiwany przez usługę z powiadomieniem i przyciskiem zatrzymania; po wygaszeniu ekranu wyniki odczytuje syntezator. Usunięcie aplikacji z ostatnich zadań zatrzymuje usługę. Wyjście do innej aplikacji samo nie kończy nasłuchu — zatrzymaj go przyciskiem lub w powiadomieniu.
+W Ustawieniach można wyłączyć odczyt wyników w trybie wizualnym (domyślnie włączony), włączyć utrzymywanie ekranu oraz ustawić aktualizacje. Pierwsza wskazówka przy grafice pokazuje, gdzie jest opcja głosu. Ręcznie wywołana zmiana nuty lub stanu mikrofonu nadal ma komunikat. Przy wygaszonym ekranie wyniki odczytuje syntezator systemowy. Nasłuch uruchamia użytkownik; działa on w usłudze z powiadomieniem i przyciskiem zatrzymania. Usunięcie aplikacji z ostatnich zadań kończy nasłuch.
 
-Częstotliwość A ma suwak 390–466 Hz, krok dostępności 0,1 Hz i wpis liczbowy po dwukrotnym stuknięciu. Z klawiatury Enter otwiera edycję. Alt+N / Ctrl+N to następna nuta; na liście nut góra/dół zmieniają cel o cały ton, lewo/prawo o półton. Aplikacja ogłasza samą nazwę nuty. Kamerton ma mocniejszy dół i łagodniejszą górę; skuteczność zależy od głośnika.
+Częstotliwość A: suwak 390–466 Hz, krok dostępności 0,1 Hz; podwójne stuknięcie lub Enter otwiera pole liczbowe. Z klawiatury na liście nut góra/dół wybiera białe klawisze C D E F G A H C; lewo/prawo wszystkie półtony. Alt+N / Ctrl+N wybiera następny cel według planu. Alt+U powtarza nutę w trybie ręcznym albo wstrzymuje/wznawia zaznaczony automat.
 
-Telefon jest obecnie niedostępny. Kod i APK skompilowano, testy DSP oraz logiki nut przeszły; nowych testów TalkBack, suwaka, usługi mikrofonu, wygaszonego ekranu ani aktualizatora nie wykonano. Wyniki 1.03 nie są wynikami 1.04. Wcześniejsze ostrzeżenie Play Protect pozostaje niewyjaśnione.
+Kwinta od c razkreślnego gra jednocześnie c razkreślne i g razkreślne; oktawa c razkreślne i c dwukreślne. Wybrana nuta jest dolną nutą pary, dlatego kwinta od g razkreślnego to g razkreślne i d dwukreślne. Zmiana współbrzmienia, nuty, oktawy lub A od razu odświeża dźwięk. Poza zakresem kamerton wstrzymuje automat zamiast powtarzać błąd. Korekta głośności wzmacnia dół i łagodzi górę; głośnik nadal ma wpływ na brzmienie.
+
+Aktualizator ponawia chwilowe błędy sieci, sprawdza sumę SHA-256, pakiet, wersję i podpis, a instalację zatwierdzasz w systemowym oknie Androida. Nie zmienia to kanału Windows. Testy dostępności kontrolek, audio i cyklu życia są odrębne od odsłuchu TalkBack przez człowieka oraz strojenia prawdziwego instrumentu. Szczegółowy zakres prób jest w android/DEVICE_TESTS.md.
 
 ## English
 
-Stroik Android 1.04 — test candidate
+Stroik Android 1.05
 
-Three bottom tabs in one row: Tuner, Settings, Help. Instrument is a list on the Tuner page. View selection precedes tuning method.
+Three bottom tabs in one row: Tuner, Settings and Help. Instrument is a dropdown on Tuner. The selected tab has clear color and accessibility state. Classic or Beginner view precedes tuning method.
 
-One microphone toggle changes Start/Stop and exposes its state. Collapsed dropdowns expose their selected value; separate labels are skipped during TalkBack traversal. Check consonance remains present when changing methods.
+One Start/Stop microphone button exposes its current state. Collapsed lists expose the selected value; separate labels are skipped during TalkBack navigation. Consonance stays in place. Theme changes preserve existing controls and focus.
 
-Spoken feedback in visual mode is enabled by default and can be disabled in Settings. A first-use graphics hint points to the option. Keep screen awake applies only to the visible window. User-started capture uses a foreground service with a stop notification; screen-off readings use system speech. Removing the app from Recents stops the service. Switching to another app does not by itself stop capture: use the toggle or notification.
+Settings includes spoken results in visual mode (on by default), keep screen awake and update preferences. The first graphics hint points to the speech option. Explicit note and microphone actions still give feedback. With the screen off, results use system TTS. Listening is user-started and runs in a foreground service with a stop notification. Removing the app from Recents stops capture.
 
-A reference uses a 390–466 Hz slider, 0.1 Hz accessibility adjustments, and numeric entry on double tap or Enter. Alt+N / Ctrl+N advances. On the note list, Up/Down move a whole tone and Left/Right one semitone. App feedback contains the note name alone. Bounded fork gain strengthens low notes and softens high ones; speaker response still matters.
+Concert A: 390–466 Hz slider, 0.1 Hz accessibility adjustment; double tap or Enter opens numeric entry. On the note list, keyboard Up/Down select white keys C D E F G A B C; Left/Right move through all semitones. Alt+N / Ctrl+N advances according to the plan. Alt+U repeats a manual strike or pauses/resumes selected automatic playback.
 
-The phone is unavailable. Source/APK compilation and DSP/note-logic checks passed; new TalkBack, slider, foreground microphone, screen-off and updater paths have not been device-tested. Previous 1.03 results are not evidence for 1.04. The earlier Play Protect warning remains unexplained.
+A fifth from C4 simultaneously plays C4 and G4; an octave plays C4 and C5. The selected note is the lower note, so a fifth from G4 is G4 and D5. Changing consonance, note, octave or concert A immediately refreshes playback. Invalid upper notes pause the fork instead of repeating errors. Bounded gain strengthens low and softens high notes; speaker response still matters.
+
+The updater retries temporary network failures and verifies SHA-256, package, version and certificate. Android's system installer asks for confirmation. Windows uses a separate channel. Structural accessibility, audio and lifecycle checks are separate from human TalkBack listening and real-instrument accuracy. See android/DEVICE_TESTS.md for the exact evidence.

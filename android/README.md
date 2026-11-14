@@ -1,10 +1,10 @@
-# Stroik Android 1.04 — wersja testowa
+# Stroik Android 1.05 — testy urządzenia
 
-Trzy zakładki w jednej linii na dole: Stroik, Ustawienia i Pomoc; instrument jest listą na stronie Stroik. Dodano jeden przełącznik mikrofonu, suwak Hz z edycją liczbową, głos w grafice, utrzymywanie ekranu i usługę nasłuchu przy wygaszonym ekranie.
+Aktualny kandydat przenosi zaległe poprawki obsługi, dostępności i wyglądu oraz poprawki kamertonu z Windows 1.16/1.17. Trzy dolne zakładki są w jednym rzędzie; instrument to lista na stronie Stroik. Jest jeden przełącznik mikrofonu, suwak Hz z wpisem liczbowym, opcje głosu i utrzymania ekranu, nasłuch w tle i TTS po wygaszeniu ekranu. Zmiana motywu zachowuje kontrolki i fokus.
 
-[Testowy APK 1.04](https://github.com/proszczok2002/Stroik/releases/download/android-v1.04/Stroik-Android-1.04.apk) · [Wydanie testowe](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.04).
+Testy na Pixelu 11 z Androidem 17 i włączonym Google TalkBack trwają. Sprawdzono już fokus PL/EN, odtwarzanie ekranów, strukturę interfejsu oraz rzeczywisty mikrofon i TTS przy wygaszonym ekranie. Pełny zakres i ograniczenia opisuje [raport urządzenia](DEVICE_TESTS.md). Kandydat jest lokalnie w `android/releases`; nie opublikowano jeszcze nowego stabilnego APK, a manifest pozostaje na 1.03 do zakończenia kontroli.
 
-**Telefon jest obecnie niedostępny.** Kod, APK i testy urządzenia skompilowano; testy sygnałów i logiki przeszły. Nowych ścieżek mikrofonu w tle, TalkBack, suwaka i aktualizatora nie sprawdzono na urządzeniu. Automatyczny manifest pozostaje na 1.03 do testu telefonu. Wcześniejsze ostrzeżenie Play Protect pozostaje niewyjaśnione. [Zakres prób](DEVICE_TESTS.md).
+Starszy [kandydat 1.04](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.04) pozostaje w historii i nie jest bieżącym buildem do prób. Pomysł osobnej zakładki Pianino jest zapisany w [POMYSLY.md](../POMYSLY.md), poza zakresem tej poprawki.
 
 ## Poprzednie wydanie 1.03
 

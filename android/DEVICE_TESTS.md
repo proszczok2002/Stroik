@@ -103,3 +103,22 @@ The candidate is a separate prerelease; android/update.json remains on stable 1.
 ### Published 1.04 candidate identity
 
 Source/tag: android-v1.04 at 6e0df7495ff9f8b5b3a2a67af04924100aa732f4. Public APK: 74395 bytes, SHA-256 AF7075CBEC89B2172E46C026465E3C0C8C7AACCE01166A441D2F0245885DA82B. Its checksum and APK were downloaded anonymously and matched local output. The signing certificate remains 3a07196ac981d8a1d5dda9f2fb140e1c47226128edc25866e2c37a8f65ab1522. Android source CI 43246043983 and tag CI 43246771342 passed. These runs compile/test core code, not the unavailable physical phone. The release is marked prerelease and does not change the Android automatic manifest (1.03/103). GitHub latest is the separately verified Windows v1.0.15.
+
+## 1.05 / 105 — Pixel 11, 14 November 2026, validation in progress
+
+This continues the untested 1.04 candidate and brings Windows 1.16/1.17 note/fork fixes to Android. The actual connected device identifies as Pixel 11 (cubs), Android 17 / API 37. Google TalkBack remains enabled throughout instrumentation; the owner's other accessibility services were not changed.
+
+The current installed candidate is **78492 bytes**, SHA-256 **80CED060066A4F52FE4A33F1CCA72A141D2E4F6EA8988CD2A50C013AACA99FFF**. Its production certificate is unchanged. A fresh first installation used ADB because this phone had no Stroik package. The later repaired candidate used the actual Android package-install confirmation. Play Protect requested a scan and then displayed “Ta aplikacja wygląda bezpiecznie” and “Możesz ją zainstalować”; installation continued through its Install button. No protection block was bypassed. The APK pulled from the installed package matches the local candidate hash; all model settings, the signing certificate and a saved data marker were retained. This was a local same-version candidate installation, not an end-to-end GitHub updater test or evidence for all future Play Protect decisions.
+
+A real focus regression reproduced lost checkbox focus after theme-triggered Activity recreation. The repaired theme changes colors/tints in place instead of replacing controls. Passed on the installed repaired candidate:
+
+- 183 PL/EN focus assertions, including method, consonance, targets/octaves, tabs, instrument, ukulele tuning, language and both in-place theme changes.
+- 983 lifecycle assertions across repeated three-page recreation and both themes.
+- 2185 interface assertions covering labels, control geometry and state; 6 accessibility-focus events and 14 click events are separate counts.
+- 6 screen-off assertions: actual device sleep, foreground AudioRecord still recording, system TTS starting with graphics on and visual speech off, and recording release on Stop. TTS.isSpeaking does not establish human pronunciation or speaker audibility.
+
+The first 1.05 candidate separately passed 60 fork assertions (actual AudioTrack replacement after real UI settings, synthesis-component checks and white-key dispatch), 48 interaction assertions and 7 audio assertions. These scenarios still need to be rerun on the repaired candidate. A synthetic keyboard test initially failed because it did not establish input focus while Android was in touch mode and left old engine configuration before its second language; the setup was fixed without ignoring assertions. Production keyboard behavior still uses normal focus. One UI-bridge test process crashed when a second UiAutomation connection was attempted concurrently; this was not a production Stroik crash, and subsequent checks run sequentially.
+
+After the successful screen-off test the phone is locked. An interaction attempt while keyguard was showing reported “Consonance disappeared”; it does not establish a failure in the unlocked app. The owner was asked to unlock the phone. Remaining: rerun fork/interaction/audio, actual TalkBack gestures, final screenshots and crash-buffer review. Human speech listening, real instrument accuracy and headphone monitoring remain separate. No 1.05 release or updater-manifest publication has happened yet.
+
+Polski: bieżąca 1.05 jest zainstalowana przez systemowe potwierdzenie, podpis/ustawienia/hash zgodne. Naprawiono odtworzoną stratę fokusu przy zmianie motywu. Na poprawionej kompilacji przeszły testy fokusu, odtwarzania stron, struktury dostępności i rzeczywistego nasłuchu/TTS przy wygaszonym ekranie. Po tej ostatniej próbie telefon jest zablokowany; dalsze testy wymagają odblokowania. Nie jest to jeszcze zakończone wydanie ani test pełnej aktualizacji z GitHuba.
