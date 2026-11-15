@@ -12,6 +12,14 @@ public final class CoreChecks {
     navigation.english = false;
     require(navigation.voiceInVisual && !navigation.keepScreenOn, "Speech and screen defaults");
     require(navigation.spokenNote(67).equals("g razkreślne"), "Concise next-note name");
+    require(
+        navigation.targetLabel(67).contains("pierwszym i drugim")
+            && navigation.nextAnnouncement(67).contains("pierwszym i drugim"),
+        "Position is missing from note or beginner announcement");
+    navigation.beginner = false;
+    require(
+        navigation.nextAnnouncement(67).equals("g razkreślne"),
+        "Classic announcement must stay concise");
     navigation.target = navigation.anchor = 67;
     for (int next = 68; next <= 108; next++) {
       require(navigation.next() == next, "Ascending fork navigation skipped a note");
@@ -27,7 +35,8 @@ public final class CoreChecks {
       natural = Model.nextNatural(natural, -1);
       require(natural == next, "Descending white keys");
     }
-    require(Model.nextNatural(21, -1) == 21 && Model.nextNatural(108, 1) == 108, "White-key bounds");
+    require(
+        Model.nextNatural(21, -1) == 21 && Model.nextNatural(108, 1) == 108, "White-key bounds");
     navigation.interval = 1;
     navigation.target = 101;
     require(navigation.next() == 101, "Fifth exceeds C8");

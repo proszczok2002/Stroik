@@ -4,6 +4,7 @@ import android.content.*;
 import android.media.AudioManager;
 import android.os.*;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import java.lang.ref.WeakReference;
 import java.util.Locale;
 
@@ -18,6 +19,10 @@ final class TuningSession implements AudioEngine.Listener {
   boolean serviceActive, ready;
   private final TextToSpeech speech;
   private String pendingSpeech = "";
+  private final Handler main = new Handler(Looper.getMainLooper());
+  private int speechEpoch;
+  private String utterance = "";
+  final MediaControls media;
 
   static synchronized TuningSession get(Context context) {
     if (instance == null) instance = new TuningSession(context.getApplicationContext());
@@ -29,17 +34,36 @@ final class TuningSession implements AudioEngine.Listener {
     audio =
         new AudioEngine(
             model, this, (AudioManager) context.getSystemService(Context.AUDIO_SERVICE));
+    media = new MediaControls(context, this);
     speech =
         new TextToSpeech(
             context,
             status -> {
               ready = status == TextToSpeech.SUCCESS;
               if (ready && !pendingSpeech.isEmpty()) speak(pendingSpeech);
+              else if (!ready) audio.speechFinished();
             });
+    speech.setOnUtteranceProgressListener(
+        new UtteranceProgressListener() {
+          public void onStart(String id) {}
+
+          public void onDone(String id) {
+            speechDone(id);
+          }
+
+          public void onError(String id) {
+            speechDone(id);
+          }
+
+          public void onStop(String id, boolean interrupted) {
+            speechDone(id);
+          }
+        });
   }
 
   void attach(MainActivity activity) {
     screen = new WeakReference<>(activity);
+    media.setAvailable(true);
   }
 
   void detach(MainActivity activity) {
@@ -57,10 +81,26 @@ final class TuningSession implements AudioEngine.Listener {
 
   void speak(String value) {
     pendingSpeech = value;
+    audio.holdForSpeech();
     if (!ready) return;
     speech.setLanguage(model.english ? Locale.US : new Locale("pl"));
-    speech.speak(value, TextToSpeech.QUEUE_FLUSH, null, "stroik");
+    speech.setSpeechRate((float) model.speechRate);
+    utterance = "stroik-" + (++speechEpoch);
+    String id = utterance;
+    if (speech.speak(value, TextToSpeech.QUEUE_FLUSH, null, id) == TextToSpeech.ERROR)
+      speechDone(id);
+    // A dead TTS engine must not block the microphone indefinitely.
+    main.postDelayed(() -> speechDone(id), 120000);
     pendingSpeech = "";
+  }
+
+  private void speechDone(String id) {
+    main.post(() -> {
+      if (utterance.equals(id)) {
+        utterance = "";
+        audio.speechFinished();
+      }
+    });
   }
 
   void start() {
@@ -76,6 +116,8 @@ final class TuningSession implements AudioEngine.Listener {
 
   void stop() {
     pendingSpeech = "";
+    utterance = "";
+    speechEpoch++;
     speech.stop();
     audio.stop();
     serviceActive = false;
@@ -86,6 +128,37 @@ final class TuningSession implements AudioEngine.Listener {
   void state() {
     MainActivity activity = screen.get();
     if (activity != null) activity.microphoneState();
+    media.refresh();
+  }
+
+  public void playbackChanged() {
+    media.refresh();
+  }
+
+  boolean playing() {
+    MainActivity activity = screen.get();
+    return activity != null && activity.active
+        ? activity.playbackActive()
+        : audio.running() || audio.forkPlaying();
+  }
+
+  void toggleFromMedia() {
+    MainActivity activity = screen.get();
+    if (activity != null && activity.active) activity.magicTap();
+    else if (audio.running() || audio.forkPlaying()) stop();
+    else if (model.method == 0 && !model.forkTap) {
+      audio.strike();
+      media.refresh();
+    } else
+      speak(
+          model.t("Otwórz Stroik, aby włączyć mikrofon.", "Open Stroik to start the microphone."));
+  }
+
+  void endSequence() {
+    audio.setPaused(true);
+    stop();
+    MainActivity activity = screen.get();
+    if (activity != null) activity.sequenceEnded();
   }
 
   public void result(String text) {
@@ -107,7 +180,14 @@ final class TuningSession implements AudioEngine.Listener {
       return;
     }
     int next = model.next();
-    if (next == model.base()) return;
+    if (next == model.base()) {
+      endSequence();
+      speak(
+          model.t(
+              "Koniec wybranej kolejności. Strojenie zatrzymane.",
+              "End of selected order. Tuning stopped."));
+      return;
+    }
     model.target = next;
     audio.configure(model);
     context
@@ -115,7 +195,7 @@ final class TuningSession implements AudioEngine.Listener {
         .edit()
         .putString("settings", model.json().toString())
         .apply();
-    speak(model.spokenNote(next));
+    speak(model.nextAnnouncement(next));
   }
 
   public void forkPaused(String text) {

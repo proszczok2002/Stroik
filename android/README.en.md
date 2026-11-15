@@ -1,25 +1,31 @@
-# Stroik Android 1.05
+# Stroik Android 1.06
 
-[Download APK 1.05](https://github.com/proszczok2002/Stroik/releases/download/android-v1.05/Stroik-Android-1.05.apk) · [Release and SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.05) · [Polski](README.md)
+[Download APK 1.06](https://github.com/proszczok2002/Stroik/releases/download/android-v1.06/Stroik-Android-1.06.apk) · [GitHub Release](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.06) · [PL](README.md) / [EN](README.en.md)
 
-This version brings the pending interaction, accessibility and visual fixes plus Windows 1.16/1.17 fork fixes. Three bottom tabs share one row; Instrument is a dropdown on Tuner. It includes one microphone toggle, an Hz slider with a visible value and numeric entry, speech and keep-screen options, foreground capture and screen-off TTS. Theme and section-visibility changes preserve controls and focus.
+Fork mode has no microphone button or separate microphone-state navigation stop. Optional acoustic double-tap listening uses its own checkbox. Reaching the end of the selected order stops all capture and playback, including hybrids and with automatic advance disabled.
 
-The exact APK was installed and checked on Pixel 11 with Android 17 and Google TalkBack: 183 PL/EN focus assertions, 983 lifecycle, 2185 interface, 48 interaction, 14 voice events, 60 fork, 7 audio and 6 screen-off checks. Play Protect scanning and system installation passed, retaining settings, data and signing certificate. See [device evidence](DEVICE_TESTS.md) for scope and limits. Natural gestures and human TalkBack listening, real instrument accuracy and headphones remain separate checks. The local installation is not reported as an end-to-end GitHub update.
+Every numeric setting uses a slider with its current value. Drag or use TalkBack adjustment gestures; double tap or Enter opens numeric keyboard entry. Out-of-range entries stay open for correction. Settings includes Stroik screen-off speech speed: 0.5–3, default 1. This does not change TalkBack speed. The alternating speaker fork waits for the synthesizer's actual utterance-completion callback instead of estimating speech duration.
 
-The 1.04 candidate remains a historical prerelease. The separate Piano-tab suggestion is recorded in [POMYSLY.md](../POMYSLY.md), outside this fix.
+Piano note options include positions relative to black-key groups. Next note also announces position in Beginner view; Classic stays concise. Accessibility traversal is ordered and the result field no longer takes editing focus. Natural flicks on Motorola and Xiaomi still need user confirmation.
 
-## Previous release 1.03
+TalkBack two-finger double tap uses standard media controls: microphone in Electronic, playback in Fork, both in Hybrid. Starting the microphone with the app closed requires opening it. Gesture routing depends on TalkBack settings and active media; system Play/Pause events were checked on Pixel, while the natural gesture needs a separate trial.
 
-Native Android 11+ tuner for blind, partially sighted and sighted musicians, using standard controls and Polish/English UI. [Polski](README.md).
+Enabled graphics sit above scrolling settings: a semicircular cents gauge and a keyboard marking the selected note. Graphics add no TalkBack stops. Guides and feedback are available in Polish and English.
 
-[Download APK 1.03](https://github.com/proszczok2002/Stroik/releases/download/android-v1.03/Stroik-Android-1.03.apk) · [Release and SHA-256](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.03).
+In-app guide: [guide.en.txt](app/src/main/assets/guide.en.txt). [Device evidence / Raport urządzenia](DEVICE_TESTS.md).
 
-**1.03 accessibility:** method, consonance and instrument changes preserve controls instead of rebuilding the screen. Tabs keep their identity; language/theme changes restore the corresponding control. Numeric labels/hints no longer mask entered values. POCO checks passed 198 PL/EN focus assertions, 1103 lifecycle assertions, 1831 interface checks and 7 audio checks. System installation from the local APK retained settings. Human TalkBack listening/gestures are separate; a full GitHub update to 1.03 was not tested. The earlier Play Protect warning remains unexplained. [Device report](DEVICE_TESTS.md).
+## Build / Budowanie
 
-See [in-app guide](app/src/main/assets/guide.en.txt). Features: fork, microphone tuner, hybrids, instruments/octaves, fifth/octave checks, JSON profiles, headphone monitoring, manual correction, graphics, support and credits.
+Windows, JDK 17+, Android SDK Platform 36 / Build Tools 36.0.0. No external libraries / bez bibliotek zewnętrznych.
 
-Updates use this repository's `android/update.json`. Android releases use `android-v1.0` and `android-v1.01` tags and are not marked as the latest Windows release. Installation requires Android's system confirmation. Package `pl.proszczok.stroik`, increasing versionCode and an unchanged signing certificate are required. Do not uninstall before updating if you want to retain settings.
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File android/build.ps1 -Sdk 'C:\Android\Sdk' -JavaBin 'C:\Java\bin'
+```
 
-Build with Windows, JDK 17+ (locally JDK 25), Android SDK Platform 36 and Build Tools 36.0.0. No external libraries. Run `android/build.ps1 -Sdk <sdk> -JavaBin <jdk-bin>`. The private signing key and password are created in ignored `android/.signing`; preserve a secure backup for future updates. `-Ci` uses a separate throwaway signing key. Outputs go to `android/releases`; old release files are archived under the project-root `niepotrzebne` folder.
+PL: Prywatny klucz i hasło w ignorowanym android/.signing muszą być zachowane do kolejnych aktualizacji. Nie publikować. Opcja -Ci korzysta z osobnego klucza do testów. Bieżące pliki są w android/releases; stare buildy zachowuje główny folder niepotrzebne.
 
-Device evidence and test limits are recorded in [DEVICE_TESTS.md](DEVICE_TESTS.md); the local work log is the root `STAN_PRAC.md`. Structural checks do not replace actual TalkBack speech and gesture testing.
+EN: Preserve the private key/password in ignored android/.signing for compatible updates; never publish them. -Ci uses a separate test key. Current files are in android/releases; old builds are archived in the project-root niepotrzebne folder.
+
+PL: Aktualizacje korzystają z android/update.json. Weryfikowane są SHA-256, pakiet, wersja i podpis. Instalacja wymaga systemowego potwierdzenia Androida. Nie odinstalowuj aplikacji przed aktualizacją. Kanał Windows pozostaje oddzielny.
+
+EN: Updates use android/update.json with SHA-256, package, version and certificate verification. Installation requires Android system confirmation. Do not uninstall before updating. Windows uses a separate release channel.

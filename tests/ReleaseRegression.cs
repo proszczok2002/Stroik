@@ -89,7 +89,8 @@ internal static class ReleaseRegression
                     var message = Message.Create(window, 0x100, (IntPtr)key, IntPtr.Zero);
                     if (!Field<NoteKeyFilter>(form, "_noteKeyFilter").FilterKey(ref message, Keys.None)) throw new Exception($"Native arrow {key} was not handled (open={open}).");
                     CheckTone(expected);
-                    if (target.AccessibleDescription != NoteCatalog.Spoken(expected, english)) throw new Exception("Missing immediate selected-note description.");
+                    string spoken = NoteCatalog.Spoken(expected, english) + ": " + KeyboardGuide.Position(expected, english);
+                    if (target.AccessibleDescription != spoken) throw new Exception("Missing selected-note position description.");
                     if (target.DroppedDown != open) throw new Exception("Arrow changed dropdown state.");
                 }
                 void CheckTone(int expected)
@@ -105,6 +106,20 @@ internal static class ReleaseRegression
                     if (measured is null || Math.Abs(measured.Value.Frequency - hz) > 0.6)
                         throw new Exception($"Selected MIDI {expected}, synthesized {measured?.Frequency} Hz instead of {hz} Hz.");
                 }
+            }
+            foreach (bool english in new[] {false, true})
+            foreach (TunerView view in new[] {TunerView.Classic, TunerView.Beginner})
+            {
+                Call(form, "ApplySettings", new Preferences { Instrument = InstrumentKind.Piano,
+                    TargetMidi = 60, English = english, View = view, AutomaticUpdates = false });
+                if (!target.SelectedItem!.ToString()!.Contains(KeyboardGuide.Position(60, english)))
+                    throw new Exception("Piano note option has no physical key position.");
+                Call(form, "SelectTarget", 61);
+                Call(form, "AnnounceTarget");
+                string expected = NoteCatalog.Spoken(61, english);
+                if (view == TunerView.Beginner) expected += ": " + KeyboardGuide.Position(61, english);
+                if (target.AccessibleDescription != expected)
+                    throw new Exception("Wrong classic/beginner target announcement.");
             }
             foreach (Consonance kind in new[] {Consonance.Fifth, Consonance.Octave})
             {

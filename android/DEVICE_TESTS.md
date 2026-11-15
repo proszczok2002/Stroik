@@ -149,3 +149,39 @@ Final screenshots were inspected for one-row bottom navigation, readable light/d
 No headphones were connected. Real instrument/noise accuracy, headphone monitoring and a complete GitHub download-to-higher-version system update remain separate from the passing local installer and audio tests. Logs/screenshots are retained locally under the ignored device-results folder. The stable Android manifest will be updated only after public APK/hash verification; Windows latest stays separate.
 
 Polski: końcowy APK EB2ACC... przeszedł całą powyższą serię na Pixelu 11 z włączonym TalkBackiem, z zachowaniem danych po systemowej instalacji. Naprawiono fokus przy motywie i zmianie wysokości sekcji, podwójne przystanki list, odświeżanie kwint/oktaw, zakres kamertonu oraz kontrast i widoczną wartość Hz. Naturalne gesty/odsłuch człowieka, prawdziwy instrument, słuchawki i pełna aktualizacja GitHub do wyższej wersji nie są uznane za przetestowane.
+
+
+## 1.06 / 106 — Pixel 11, 15 November 2026
+
+The final local production APK is **82589 bytes**, SHA-256 **D25A0BAE04BA84F4B1A32A004B9889D88DC2E55AA5EC4379289B79DA56559968**. Device: Pixel 11 (cubs), Android 17 / API 37, connected through wireless debugging. Google TalkBack and the owner's other accessibility services stayed enabled. The installed package was pulled and its hash matched this file. The production certificate remains **3a07196ac981d8a1d5dda9f2fb140e1c47226128edc25866e2c37a8f65ab1522**.
+
+The earlier 1.05 installation was upgraded to a 1.06 candidate using Android's visible confirmation; subsequent local candidates also used the system installer. Play Protect scan reported the app safe before Install was selected. No security block was bypassed. Settings, certificate and saved data marker were retained; profile comparison accounts for the new default speechRate field through the same model migration used by production. Only the separate test harness was replaced using ADB. This is a system-confirmed local version upgrade, not a complete GitHub-updater round trip.
+
+Passed on this exact APK:
+
+| Scenario | Assertions | Scope |
+| --- | ---: | --- |
+| Requested changes PL/EN | 174 | Numeric ranges, note positions, top graphics, hidden fork microphone control, MediaController and system AudioManager Play/Pause for all four methods; finished manual tone becomes Paused and can be repeated; end-of-plan stops all methods with advance on/off |
+| Numeric dialogs / traversal PL/EN | 3172 | Every visible numeric slider opens an editable dialog, rejects invalid input and saves a valid number; every explicit traversal chain reaches the heading without cycles or hidden references |
+| Focus PL/EN | 177 | Actual accessibility focus retained across method/interval/instrument/target/tab/theme changes |
+| Lifecycle | 863 | Repeated page recreation, preserved model and both themes |
+| Interaction | 48 | Native control semantics, collapsed values, reference range, microphone toggle, tabs and shortcuts |
+| State/voice events | 14 | Immediate microphone-off feedback and explicit Next note with muted automatic visual readings |
+| Fork | 60 | Actual AudioTrack replacement after UI settings, paired synthesis, arrow dispatch and range pause |
+| Audio | 7 | AudioRecord/AudioTrack start/stop and speaker-reference capture guard |
+| Interface | 1869 | Labels, geometry, native states and 4 focus / 14 click events (event counts are separate) |
+
+A slow real system-TTS utterance with speed 0.5 took approximately 7.5 seconds in the timing scenario. A deliberately overdue repeat deadline did not trigger the fork during speech; playback resumed after the actual completion callback. Screen-off evidence is recorded below.
+
+One earlier test run crashed in Android ViewGroup.buildOrderedChildList while accessibility nodes were being built simultaneously by the instrumentation thread and the UI/TalkBack path. The test harness now builds all direct nodes on the UI thread. Requests then passed twice, sliders and interaction passed again, without suppressing services. This failed run is retained in local logs; it is not counted as a passing run or proof of general device reliability.
+
+Light/dark screenshots were inspected: the entire semicircular gauge and marked keyboard sit above the scroll container, bottom tabs remain on one row, contrast and selected-note marking are readable. Graphics are skipped by accessibility traversal. No replacement logo was created.
+
+**Limits:** the remote swipe experiment did not produce usable natural TalkBack traversal (only heading focus), so it failed and is not counted as proof that the reported Motorola/Xiaomi loop is resolved. Explicit ordering, focus retention and dialog actions passed independently. Natural two-finger double tap, every right/left flick, human pronunciation/listening, Motorola G72/Xiaomi behavior, real instrument accuracy and physical headphones remain user/device checks. Standard media events passed; that is distinct from the natural TalkBack gesture. No other media player was used in the media-routing test. When the app is closed, starting microphone capture still requires opening it under Android microphone restrictions.
+
+PL: Na dokładnym APK przeszły powyższe próby suwaków/dialogów, opisów nut, fokusu, cyklu życia, zdarzeń, sterowania mediami i audio. Systemowa instalacja zachowała ustawienia oraz podpis. Grafika jest widoczna bez przewijania. Naturalne gesty i odsłuch człowieka oraz zgłoszona pętla na Moto/Xiaomi wymagają osobnego potwierdzenia; nie zastępujemy tego testem struktury. Pełny updater GitHub do wyższej wersji pozostaje odrębny od lokalnego potwierdzenia instalacji i pobierania publicznego APK.
+
+
+Screen-off final check: **65 assertions passed** on the same APK. The phone was physically put to sleep in alternating-speaker hybrid mode with graphics enabled, visual speech muted and application speech rate 0.5. Foreground AudioRecord kept recording; system TTS started; a forced overdue fork deadline did not overlap the utterance; the fork resumed after completion; Stop released capture/service. The phone returned to the keyguard afterwards. This observes TTS/AudioTrack state, not human audibility or pronunciation.
+
+Polski: próba przy fizycznie wygaszonym ekranie zakończona — 65 asercji PASS, mikrofon działał, wolny TTS dokończył wypowiedź przed kamertonem, następnie odtwarzanie wróciło, a Stop zwolnił zasoby. Telefon po próbie jest zablokowany.

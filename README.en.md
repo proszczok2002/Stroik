@@ -1,6 +1,6 @@
-# Stroik 1.17
+# Stroik 1.18
 
-[Native Android 1.05](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.05) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
+[Native Android 1.06](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.06) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -136,3 +136,8 @@ Pitch detection uses YIN, audio input uses Windows waveIn, and accessibility ann
 - To repeat the same note, clear automatic strikes and press Alt+U or Strike tuning fork. The separate piano-tab suggestion has been recorded for later design; it is not part of this fix.
 
 PCM tests after actual UI events cover fifths, octaves, Off, A=435/440 and manual/automatic fork modes. Listening on the affected computer and NVDA were not tested. This is a Windows fix.
+
+
+## Changes in 1.18
+
+Piano key positions are included in note-list options. Beginner target changes also announce position; Classic keeps the short note name. For example, G4 is the white key between the first and second black keys of a three-key group. Descriptions include black keys.

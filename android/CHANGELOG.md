@@ -1,5 +1,12 @@
 # Android changelog / Historia zmian Android
 
+## 1.06 / 106 — 2026-11-15
+
+- PL: Suwaki wszystkich ustawień liczbowych z dialogiem numerycznym; prędkość mowy 0,5–3 i oczekiwanie kamertonu na koniec wypowiedzi TTS. Zatrzymanie wszystkich zasobów na końcu planu. Bez przycisku mikrofonu w kamertonie i podwójnego przystanku stanu/przycisku.
+- EN: Sliders with numeric dialogs for all numeric settings; speech speed 0.5–3 and actual TTS completion gating. Stop all resources at plan end. Hide fork-mode microphone button and redundant status navigation stop.
+- PL/EN: Piano positions within note options and beginner Next announcements; explicit acyclic accessibility traversal, read-only result without editing focus; standard media-session start/stop; fixed top gauge/keyboard.
+- Device evidence and remaining natural-gesture / Motorola / Xiaomi checks: DEVICE_TESTS.md. No logo change.
+
 ## 1.05 / 105 — 2026-11-14
 
 - PL: Zaległe zmiany 1.04 przetestowano na Pixelu 11 (Android 17, Google TalkBack). Naprawiono utratę fokusu przy zmianie motywu — kolory są aktualizowane bez odtwarzania kontrolek. Wybrana dolna zakładka ma kontrastowy kolor i stan dostępności.

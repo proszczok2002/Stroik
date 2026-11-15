@@ -6,7 +6,7 @@ Bottom buttons open Tuner, Settings and Help in one row. Use TalkBack gestures t
 Methods
 Tuning fork plays a decaying reference. Enable automatic strikes and set an interval or use Strike tuning fork. Pause/resume controls automatic playback.
 Electronic tuner requires microphone permission. Start microphone, play one note and mute it. The result gives note, direction and deviation. Stop microphone ends listening. Active capture uses a foreground service when the screen turns off or another app opens. Stop it with the same toggle or notification action; removing the app from Recents stops the service. Audio is not saved or uploaded.
-Speaker hybrid plays a 3-second reference, ignores capture for 3.4 seconds, listens to your instrument, announces the reading, waits about 5 seconds and repeats. Long screen reader speech or room reverberation may require stopping and retrying.
+Speaker hybrid plays a 3-second reference, ignores capture for 3.4 seconds, listens to your instrument, announces the reading, waits for its own synthesizer utterance to finish and repeats. On-screen TalkBack speech is controlled by the system; room reverberation can still affect readings.
 Headphone hybrid listens while the reference plays. Optional microphone monitoring requires connected headphones. Do not monitor through speakers: feedback can occur. Latency depends on hardware. Default Android devices are used without changing system settings.
 
 Instruments and notes
@@ -27,16 +27,14 @@ A new release shows notes and asks to download. SHA-256, package name, increasin
 Project: https://github.com/proszczok2002/Stroik
 MIT license. Created by Proszczok with Codex; original idea by Witold.
 
-Stroik Android 1.05
+Stroik Android 1.06
 
-Three bottom tabs in one row: Tuner, Settings and Help. Instrument is a dropdown on Tuner. The selected tab has clear color and accessibility state. Classic or Beginner view precedes tuning method.
+Fork mode has no microphone button or separate microphone-state navigation stop. Optional acoustic double-tap listening uses its own checkbox. Reaching the end of the selected order stops all capture and playback, including hybrids and with automatic advance disabled.
 
-One Start/Stop microphone button exposes its current state. Collapsed lists expose the selected value; separate labels are skipped during TalkBack navigation. Consonance stays in place. Theme changes preserve existing controls and focus.
+Every numeric setting uses a slider with its current value. Drag or use TalkBack adjustment gestures; double tap or Enter opens numeric keyboard entry. Out-of-range entries stay open for correction. Settings includes Stroik screen-off speech speed: 0.5–3, default 1. This does not change TalkBack speed. The alternating speaker fork waits for the synthesizer's actual utterance-completion callback instead of estimating speech duration.
 
-Settings includes spoken results in visual mode (on by default), keep screen awake and update preferences. The first graphics hint points to the speech option. Explicit note and microphone actions still give feedback. With the screen off, results use system TTS. Listening is user-started and runs in a foreground service with a stop notification. Removing the app from Recents stops capture.
+Piano note options include positions relative to black-key groups. Next note also announces position in Beginner view; Classic stays concise. Accessibility traversal is ordered and the result field no longer takes editing focus. Natural flicks on Motorola and Xiaomi still need user confirmation.
 
-Concert A: 390–466 Hz slider, 0.1 Hz accessibility adjustment; double tap or Enter opens numeric entry. On the note list, keyboard Up/Down select white keys C D E F G A B C; Left/Right move through all semitones. Alt+N / Ctrl+N advances according to the plan. Alt+U repeats a manual strike or pauses/resumes selected automatic playback.
+TalkBack two-finger double tap uses standard media controls: microphone in Electronic, playback in Fork, both in Hybrid. Starting the microphone with the app closed requires opening it. Gesture routing depends on TalkBack settings and active media; system Play/Pause events were checked on Pixel, while the natural gesture needs a separate trial.
 
-A fifth from C4 simultaneously plays C4 and G4; an octave plays C4 and C5. The selected note is the lower note, so a fifth from G4 is G4 and D5. Changing consonance, note, octave or concert A immediately refreshes playback. Invalid upper notes pause the fork instead of repeating errors. Bounded gain strengthens low and softens high notes; speaker response still matters.
-
-The updater retries temporary network failures and verifies SHA-256, package, version and certificate. Android's system installer asks for confirmation. Windows uses a separate channel. Structural accessibility, audio and lifecycle checks are separate from human TalkBack listening and real-instrument accuracy. See android/DEVICE_TESTS.md for the exact evidence.
+Enabled graphics sit above scrolling settings: a semicircular cents gauge and a keyboard marking the selected note. Graphics add no TalkBack stops. Guides and feedback are available in Polish and English.

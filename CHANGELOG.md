@@ -1,5 +1,11 @@
 # Changelog / Historia zmian
 
+## 1.0.18 (Stroik 1.18) — 2026-11-15
+
+- PL: Opisy położenia klawiszy pianina bezpośrednio w liście dźwięków; w widoku dla początkujących także przy ogłaszaniu nowego celu. Krótkie komunikaty w widoku klasycznym.
+- EN: Piano key positions embedded in note options and Beginner target announcements. Classic announcements remain concise.
+- PL/EN: PL/EN guides and navigation regression updated; retained fork/interval/updater regressions. Android 1.06 uses its own release channel.
+
 ## 1.0.17 (Stroik 1.17) — 2026-11-13
 
 - PL: Zmiana kwinty/oktawy, nuty na liście, oktawy lub A odniesienia od razu zastępuje poprzedni dźwięk kamertonu, również bez mikrofonu i bez automatu. Poprzednio lista mogła wskazywać kwintę, gdy wciąż brzmiała pojedyncza nuta. Opis dostępności wskazuje obie nuty i dolny cel.

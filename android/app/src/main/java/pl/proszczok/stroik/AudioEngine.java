@@ -15,7 +15,11 @@ public final class AudioEngine implements AutoCloseable {
 
     void failed(String text);
 
-    default void forkPaused(String text) { result(text); }
+    default void forkPaused(String text) {
+      result(text);
+    }
+
+    default void playbackChanged() {}
   }
 
   private final Listener listener;
@@ -27,6 +31,8 @@ public final class AudioEngine implements AutoCloseable {
   private AudioTrack fork, monitor;
   private Thread worker;
   private volatile long muteUntil, repeatAt;
+  private volatile boolean speechPending;
+  private volatile boolean strikeAfterSpeech;
   private volatile int generation;
   private final AtomicInteger playbackEpoch = new AtomicInteger();
   private int rate = 48000;
@@ -42,14 +48,48 @@ public final class AudioEngine implements AutoCloseable {
     return running;
   }
 
+  public synchronized boolean forkPlaying() {
+    return fork != null
+        && fork.getPlayState() == AudioTrack.PLAYSTATE_PLAYING
+        && fork.getPlaybackHeadPosition() < 44100 * 3;
+  }
+
+  public void holdForSpeech() {
+    speechPending = true;
+    if (config.method == 2 && running) {
+      strikeAfterSpeech = true;
+      stopFork();
+    }
+  }
+
+  public void speechFinished() {
+    // Leave a small tail after the synthesizer's actual completion callback.
+    muteUntil = Math.max(muteUntil, SystemClock.elapsedRealtime() + 300);
+    speechPending = false;
+    if (strikeAfterSpeech) {
+      strikeAfterSpeech = false;
+      if (!paused && running && config.method == 2) repeatAt = SystemClock.elapsedRealtime() + 300;
+      else if (!paused && config.method != 1) ui.post(this::strike);
+    }
+  }
+
   public void configure(Model m) {
     Model previous = config;
-    boolean referenceChanged = previous.method != m.method || previous.base() != m.base()
-        || previous.reference != m.reference || previous.interval != m.interval;
-    boolean measurementChanged = referenceChanged || previous.sensitivity != m.sensitivity
-        || previous.correction != m.correction || previous.pairMode != m.pairMode
-        || previous.forkTap != m.forkTap || previous.advance != m.advance || previous.gap != m.gap
-        || previous.instrument != m.instrument || previous.swapped != m.swapped;
+    boolean referenceChanged =
+        previous.method != m.method
+            || previous.base() != m.base()
+            || previous.reference != m.reference
+            || previous.interval != m.interval;
+    boolean measurementChanged =
+        referenceChanged
+            || previous.sensitivity != m.sensitivity
+            || previous.correction != m.correction
+            || previous.pairMode != m.pairMode
+            || previous.forkTap != m.forkTap
+            || previous.advance != m.advance
+            || previous.gap != m.gap
+            || previous.instrument != m.instrument
+            || previous.swapped != m.swapped;
     config = m.copy();
     if (measurementChanged) generation++;
     // Preserve the reference-decay guard when only appearance/voice/update options change.
@@ -99,12 +139,17 @@ public final class AudioEngine implements AutoCloseable {
     if (recorder == null) {
       throw new IllegalStateException("Cannot open microphone / Nie można otworzyć mikrofonu");
     }
-    try { recorder.startRecording(); }
-    catch (RuntimeException error) { recorder.release(); recorder = null; throw error; }
+    try {
+      recorder.startRecording();
+    } catch (RuntimeException error) {
+      recorder.release();
+      recorder = null;
+      throw error;
+    }
     running = true;
     worker = new Thread(this::capture, "Stroik microphone");
     worker.start();
-    if (config.method == 2) strike();
+    if (config.method == 2 || config.method == 3) strike();
   }
 
   private AudioRecord createRecord(int source, int min) {
@@ -160,11 +205,11 @@ public final class AudioEngine implements AutoCloseable {
                     "Connect headphones before microphone monitoring."));
           writeMonitor(frame, n);
         } else stopMonitor();
-        if (m.method == 2 && repeatAt > 0 && now >= repeatAt && !paused) {
+        if (m.method == 2 && repeatAt > 0 && now >= repeatAt && !paused && !speechPending) {
           repeatAt = 0;
           strike();
         }
-        if (now < muteUntil || (m.method == 2 && repeatAt > 0)) {
+        if (speechPending || now < muteUntil || (m.method == 2 && repeatAt > 0)) {
           count = pairCount = 0;
           session.reset();
           taps.reset();
@@ -356,13 +401,21 @@ public final class AudioEngine implements AutoCloseable {
 
   public void strike() {
     if (closed) return;
+    if (speechPending) {
+      strikeAfterSpeech = true;
+      return;
+    }
     Model m = config;
     int base = m.base();
     if (m.interval != 0 && base + m.semitones() > 108) {
       setPaused(true);
-      post(generation, () -> listener.forkPaused(m.t(
-          "Kamerton wstrzymany: wybierz niższy dźwięk albo wyłącz współbrzmienia.",
-          "Fork paused: choose a lower target or turn consonance off.")));
+      post(
+          generation,
+          () ->
+              listener.forkPaused(
+                  m.t(
+                      "Kamerton wstrzymany: wybierz niższy dźwięk albo wyłącz współbrzmienia.",
+                      "Fork paused: choose a lower target or turn consonance off.")));
       return;
     }
     long now = SystemClock.elapsedRealtime();
@@ -372,36 +425,53 @@ public final class AudioEngine implements AutoCloseable {
     player.execute(() -> {
       if (closed || generation != playbackGeneration || request != playbackEpoch.get()) return;
       try {
-      short[] data =
-          Dsp.fork(
-              Model.hz(base, m.reference),
-              m.interval == 0 ? 0 : Model.hz(base + m.semitones(), m.reference),
-              44100);
-      synchronized (this) {
-        if (closed || generation != playbackGeneration || request != playbackEpoch.get()) return;
-        releaseFork();
-        fork =
-            new AudioTrack.Builder()
-                .setAudioAttributes(
-                    new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build())
-                .setAudioFormat(
-                    new AudioFormat.Builder()
-                        .setSampleRate(44100)
-                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                        .build())
-                .setBufferSizeInBytes(data.length * 2)
-                .setTransferMode(AudioTrack.MODE_STATIC)
-                .build();
-        if (fork.write(data, 0, data.length) != data.length) throw new IllegalStateException("Incomplete fork buffer");
-        fork.play();
-      }
+        short[] data =
+            Dsp.fork(
+                Model.hz(base, m.reference),
+                m.interval == 0 ? 0 : Model.hz(base + m.semitones(), m.reference),
+                44100);
+        synchronized (this) {
+          if (closed || generation != playbackGeneration || request != playbackEpoch.get()) return;
+          releaseFork();
+          fork =
+              new AudioTrack.Builder()
+                  .setAudioAttributes(
+                      new AudioAttributes.Builder()
+                          .setUsage(AudioAttributes.USAGE_MEDIA)
+                          .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                          .build())
+                  .setAudioFormat(
+                      new AudioFormat.Builder()
+                          .setSampleRate(44100)
+                          .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                          .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                          .build())
+                  .setBufferSizeInBytes(data.length * 2)
+                  .setTransferMode(AudioTrack.MODE_STATIC)
+                  .build();
+          if (fork.write(data, 0, data.length) != data.length)
+            throw new IllegalStateException("Incomplete fork buffer");
+          fork.setPlaybackPositionUpdateListener(
+              new AudioTrack.OnPlaybackPositionUpdateListener() {
+                public void onMarkerReached(AudioTrack track) {
+                  if (request == playbackEpoch.get()) listener.playbackChanged();
+                }
+
+                public void onPeriodicNotification(AudioTrack track) {}
+              },
+              ui);
+          fork.setNotificationMarkerPosition(data.length);
+          fork.play();
+          post(playbackGeneration, listener::playbackChanged);
+        }
       } catch (RuntimeException error) {
         setPaused(true);
-        post(playbackGeneration, () -> listener.forkPaused(m.t("Błąd odtwarzania kamertonu: ", "Fork playback failed: ") + error.getMessage()));
+        post(
+            playbackGeneration,
+            () ->
+                listener.forkPaused(
+                    m.t("Błąd odtwarzania kamertonu: ", "Fork playback failed: ")
+                        + error.getMessage()));
       }
     });
   }
@@ -458,6 +528,8 @@ public final class AudioEngine implements AutoCloseable {
     running = false;
     generation++;
     repeatAt = 0;
+    speechPending = false;
+    strikeAfterSpeech = false;
     if (recorder != null) {
       try {
         recorder.stop();

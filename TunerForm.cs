@@ -293,6 +293,8 @@ internal sealed partial class TunerForm : Form
     private void AnnounceTarget()
     {
         string name = NoteCatalog.Spoken(_targetMidi, _english);
+        if (_instrumentKind == InstrumentKind.Piano && _view.SelectedIndex == (int)TunerView.Beginner)
+            name += ": " + KeyboardGuide.Position(_targetMidi, _english);
         _target.AccessibleDescription = name;
         _target.AccessibilityObject.RaiseAutomationNotification(AutomationNotificationKind.ActionCompleted,
             AutomationNotificationProcessing.ImportantMostRecent, name);
@@ -388,7 +390,8 @@ internal sealed partial class TunerForm : Form
         else
         {
             for (int midi = NoteCatalog.LowestMidi; midi <= NoteCatalog.HighestMidi; midi++)
-                _target.Items.Add(new Choice(midi, 0, NoteCatalog.Label(midi, _english)));
+                _target.Items.Add(new Choice(midi, 0, kind == InstrumentKind.Piano
+                    ? KeyboardGuide.Describe(midi, _english) : NoteCatalog.Label(midi, _english)));
         }
         int selected = -1;
         for (int i = 0; i < _target.Items.Count; i++)

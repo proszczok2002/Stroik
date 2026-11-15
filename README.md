@@ -1,6 +1,6 @@
-# Stroik 1.17
+# Stroik 1.18
 
-[Natywna wersja Android 1.05](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.05) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
+[Natywna wersja Android 1.06](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.06) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -138,3 +138,8 @@ Detekcja wysokości używa metody YIN, wejście audio — Windows waveIn, a komu
 - Aby ponownie uderzyć tę samą nutę, odznacz automat i naciśnij Alt+U lub „Uderz kamerton”. Pomysł osobnej zakładki do grania melodii zapisano do późniejszego zaprojektowania; nie dodano jej w tej poprawce.
 
 Testy sygnału PCM po rzeczywistych zdarzeniach interfejsu obejmują kwinty, oktawy, wyłączenie współbrzmienia, A=435/440 i ręczny/automatyczny kamerton. Nie wykonano odsłuchu na komputerze zgłaszającym problem ani testu NVDA. Poprawka dotyczy Windows.
+
+
+## Zmiany w 1.18
+
+Opisy położenia klawiszy pianina są częścią opcji na liście dźwięków. W widoku dla początkujących program zgłasza położenie także po wybraniu kolejnego celu; widok klasyczny zachowuje krótką nazwę. Przykład: g razkreślne — biały klawisz między pierwszym a drugim czarnym klawiszem grupy trzech. Opisy obejmują również czarne klawisze.

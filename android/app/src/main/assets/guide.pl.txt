@@ -6,7 +6,7 @@ Dolne przyciski otwierają Stroik, Ustawienia i Pomoc w jednej linii. Każdy prz
 Metody
 Kamerton odtwarza gasnący wzorzec wybranej nuty. Wybierz automatyczne uderzenia i odstęp lub naciskaj Uderz kamerton. Przycisk pauzy zatrzymuje lub wznawia automat.
 Stroik elektroniczny wymaga zgody na mikrofon. Naciśnij Włącz mikrofon, zagraj jedną nutę i wycisz instrument. Wynik podaje nazwę nuty, kierunek i odchyłkę. Wyłącz mikrofon kończy nasłuch. Włączony nasłuch działa w usłudze także po wygaszeniu ekranu i przełączeniu aplikacji. Wyłącz go tym samym przyciskiem lub akcją w powiadomieniu; usunięcie aplikacji z ostatnich zadań zatrzymuje usługę. Nagrania nie są zapisywane ani wysyłane.
-Hybryda głośnikowa gra wzorzec 3 sekundy, pomija mikrofon przez 3,4 sekundy, słucha instrumentu, podaje wynik, czeka około 5 sekund i powtarza wzorzec. Długi komunikat czytnika lub pogłos mogą zakłócić rytm; wtedy zatrzymaj i powtórz próbę.
+Hybryda głośnikowa gra wzorzec 3 sekundy, pomija mikrofon przez 3,4 sekundy, słucha instrumentu, podaje wynik, czeka na koniec własnej wypowiedzi syntezatora i powtarza wzorzec. Mowa TalkBack przy włączonym ekranie jest sterowana przez system; pogłos nadal może zakłócić pomiar.
 Hybryda słuchawkowa słucha równocześnie z wzorcem. Odsłuch mikrofonu jest opcjonalny i wymaga podłączonych słuchawek. Nie włączaj odsłuchu przez głośniki: grozi sprzężeniem. Opóźnienie zależy od urządzenia. Program używa domyślnych urządzeń Androida i nie zmienia ustawień systemowych.
 
 Instrument i dźwięk
@@ -27,16 +27,14 @@ Nowe wydanie pokazuje zmiany i pytanie o pobranie. APK jest sprawdzany przez SHA
 Projekt: https://github.com/proszczok2002/Stroik
 Licencja MIT. Wykonawca Proszczok z Codex; pomysłodawca Witold.
 
-Stroik Android 1.05
+Stroik Android 1.06
 
-Trzy zakładki w jednym rzędzie na dole: Stroik, Ustawienia i Pomoc. Instrument wybierasz z listy na stronie Stroik. Wybrana zakładka ma wyraźny kolor i stan dostępności. Widok klasyczny lub dla początkujących jest przed metodą strojenia.
+W kamertonie nie ma przycisku mikrofonu ani osobnego przystanku z jego stanem. Opcjonalny nasłuch dwóch stuknięć włącza się własnym polem wyboru. Po końcu wybranej kolejności kończy się cały aktywny nasłuch i odtwarzanie, również w hybrydzie i przy wyłączonym automatycznym przechodzeniu.
 
-Jeden przycisk Włącz/Wyłącz mikrofon podaje aktualny stan. Listy udostępniają bieżący wybór bez otwierania; osobne etykiety nie są kolejnymi elementami nawigacji TalkBack. Współbrzmienia pozostają w tym samym miejscu, a zmiana motywu zachowuje istniejące kontrolki i fokus.
+Wszystkie ustawienia liczbowe są suwakami z bieżącą wartością. Przesuń palec lub użyj gestu regulacji TalkBack; podwójne stuknięcie albo Enter otwiera pole z klawiaturą numeryczną. Wpis poza zakresem pozostaje w dialogu do poprawienia. Ustawienia obejmują prędkość mowy Stroika przy wygaszonym ekranie: 0,5–3, domyślnie 1. Nie zmienia to prędkości TalkBacka. W hybrydzie głośnikowej własny kamerton czeka na rzeczywisty koniec wypowiedzi syntezatora, zamiast zgadywać jej długość.
 
-W Ustawieniach można wyłączyć odczyt wyników w trybie wizualnym (domyślnie włączony), włączyć utrzymywanie ekranu oraz ustawić aktualizacje. Pierwsza wskazówka przy grafice pokazuje, gdzie jest opcja głosu. Ręcznie wywołana zmiana nuty lub stanu mikrofonu nadal ma komunikat. Przy wygaszonym ekranie wyniki odczytuje syntezator systemowy. Nasłuch uruchamia użytkownik; działa on w usłudze z powiadomieniem i przyciskiem zatrzymania. Usunięcie aplikacji z ostatnich zadań kończy nasłuch.
+Lista nut pianina zawiera opisy położenia względem grup czarnych klawiszy. Następny dźwięk w widoku dla początkujących czyta także położenie; widok klasyczny zachowuje krótką nazwę. Uporządkowano kolejność dostępności i usunięto przejmowanie fokusu przez pole wyniku. Naturalne flicki na Motoroli i Xiaomi wymagają jeszcze potwierdzenia użytkownika.
 
-Częstotliwość A: suwak 390–466 Hz, krok dostępności 0,1 Hz; podwójne stuknięcie lub Enter otwiera pole liczbowe. Z klawiatury na liście nut góra/dół wybiera białe klawisze C D E F G A H C; lewo/prawo wszystkie półtony. Alt+N / Ctrl+N wybiera następny cel według planu. Alt+U powtarza nutę w trybie ręcznym albo wstrzymuje/wznawia zaznaczony automat.
+Podwójne stuknięcie dwoma palcami TalkBack korzysta ze standardowego sterowania mediami: mikrofon w stroiku elektronicznym, kamerton w metodzie kamertonowej, oba w hybrydzie. Przy zamkniętej aplikacji rozpoczęcie mikrofonu wymaga jej otwarcia. Działanie gestu zależy od konfiguracji TalkBack i aktywnych mediów; systemowe zdarzenia Play/Pause sprawdzono na Pixelu, naturalny gest wymaga osobnej próby.
 
-Kwinta od c razkreślnego gra jednocześnie c razkreślne i g razkreślne; oktawa c razkreślne i c dwukreślne. Wybrana nuta jest dolną nutą pary, dlatego kwinta od g razkreślnego to g razkreślne i d dwukreślne. Zmiana współbrzmienia, nuty, oktawy lub A od razu odświeża dźwięk. Poza zakresem kamerton wstrzymuje automat zamiast powtarzać błąd. Korekta głośności wzmacnia dół i łagodzi górę; głośnik nadal ma wpływ na brzmienie.
-
-Aktualizator ponawia chwilowe błędy sieci, sprawdza sumę SHA-256, pakiet, wersję i podpis, a instalację zatwierdzasz w systemowym oknie Androida. Nie zmienia to kanału Windows. Testy dostępności kontrolek, audio i cyklu życia są odrębne od odsłuchu TalkBack przez człowieka oraz strojenia prawdziwego instrumentu. Szczegółowy zakres prób jest w android/DEVICE_TESTS.md.
+Włączona grafika jest nad przewijanymi ustawieniami: półkolisty wskaźnik odchyłki w centach oraz klawiatura z oznaczeniem wybranej nuty. Grafika nie dodaje przystanków TalkBack. Dokumentacja i komunikaty są po polsku i angielsku.

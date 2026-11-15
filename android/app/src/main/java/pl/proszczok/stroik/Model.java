@@ -25,7 +25,12 @@ public final class Model {
       pairMode = 0,
       sensitivity = 1,
       minutes = 5;
-  public double reference = 440, tolerance = 5, correction = 0, gap = 1.2, forkSeconds = 3;
+  public double reference = 440,
+      tolerance = 5,
+      correction = 0,
+      gap = 1.2,
+      forkSeconds = 3,
+      speechRate = 1;
   static final String[] PL = {"c", "cis", "d", "dis", "e", "f", "fis", "g", "gis", "a", "b", "h"};
   static final String[] EN = {
     "C", "C sharp", "D", "D sharp", "E", "F", "F sharp", "G", "G sharp", "A", "B flat", "B"
@@ -150,8 +155,7 @@ public final class Model {
     if (strings()) {
       int[] n = stringsMidi();
       for (int i = 0; i < n.length - 1; i++)
-        if (n[i] == base())
-          for (int j = i + 1; j < n.length; j++) if (n[j] <= highest) return n[j];
+        if (n[i] == base()) for (int j = i + 1; j < n.length; j++) if (n[j] <= highest) return n[j];
       return base();
     }
     if (order == 0) return base() < highest ? base() + 1 : base();
@@ -173,12 +177,18 @@ public final class Model {
     if (direction != -1 && direction != 1) throw new IllegalArgumentException("Direction");
     for (int midi = current + direction; midi >= 21 && midi <= 108; midi += direction) {
       int pitch = midi % 12;
-      if (pitch == 0 || pitch == 2 || pitch == 4 || pitch == 5 || pitch == 7 || pitch == 9 || pitch == 11) return midi;
+      if (pitch == 0
+          || pitch == 2
+          || pitch == 4
+          || pitch == 5
+          || pitch == 7
+          || pitch == 9
+          || pitch == 11) return midi;
     }
     return current;
   }
 
-  public String guide() {
+  public String position(int midi) {
     String[] pl = {
       "biały przed grupą dwóch czarnych",
       "pierwszy czarny w grupie dwóch",
@@ -207,7 +217,19 @@ public final class Model {
       "third black of three",
       "white after three black keys"
     };
-    return note(base()) + ": " + (english ? en : pl)[base() % 12];
+    return (english ? en : pl)[midi % 12];
+  }
+
+  public String guide() {
+    return note(base()) + ": " + position(base());
+  }
+
+  public String targetLabel(int midi) {
+    return note(midi) + (instrument == 0 ? ": " + position(midi) : "");
+  }
+
+  public String nextAnnouncement(int midi) {
+    return spokenNote(midi) + (beginner && instrument == 0 ? ": " + position(midi) : "");
   }
 
   public JSONObject json() {
@@ -268,7 +290,10 @@ public final class Model {
         || gap > 2.5
         || !Double.isFinite(forkSeconds)
         || forkSeconds < 1
-        || forkSeconds > 10)
+        || forkSeconds > 10
+        || !Double.isFinite(speechRate)
+        || speechRate < .5
+        || speechRate > 3)
       throw new IllegalArgumentException("Invalid settings / Błędne ustawienia");
   }
 

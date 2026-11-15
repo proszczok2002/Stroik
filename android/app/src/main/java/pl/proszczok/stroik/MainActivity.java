@@ -46,6 +46,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private long lastFork;
   private String lastResult = "";
   private Meter meter;
+  private LinearLayout visualPanel;
   private final Runnable updateTick =
       new Runnable() {
         public void run() {
@@ -163,6 +164,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     session.configure(model);
     applyScreenPolicy();
     updateGuide();
+    rebuildTraversal();
+    if (visualPanel != null)
+      visualPanel.setVisibility(page == 0 && model.graphics ? View.VISIBLE : View.GONE);
     handler.removeCallbacks(updateTick);
     if (active && model.updates) handler.postDelayed(updateTick, model.minutes * 60000L);
   }
@@ -231,15 +235,18 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 label + ": " + (selected == null ? "" : selected.toString()));
           }
         });
-    ArrayAdapter<String> a = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items) {
-      @Override public View getView(int position, View reusable, ViewGroup parent) {
-        View selected = super.getView(position, reusable, parent);
-        // The collapsed list is one labelled accessibility stop. Popup rows
-        // still use getDropDownView and retain their ordinary accessibility.
-        selected.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
-        return selected;
-      }
-    };
+    ArrayAdapter<String> a =
+        new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, items) {
+          @Override
+          public View getView(int position, View reusable, ViewGroup parent) {
+            View selected = super.getView(position, reusable, parent);
+            // The collapsed list is one labelled accessibility stop. Popup rows
+            // still use getDropDownView and retain their ordinary accessibility.
+            selected.setImportantForAccessibility(
+                View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+            return selected;
+          }
+        };
     a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     s.setAdapter(a);
     s.setSelection(Math.max(0, Math.min(items.length - 1, value)));
@@ -261,41 +268,28 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   private void number(String label, double value, double min, double max, DoubleConsumer change) {
-    TextView l = text(label, false);
-    l.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-    EditText e = new EditText(this);
-    e.setId(nextId++);
-    l.setLabelFor(e.getId());
-    e.setHint(label);
-    e.setSingleLine(true);
-    e.setTextSize(18);
-    e.setMinHeight(dp(64));
-    e.setInputType(
-        android.text.InputType.TYPE_CLASS_NUMBER
-            | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-            | (min < 0 ? android.text.InputType.TYPE_NUMBER_FLAG_SIGNED : 0));
-    e.setSelectAllOnFocus(true);
-    e.setText(String.valueOf(value));
-    Runnable commit =
-        () -> {
-          try {
-            double n = Double.parseDouble(e.getText().toString().trim().replace(',', '.'));
-            if (!Double.isFinite(n) || n < min || n > max) throw new IllegalArgumentException();
-            change.accept(n);
-            changed();
-          } catch (Exception ex) {
-            e.setText(String.valueOf(value));
-            message(t("Wpisz wartość od ", "Enter a value from ") + min + t(" do ", " to ") + max);
-          }
-        };
-    e.setOnFocusChangeListener((v, focus) -> {
-      if (!focus) commit.run();
-    });
-    e.setOnEditorActionListener((v, action, event) -> {
-      commit.run();
-      return false;
-    });
-    body.addView(e, new LinearLayout.LayoutParams(-1, -2));
+    number(label, value, min, max, max == 1440 || max == 20 ? 1 : max == 2.5 ? .05 : .1, change);
+  }
+
+  private void number(
+      String label, double value, double min, double max, double step, DoubleConsumer change) {
+    TextView caption = text(label, false);
+    caption.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+    NumberSlider slider =
+        new NumberSlider(
+            this,
+            label,
+            value,
+            min,
+            max,
+            step,
+            caption,
+            next -> {
+              change.accept(next);
+              changed();
+            });
+    slider.setId(nextId++);
+    body.addView(slider, new LinearLayout.LayoutParams(-1, -2));
   }
 
   private View accessibilityFocus(View view) {
@@ -332,20 +326,25 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     // the focused control outside the viewport and Android can clear it.
     View focused = accessibilityFocus(root);
     visible(pairControls, model.interval != 0 && model.method != 0);
-    visible(micControls, model.method != 0 || model.forkTap);
+    visible(micControls, model.method != 0);
     visible(forkControls, model.method != 1);
     visible(monitorControls, model.method == 3);
     visible(advanceControls, model.method == 1);
     if (focused != null)
       focused.post(() -> {
-        if (focused.isAttachedToWindow() && focused.isShown()) {
+        View current = accessibilityFocus(root);
+        if (focused.isAttachedToWindow()
+            && focused.isShown()
+            && (current == null || current == focused || current == heading)) {
           focused.requestRectangleOnScreen(
               new Rect(0, 0, focused.getWidth(), focused.getHeight()), true);
-          if (!focused.isAccessibilityFocused()) focused.performAccessibilityAction(
-              android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
+          if (!focused.isAccessibilityFocused())
+            focused.performAccessibilityAction(
+                android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
         }
       });
     updateGuide();
+    rebuildTraversal();
   }
 
   private void updateInstrumentSections() {
@@ -383,190 +382,21 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     WindowInsetsController bars = getWindow().getInsetsController();
     if (bars != null) {
-      int light = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-          | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+      int light =
+          WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+              | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
       bars.setSystemBarsAppearance(model.dark ? 0 : light, light);
     }
   }
 
   private void referenceControl() {
-    String name = t("Częstotliwość odniesienia A, Hz", "A reference frequency, Hz");
-    TextView label = text(name, false);
-    label.setText(name + ": " + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
-    label.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-    SeekBar slider =
-        new SeekBar(this) {
-          @Override
-          public void onInitializeAccessibilityNodeInfo(
-              android.view.accessibility.AccessibilityNodeInfo info) {
-            super.onInitializeAccessibilityNodeInfo(info);
-            info.setRangeInfo(
-                android.view.accessibility.AccessibilityNodeInfo.RangeInfo.obtain(
-                    android.view.accessibility.AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_FLOAT,
-                    390,
-                    466,
-                    (float) model.reference));
-            info.addAction(
-                new android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction(
-                    android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,
-                    t("Wpisz częstotliwość", "Enter frequency")));
-          }
-
-          @Override
-          public boolean performAccessibilityAction(int action, Bundle args) {
-            if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK) {
-              editReference();
-              return true;
-            }
-            if (action
-                    == android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction
-                        .ACTION_SET_PROGRESS
-                        .getId()
-                && args != null) {
-              float value =
-                  args.getFloat(
-                      android.view.accessibility.AccessibilityNodeInfo
-                          .ACTION_ARGUMENT_PROGRESS_VALUE);
-              if (!Float.isFinite(value) || value < 390 || value > 466) return false;
-              model.reference = Math.round(value * 10) / 10.0;
-              setProgress((int) Math.round((model.reference - 390) * 10));
-              setStateDescription(String.format(Locale.US, "%.1f Hz", model.reference));
-              label.setText(name + ": " + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
-              changed();
-              return true;
-            }
-            if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
-                || action
-                    == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) {
-              model.reference =
-                  Math.max(
-                      390,
-                      Math.min(
-                          466,
-                          model.reference
-                              + (action
-                                      == android.view.accessibility.AccessibilityNodeInfo
-                                          .ACTION_SCROLL_FORWARD
-                                  ? .1
-                                  : -.1)));
-              setProgress((int) Math.round((model.reference - 390) * 10));
-              setStateDescription(String.format(Locale.US, "%.1f Hz", model.reference));
-              label.setText(name + ": " + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
-              changed();
-              return true;
-            }
-            return super.performAccessibilityAction(action, args);
-          }
-        };
-    slider.setId(nextId++);
-    slider.setTag(label);
-    slider.setContentDescription(name);
-    label.setLabelFor(slider.getId());
-    slider.setMinHeight(dp(64));
-    slider.setMax(760);
-    slider.setKeyProgressIncrement(1);
-    slider.setProgress((int) Math.round((model.reference - 390) * 10));
-    slider.setStateDescription(
-        String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
-    slider.setOnSeekBarChangeListener(
-        new SeekBar.OnSeekBarChangeListener() {
-          public void onStartTrackingTouch(SeekBar bar) {}
-
-          public void onStopTrackingTouch(SeekBar bar) {}
-
-          public void onProgressChanged(SeekBar bar, int progress, boolean user) {
-            if (!user) return;
-            model.reference = 390 + progress / 10.0;
-            label.setText(name + ": " + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
-            bar.setStateDescription(
-                String.format(
-                    model.english ? Locale.US : new Locale("pl"), "%.1f Hz", model.reference));
-            changed();
-          }
-        });
-    GestureDetector doubleTap =
-        new GestureDetector(
-            this,
-            new GestureDetector.SimpleOnGestureListener() {
-              @Override
-              public boolean onDown(android.view.MotionEvent event) {
-                return true;
-              }
-
-              @Override
-              public boolean onDoubleTap(android.view.MotionEvent event) {
-                editReference();
-                return true;
-              }
-            });
-    slider.setOnTouchListener((view, event) -> {
-      doubleTap.onTouchEvent(event);
-      return false;
-    });
-    slider.setOnKeyListener((view, key, event) -> {
-      if (event.getAction() == KeyEvent.ACTION_UP
-          && (key == KeyEvent.KEYCODE_ENTER || key == KeyEvent.KEYCODE_DPAD_CENTER)) {
-        editReference();
-        return true;
-      }
-      return false;
-    });
-    body.addView(slider, new LinearLayout.LayoutParams(-1, -2));
-    text(
-        t(
-            "Przesuń suwak; dwukrotne stuknięcie otwiera wpis liczbowy. TalkBack: gest zmiany"
-                + " wartości; dwukrotne stuknięcie — klawiatura.",
-            "Drag the slider; double tap for numeric entry. TalkBack: use the adjust-value gesture;"
-                + " double tap opens the keyboard."),
-        false);
-  }
-
-  private void editReference() {
-    EditText field = new EditText(this);
-    field.setInputType(
-        android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
-    field.setHint("390–466 Hz");
-    field.setText(String.valueOf(model.reference));
-    field.selectAll();
-    AlertDialog dialog =
-        new AlertDialog.Builder(this)
-            .setTitle(t("Częstotliwość odniesienia, Hz", "Reference frequency, Hz"))
-            .setView(field)
-            .setPositiveButton(t("Zapisz", "Save"), null)
-            .setNegativeButton(t("Anuluj", "Cancel"), null)
-            .create();
-    dialog.setOnShowListener(unused -> {
-      field.requestFocus();
-      dialog
-          .getWindow()
-          .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-      dialog
-          .getButton(AlertDialog.BUTTON_POSITIVE)
-          .setOnClickListener(view -> {
-            try {
-              double value =
-                  Double.parseDouble(field.getText().toString().trim().replace(',', '.'));
-              if (!Double.isFinite(value) || value < 390 || value > 466)
-                throw new IllegalArgumentException();
-              model.reference = value;
-              changed();
-              for (int i = 0; i < body.getChildCount(); i++) {
-                View child = body.getChildAt(i);
-                if (child instanceof SeekBar) {
-                  ((SeekBar) child).setProgress((int) Math.round((value - 390) * 10));
-                  child.setStateDescription(String.format(Locale.US, "%.1f Hz", value));
-                  if (child.getTag() instanceof TextView) ((TextView) child.getTag()).setText(
-                      t("Częstotliwość odniesienia A, Hz", "A reference frequency, Hz") + ": "
-                      + String.format(model.english ? Locale.US : new Locale("pl"), "%.1f Hz", value));
-                }
-              }
-              dialog.dismiss();
-            } catch (Exception error) {
-              field.setError(t("Wpisz 390–466 Hz", "Enter 390–466 Hz"));
-            }
-          });
-    });
-    dialog.show();
+    number(
+        t("Częstotliwość odniesienia A, Hz", "A reference frequency, Hz"),
+        model.reference,
+        390,
+        466,
+        .1,
+        value -> model.reference = value);
   }
 
   private void render() {
@@ -584,7 +414,6 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     heading.setText("Stroik " + version() + " — " + pages[page]);
     result = guide = status = null;
     consonanceList = null;
-    meter = null;
     targetList = octaveList = null;
     targetsBox = null;
     microphoneButton = null;
@@ -594,6 +423,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     if (page == 0) tuner();
     else if (page == 1) settings();
     else help();
+    visualPanel.setVisibility(page == 0 && model.graphics ? View.VISIBLE : View.GONE);
     for (int i = 0; i < tabs.length; i++) {
       tabs[i].setText(pages[i]);
       tabs[i].setSelected(i == page);
@@ -615,14 +445,49 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
             android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
     });
     root.requestApplyInsets();
+    rebuildTraversal();
+  }
+
+  private void rebuildTraversal() {
+    if (root == null) return;
+    ArrayList<View> stops = new ArrayList<>();
+    collectStops(root, stops);
+    for (int i = 0; i < stops.size(); i++) {
+      View stop = stops.get(i);
+      stop.setAccessibilityTraversalBefore(View.NO_ID);
+      stop.setAccessibilityTraversalAfter(i == 0 ? View.NO_ID : stops.get(i - 1).getId());
+    }
+  }
+
+  private void collectStops(View view, List<View> stops) {
+    if (view.getVisibility() != View.VISIBLE
+        || view.getImportantForAccessibility()
+            == View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS) return;
+    if (view instanceof Spinner
+        || view instanceof SeekBar
+        || view instanceof Button
+        || view instanceof TextView
+            && view.getImportantForAccessibility() != View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            && ((TextView) view).length() > 0) {
+      if (view.getId() == View.NO_ID) view.setId(View.generateViewId());
+      stops.add(view);
+      return;
+    }
+    if (view instanceof ViewGroup)
+      for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++)
+        collectStops(((ViewGroup) view).getChildAt(i), stops);
   }
 
   private void styleTabs() {
     for (int i = 0; i < tabs.length; i++) {
       tabs[i].setTypeface(null, i == page ? Typeface.BOLD : Typeface.NORMAL);
       tabs[i].setTextColor(i == page ? Color.WHITE : model.dark ? Color.WHITE : Color.BLACK);
-      android.graphics.drawable.GradientDrawable tabBackground = new android.graphics.drawable.GradientDrawable();
-      tabBackground.setColor(i == page ? Color.rgb(0, 83, 145) : model.dark ? Color.rgb(48, 48, 48) : Color.rgb(235, 240, 245));
+      android.graphics.drawable.GradientDrawable tabBackground =
+          new android.graphics.drawable.GradientDrawable();
+      tabBackground.setColor(
+          i == page
+              ? Color.rgb(0, 83, 145)
+              : model.dark ? Color.rgb(48, 48, 48) : Color.rgb(235, 240, 245));
       tabBackground.setCornerRadius(dp(10));
       tabs[i].setBackground(tabBackground);
     }
@@ -644,8 +509,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     } else if (view instanceof Spinner) {
       view.setBackgroundTintList(android.content.res.ColorStateList.valueOf(accent));
     } else if (view instanceof Button && view.getId() < 10000) {
-      view.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
-          model.dark ? Color.rgb(64, 64, 64) : Color.rgb(225, 231, 237)));
+      view.setBackgroundTintList(
+          android.content.res.ColorStateList.valueOf(
+              model.dark ? Color.rgb(64, 64, 64) : Color.rgb(225, 231, 237)));
     }
     if (view instanceof ViewGroup)
       for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++)
@@ -662,11 +528,18 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     root.setOrientation(1);
     setContentView(root);
     heading = new TextView(this);
+    heading.setId(9000);
     heading.setTextSize(24);
     heading.setTextColor(model.dark ? Color.WHITE : Color.BLACK);
     heading.setPadding(dp(16), dp(12), dp(16), dp(12));
     heading.setAccessibilityHeading(true);
     root.addView(heading);
+    visualPanel = new LinearLayout(this);
+    visualPanel.setOrientation(1);
+    visualPanel.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+    meter = new Meter(this);
+    visualPanel.addView(meter, new LinearLayout.LayoutParams(-1, dp(210)));
+    root.addView(visualPanel);
     scroll = new ScrollView(this);
     scroll.setFillViewport(true);
     body = new LinearLayout(this);
@@ -707,7 +580,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
 
   @Override
   public boolean dispatchKeyEvent(KeyEvent event) {
-    if (event.getAction() == KeyEvent.ACTION_DOWN && handleKey(event.getKeyCode(), event)) return true;
+    if (event.getAction() == KeyEvent.ACTION_DOWN && handleKey(event.getKeyCode(), event))
+      return true;
     return super.dispatchKeyEvent(event);
   }
 
@@ -749,9 +623,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
             || key == KeyEvent.KEYCODE_DPAD_DOWN
             || key == KeyEvent.KEYCODE_DPAD_LEFT
             || key == KeyEvent.KEYCODE_DPAD_RIGHT)) {
-      model.target = key == KeyEvent.KEYCODE_DPAD_UP || key == KeyEvent.KEYCODE_DPAD_DOWN
-          ? Model.nextNatural(model.base(), key == KeyEvent.KEYCODE_DPAD_UP ? -1 : 1)
-          : Math.max(21, Math.min(108, model.base() + (key == KeyEvent.KEYCODE_DPAD_LEFT ? -1 : 1)));
+      model.target =
+          key == KeyEvent.KEYCODE_DPAD_UP || key == KeyEvent.KEYCODE_DPAD_DOWN
+              ? Model.nextNatural(model.base(), key == KeyEvent.KEYCODE_DPAD_UP ? -1 : 1)
+              : Math.max(
+                  21, Math.min(108, model.base() + (key == KeyEvent.KEYCODE_DPAD_LEFT ? -1 : 1)));
       model.anchor = model.target;
       changed();
       syncTarget();
@@ -813,14 +689,15 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           updateTunerSections();
         });
     consonanceLabel = t("Sprawdź współbrzmienie", "Check consonance");
-    consonanceList = choice(
-        consonanceLabel,
-        new String[] {t("Wyłączone", "Off"), t("Kwinty", "Fifths"), t("Oktawy", "Octaves")},
-        model.interval,
-        v -> {
-          model.interval = v;
-          updateTunerSections();
-        });
+    consonanceList =
+        choice(
+            consonanceLabel,
+            new String[] {t("Wyłączone", "Off"), t("Kwinty", "Fifths"), t("Oktawy", "Octaves")},
+            model.interval,
+            v -> {
+              model.interval = v;
+              updateTunerSections();
+            });
     pairControls =
         section(() ->
             choice(
@@ -855,6 +732,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 ? t("Mikrofon włączony", "Microphone on")
                 : t("Mikrofon wyłączony", "Microphone off"),
             false);
+    // The microphone state belongs to the toggle, not a duplicate dead stop.
+    status.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
     micControls =
         section(() -> {
           microphoneButton =
@@ -908,6 +787,10 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
               v -> {
                 model.forkTap = v;
                 updateTunerSections();
+                if (model.method == 0) {
+                  if (v && active) startMic();
+                  else if (!v) session.stop();
+                }
               });
         });
     monitorControls =
@@ -953,7 +836,10 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                     "The result appears after the note stops.")
                 : lastResult,
             false);
-    result.setTextIsSelectable(true);
+    // Read-only feedback must not acquire input focus or start text-selection
+    // navigation while TalkBack is traversing the controls below it.
+    result.setTextIsSelectable(false);
+    result.setFocusable(false);
     result.setContentDescription(t("Ostatni wynik: ", "Last result: ") + result.getText());
     button(
         t("Powtórz wynik", "Repeat result"),
@@ -961,11 +847,6 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     button(
         t("Sprawdź komunikat czytnika ekranu", "Test screen reader announcement"),
         () -> say(t("Stroik. Komunikaty są dostępne.", "Stroik. Announcements are available.")));
-    if (model.graphics) {
-      meter = new Meter(this);
-      meter.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-      body.addView(meter, new LinearLayout.LayoutParams(-1, dp(160)));
-    }
     button(t("Zapisz plik ustawień", "Save settings file"), this::saveProfile);
     button(t("Wczytaj plik ustawień", "Open settings file"), this::loadProfile);
     updateTunerSections();
@@ -1005,7 +886,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     for (int i = 1; i < names.length; i++) {
       names[i] =
           (model.strings() ? t("Struna ", "String ") + (names.length - i) + ": " : "")
-              + model.note(options[i]);
+              + model.targetLabel(options[i]);
       if (options[i] == model.target) selected = i;
     }
     targetList =
@@ -1027,7 +908,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     if (targetList != null) {
       int[] options = (int[]) targetList.getTag();
       for (int i = 0; i < options.length; i++)
-              if (options[i] == model.target) {
+        if (options[i] == model.target) {
           selectSilently(targetList, i);
           break;
         }
@@ -1037,7 +918,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
 
   private void updateGuide() {
     if (guide == null) return;
-    String value = model.instrument == 0 ? model.guide() : model.note(model.base());
+    String value = "";
+    if (meter != null) meter.invalidate();
     if (model.interval != 0) {
       int upper = model.base() + model.semitones();
       value +=
@@ -1050,7 +932,10 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       value +=
           "\n"
               + (model.method == 0
-                  ? t("Kamerton gra oba dźwięki razem. Wybrana nuta jest dolnym dźwiękiem pary.", "The fork plays both notes together. The selected note is the lower note of the pair.")
+                  ? t(
+                      "Kamerton gra oba dźwięki razem. Wybrana nuta jest dolnym dźwiękiem pary.",
+                      "The fork plays both notes together. The selected note is the lower note of"
+                          + " the pair.")
                   : model.pairMode == 0
                       ? t(
                           "Zagraj dolny, wycisz, potem górny i wycisz.",
@@ -1061,9 +946,15 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                           "Experimental: play together about 2 seconds. A harmonic may mimic a"
                               + " second note — also check separately."));
     }
-    if (consonanceList != null) consonanceList.setStateDescription(model.interval == 0 ? null
-        : model.spokenNote(model.base()) + " + " + model.note(model.base() + model.semitones()));
+    if (consonanceList != null)
+      consonanceList.setStateDescription(
+          model.interval == 0
+              ? null
+              : model.spokenNote(model.base())
+                  + " + "
+                  + model.note(model.base() + model.semitones()));
     if (!value.contentEquals(guide.getText())) guide.setText(value);
+    guide.setVisibility(value.isEmpty() ? View.GONE : View.VISIBLE);
   }
 
   private void instrument() {
@@ -1155,8 +1046,10 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         model.dark,
         v -> {
           model.dark = v;
-          setTheme(model.dark ? android.R.style.Theme_Material_NoActionBar
-              : android.R.style.Theme_Material_Light_NoActionBar);
+          setTheme(
+              model.dark
+                  ? android.R.style.Theme_Material_NoActionBar
+                  : android.R.style.Theme_Material_Light_NoActionBar);
           applyThemeInPlace(root);
           root.setBackgroundColor(model.dark ? Color.rgb(30, 30, 30) : Color.WHITE);
           styleTabs();
@@ -1191,6 +1084,20 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         t("Nie pozwalaj na autoblokadę ekranu", "Keep screen awake"),
         model.keepScreenOn,
         v -> model.keepScreenOn = v);
+    number(
+        t("Prędkość mowy przy wygaszonym ekranie (0,5–3)", "Screen-off speech rate (0.5–3)"),
+        model.speechRate,
+        .5,
+        3,
+        .1,
+        v -> model.speechRate = v);
+    text(
+        t(
+            "Ta prędkość dotyczy mowy Stroika, nie zmienia prędkości TalkBacka. Kamerton w trybie"
+                + " hybrydowym głośnikowym czeka na zakończenie wypowiedzi.",
+            "This adjusts Stroik speech, without changing TalkBack. The alternating speaker fork"
+                + " waits for speech to finish."),
+        false);
     number(
         t("Korekta mikrofonu, centy (−100 do +100)", "Microphone correction, cents (−100 to +100)"),
         model.correction,
@@ -1295,7 +1202,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     }
   }
 
-  private void startMic() {
+  void startMic() {
     getCurrentFocusClear();
     if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
         != PackageManager.PERMISSION_GRANTED) {
@@ -1413,13 +1320,43 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   public void advance() {
     int next = model.next();
     if (next == model.base()) {
-      say(t("Koniec wybranej kolejności.", "End of selected order."));
+      session.endSequence();
+      sayAction(
+          t(
+              "Koniec wybranej kolejności. Strojenie zatrzymane.",
+              "End of selected order. Tuning stopped."),
+          targetList);
       return;
     }
     model.target = next;
     changed();
     syncTarget();
-    sayAction(model.spokenNote(next), targetList);
+    sayAction(model.nextAnnouncement(next), targetList);
+  }
+
+  void sequenceEnded() {
+    autoPaused = true;
+    audio.setPaused(true);
+    session.media.refresh();
+  }
+
+  void magicTap() {
+    if (playbackActive()) {
+      session.endSequence();
+    } else {
+      autoPaused = false;
+      audio.setPaused(false);
+      if (model.method == 0 && !model.forkTap) audio.strike();
+      else startMic();
+    }
+    session.media.refresh();
+  }
+
+  boolean playbackActive() {
+    return audio.running()
+        || session.serviceActive
+        || audio.forkPlaying()
+        || (model.method == 0 && model.autoFork && !autoPaused);
   }
 
   public void forkPaused(String text) {
@@ -1447,7 +1384,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       microphoneButton.setStateDescription(value);
     }
     if (status != null) status.setText(value);
-    if (announcedMicState != null && announcedMicState != audio.running()) sayAction(value, microphoneButton);
+    if (announcedMicState != null && announcedMicState != audio.running())
+      sayAction(value, microphoneButton);
     announcedMicState = audio.running();
   }
 
@@ -1534,6 +1472,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     active = false;
     handler.removeCallbacksAndMessages(null);
     if (!session.serviceActive) audio.stop();
+    session.media.setAvailable(false);
     persist();
     super.onPause();
   }
@@ -1547,39 +1486,97 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   private final class Meter extends View {
-    double cents;
-    final Paint paint = new Paint(3);
+    double cents = Double.NaN;
+    final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    Meter(Context c) {
-      super(c);
+    Meter(Context context) {
+      super(context);
     }
 
-    protected void onDraw(Canvas c) {
-      super.onDraw(c);
-      paint.setColor(model.dark ? Color.WHITE : Color.BLACK);
-      paint.setTextSize(dp(22));
-      c.drawText(String.format(model.english ? Locale.US : new Locale("pl"),
-          model.t("%+.1f centów", "%+.1f cents"), cents), dp(8), dp(30), paint);
-      float middle = getWidth() / 2f;
+    protected void onDraw(Canvas canvas) {
+      super.onDraw(canvas);
+      int foreground = model.dark ? Color.WHITE : Color.BLACK;
+      float cx = getWidth() / 2f, cy = dp(112), radius = dp(64);
+      paint.setStyle(Paint.Style.FILL);
+      paint.setColor(foreground);
+      paint.setTextAlign(Paint.Align.CENTER);
+      paint.setTextSize(dp(17));
+      canvas.drawText(model.spokenNote(model.base()), cx, dp(23), paint);
+      paint.setStyle(Paint.Style.STROKE);
       paint.setStrokeWidth(dp(3));
-      c.drawLine(middle, dp(40), middle, dp(95), paint);
-      paint.setColor(
-          Math.abs(cents) <= model.tolerance ? Color.rgb(0, 150, 90) : Color.rgb(180, 70, 0));
-      float x = (float) (middle + Math.max(-50, Math.min(50, cents)) / 50 * (middle - dp(16)));
-      c.drawCircle(x, dp(70), dp(10), paint);
-      int selected = model.base() % 12;
+      paint.setColor(model.dark ? Color.LTGRAY : Color.DKGRAY);
+      canvas.drawArc(cx - radius, cy - radius, cx + radius, cy + radius, 180, 180, false, paint);
+      for (int tick = -50; tick <= 50; tick += 10) {
+        double angle = Math.PI + (tick + 50) / 100.0 * Math.PI;
+        float dx = (float) Math.cos(angle), dy = (float) Math.sin(angle);
+        canvas.drawLine(
+            cx + dx * (radius - dp(7)),
+            cy + dy * (radius - dp(7)),
+            cx + dx * (radius + dp(3)),
+            cy + dy * (radius + dp(3)),
+            paint);
+      }
+      boolean valid = Double.isFinite(cents) && audio.running();
+      if (valid) {
+        double angle = Math.PI + (Math.max(-50, Math.min(50, cents)) + 50) / 100 * Math.PI;
+        paint.setColor(
+            Math.abs(cents) <= model.tolerance ? Color.rgb(0, 160, 90) : Color.rgb(210, 95, 0));
+        canvas.drawLine(
+            cx,
+            cy,
+            cx + (float) Math.cos(angle) * (radius - dp(10)),
+            cy + (float) Math.sin(angle) * (radius - dp(10)),
+            paint);
+        paint.setStyle(Paint.Style.FILL);
+        canvas.drawCircle(cx, cy, dp(5), paint);
+      }
+      paint.setStyle(Paint.Style.FILL);
+      paint.setTextSize(dp(14));
+      paint.setColor(foreground);
+      canvas.drawText("−50", cx - radius - dp(22), cy + dp(4), paint);
+      canvas.drawText("+50", cx + radius + dp(22), cy + dp(4), paint);
+      canvas.drawText("0", cx, cy - radius - dp(8), paint);
+      canvas.drawText(
+          valid
+              ? String.format(
+                  model.english ? Locale.US : new Locale("pl"),
+                  model.t("%+.1f centów", "%+.1f cents"),
+                  cents)
+              : model.t("Zagraj dźwięk", "Play a note"),
+          cx,
+          dp(137),
+          paint);
       int[] whites = {0, 2, 4, 5, 7, 9, 11};
-      float width = getWidth() / 7f;
+      int selected = model.base() % 12;
+      float left = dp(12), width = (getWidth() - dp(24)) / 7f;
       for (int i = 0; i < whites.length; i++) {
-        paint.setColor(whites[i] == selected ? Color.rgb(0, 130, 220) : Color.WHITE);
-        c.drawRect(i * width, dp(105), (i + 1) * width - 2, dp(158), paint);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(whites[i] == selected ? Color.rgb(0, 115, 190) : Color.WHITE);
+        canvas.drawRect(left + i * width, dp(147), left + (i + 1) * width, dp(205), paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(dp(1));
+        paint.setColor(Color.DKGRAY);
+        canvas.drawRect(left + i * width, dp(147), left + (i + 1) * width, dp(205), paint);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setTextSize(dp(11));
+        paint.setColor(whites[i] == selected ? Color.WHITE : Color.BLACK);
+        canvas.drawText(
+            (model.english ? Model.EN : Model.PL)[whites[i]],
+            left + (i + .5f) * width,
+            dp(200),
+            paint);
       }
       int[] blacks = {1, 3, 6, 8, 10}, positions = {1, 2, 4, 5, 6};
       for (int i = 0; i < blacks.length; i++) {
-        paint.setColor(blacks[i] == selected ? Color.rgb(0, 130, 220) : Color.BLACK);
-        float center = positions[i] * width;
-        c.drawRect(center - width * .28f, dp(105), center + width * .28f, dp(138), paint);
+        float center = left + positions[i] * width;
+        paint.setColor(blacks[i] == selected ? Color.rgb(0, 115, 190) : Color.BLACK);
+        canvas.drawRect(center - width * .28f, dp(147), center + width * .28f, dp(181), paint);
+        if (blacks[i] == selected) {
+          paint.setColor(Color.WHITE);
+          canvas.drawCircle(center, dp(169), dp(4), paint);
+        }
       }
+      paint.setTextAlign(Paint.Align.LEFT);
     }
   }
 }

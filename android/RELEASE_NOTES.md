@@ -1,39 +1,29 @@
-# Stroik Android 1.05
+# Stroik Android 1.06
 
 ## Polski
 
-Stroik Android 1.05
+Stroik Android 1.06
 
-Trzy zakładki w jednym rzędzie na dole: Stroik, Ustawienia i Pomoc. Instrument wybierasz z listy na stronie Stroik. Wybrana zakładka ma wyraźny kolor i stan dostępności. Widok klasyczny lub dla początkujących jest przed metodą strojenia.
+W kamertonie nie ma przycisku mikrofonu ani osobnego przystanku z jego stanem. Opcjonalny nasłuch dwóch stuknięć włącza się własnym polem wyboru. Po końcu wybranej kolejności kończy się cały aktywny nasłuch i odtwarzanie, również w hybrydzie i przy wyłączonym automatycznym przechodzeniu.
 
-Jeden przycisk Włącz/Wyłącz mikrofon podaje aktualny stan. Listy udostępniają bieżący wybór bez otwierania; osobne etykiety nie są kolejnymi elementami nawigacji TalkBack. Współbrzmienia pozostają w tym samym miejscu, a zmiana motywu zachowuje istniejące kontrolki i fokus.
+Wszystkie ustawienia liczbowe są suwakami z bieżącą wartością. Przesuń palec lub użyj gestu regulacji TalkBack; podwójne stuknięcie albo Enter otwiera pole z klawiaturą numeryczną. Wpis poza zakresem pozostaje w dialogu do poprawienia. Ustawienia obejmują prędkość mowy Stroika przy wygaszonym ekranie: 0,5–3, domyślnie 1. Nie zmienia to prędkości TalkBacka. W hybrydzie głośnikowej własny kamerton czeka na rzeczywisty koniec wypowiedzi syntezatora, zamiast zgadywać jej długość.
 
-W Ustawieniach można wyłączyć odczyt wyników w trybie wizualnym (domyślnie włączony), włączyć utrzymywanie ekranu oraz ustawić aktualizacje. Pierwsza wskazówka przy grafice pokazuje, gdzie jest opcja głosu. Ręcznie wywołana zmiana nuty lub stanu mikrofonu nadal ma komunikat. Przy wygaszonym ekranie wyniki odczytuje syntezator systemowy. Nasłuch uruchamia użytkownik; działa on w usłudze z powiadomieniem i przyciskiem zatrzymania. Usunięcie aplikacji z ostatnich zadań kończy nasłuch.
+Lista nut pianina zawiera opisy położenia względem grup czarnych klawiszy. Następny dźwięk w widoku dla początkujących czyta także położenie; widok klasyczny zachowuje krótką nazwę. Uporządkowano kolejność dostępności i usunięto przejmowanie fokusu przez pole wyniku. Naturalne flicki na Motoroli i Xiaomi wymagają jeszcze potwierdzenia użytkownika.
 
-Częstotliwość A: suwak 390–466 Hz, krok dostępności 0,1 Hz; podwójne stuknięcie lub Enter otwiera pole liczbowe. Z klawiatury na liście nut góra/dół wybiera białe klawisze C D E F G A H C; lewo/prawo wszystkie półtony. Alt+N / Ctrl+N wybiera następny cel według planu. Alt+U powtarza nutę w trybie ręcznym albo wstrzymuje/wznawia zaznaczony automat.
+Podwójne stuknięcie dwoma palcami TalkBack korzysta ze standardowego sterowania mediami: mikrofon w stroiku elektronicznym, kamerton w metodzie kamertonowej, oba w hybrydzie. Przy zamkniętej aplikacji rozpoczęcie mikrofonu wymaga jej otwarcia. Działanie gestu zależy od konfiguracji TalkBack i aktywnych mediów; systemowe zdarzenia Play/Pause sprawdzono na Pixelu, naturalny gest wymaga osobnej próby.
 
-Kwinta od c razkreślnego gra jednocześnie c razkreślne i g razkreślne; oktawa c razkreślne i c dwukreślne. Wybrana nuta jest dolną nutą pary, dlatego kwinta od g razkreślnego to g razkreślne i d dwukreślne. Zmiana współbrzmienia, nuty, oktawy lub A od razu odświeża dźwięk. Poza zakresem kamerton wstrzymuje automat zamiast powtarzać błąd. Korekta głośności wzmacnia dół i łagodzi górę; głośnik nadal ma wpływ na brzmienie.
-
-Aktualizator ponawia chwilowe błędy sieci, sprawdza sumę SHA-256, pakiet, wersję i podpis, a instalację zatwierdzasz w systemowym oknie Androida. Nie zmienia to kanału Windows. Testy dostępności kontrolek, audio i cyklu życia są odrębne od odsłuchu TalkBack przez człowieka oraz strojenia prawdziwego instrumentu. Szczegółowy zakres prób jest w android/DEVICE_TESTS.md.
+Włączona grafika jest nad przewijanymi ustawieniami: półkolisty wskaźnik odchyłki w centach oraz klawiatura z oznaczeniem wybranej nuty. Grafika nie dodaje przystanków TalkBack. Dokumentacja i komunikaty są po polsku i angielsku.
 
 ## English
 
-Stroik Android 1.05
+Stroik Android 1.06
 
-Three bottom tabs in one row: Tuner, Settings and Help. Instrument is a dropdown on Tuner. The selected tab has clear color and accessibility state. Classic or Beginner view precedes tuning method.
+Fork mode has no microphone button or separate microphone-state navigation stop. Optional acoustic double-tap listening uses its own checkbox. Reaching the end of the selected order stops all capture and playback, including hybrids and with automatic advance disabled.
 
-One Start/Stop microphone button exposes its current state. Collapsed lists expose the selected value; separate labels are skipped during TalkBack navigation. Consonance stays in place. Theme changes preserve existing controls and focus.
+Every numeric setting uses a slider with its current value. Drag or use TalkBack adjustment gestures; double tap or Enter opens numeric keyboard entry. Out-of-range entries stay open for correction. Settings includes Stroik screen-off speech speed: 0.5–3, default 1. This does not change TalkBack speed. The alternating speaker fork waits for the synthesizer's actual utterance-completion callback instead of estimating speech duration.
 
-Settings includes spoken results in visual mode (on by default), keep screen awake and update preferences. The first graphics hint points to the speech option. Explicit note and microphone actions still give feedback. With the screen off, results use system TTS. Listening is user-started and runs in a foreground service with a stop notification. Removing the app from Recents stops capture.
+Piano note options include positions relative to black-key groups. Next note also announces position in Beginner view; Classic stays concise. Accessibility traversal is ordered and the result field no longer takes editing focus. Natural flicks on Motorola and Xiaomi still need user confirmation.
 
-Concert A: 390–466 Hz slider, 0.1 Hz accessibility adjustment; double tap or Enter opens numeric entry. On the note list, keyboard Up/Down select white keys C D E F G A B C; Left/Right move through all semitones. Alt+N / Ctrl+N advances according to the plan. Alt+U repeats a manual strike or pauses/resumes selected automatic playback.
+TalkBack two-finger double tap uses standard media controls: microphone in Electronic, playback in Fork, both in Hybrid. Starting the microphone with the app closed requires opening it. Gesture routing depends on TalkBack settings and active media; system Play/Pause events were checked on Pixel, while the natural gesture needs a separate trial.
 
-A fifth from C4 simultaneously plays C4 and G4; an octave plays C4 and C5. The selected note is the lower note, so a fifth from G4 is G4 and D5. Changing consonance, note, octave or concert A immediately refreshes playback. Invalid upper notes pause the fork instead of repeating errors. Bounded gain strengthens low and softens high notes; speaker response still matters.
-
-The updater retries temporary network failures and verifies SHA-256, package, version and certificate. Android's system installer asks for confirmation. Windows uses a separate channel. Structural accessibility, audio and lifecycle checks are separate from human TalkBack listening and real-instrument accuracy. See android/DEVICE_TESTS.md for the exact evidence.
-
-## Weryfikacja / Verification
-
-PL: Końcowy APK zainstalowano i sprawdzono na Pixelu 11 z Androidem 17 oraz Google TalkBack. Przeszły testy fokusu PL/EN, cyklu życia, dostępności kontrolek i komunikatów, kamertonu, mikrofonu oraz działania i TTS przy wygaszonym ekranie. Naprawiono także fokus po zmianie wysokości sekcji i wizualny znacznik zaznaczenia motywu. Naturalne gesty/odsłuch człowieka, strojenie prawdziwego instrumentu i pełna aktualizacja z GitHuba do wyższej wersji pozostają osobnymi próbami. Szczegóły: android/DEVICE_TESTS.md.
-
-EN: The final APK was installed and checked on Pixel 11 with Android 17 and Google TalkBack. PL/EN focus, lifecycle, accessible controls/events, fork, microphone and screen-off capture/TTS checks passed. This also fixes focus after section reflow and the visible theme checkmark. Natural gestures/human listening, real-instrument tuning and a complete GitHub update to a higher version remain separate validation. See android/DEVICE_TESTS.md.
+Enabled graphics sit above scrolling settings: a semicircular cents gauge and a keyboard marking the selected note. Graphics add no TalkBack stops. Guides and feedback are available in Polish and English.

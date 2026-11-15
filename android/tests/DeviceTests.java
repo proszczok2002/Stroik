@@ -17,8 +17,8 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
-  private int expectedCode = 105;
-  private String expectedName = "1.05";
+  private int expectedCode = 106;
+  private String expectedName = "1.06";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
@@ -26,8 +26,8 @@ public final class DeviceTests extends Instrumentation {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
     if (args != null) {
-      expectedCode = args.getInt("expectedCode", 105);
-      expectedName = args.getString("expectedName", "1.05");
+      expectedCode = args.getInt("expectedCode", 106);
+      expectedName = args.getString("expectedName", "1.06");
     }
     start();
   }
@@ -45,6 +45,15 @@ public final class DeviceTests extends Instrumentation {
   private void main(Runnable action) {
     runOnMainSync(action);
     waitForIdleSync();
+  }
+
+  // Android's node construction shares the ViewGroup drawing-order buffer with TalkBack.
+  // Never build a node on the instrumentation thread while the UI is using that buffer.
+  private AccessibilityNodeInfo accessible(View view) {
+    java.util.concurrent.atomic.AtomicReference<AccessibilityNodeInfo> node =
+        new java.util.concurrent.atomic.AtomicReference<>();
+    runOnMainSync(() -> node.set(view.createAccessibilityNodeInfo()));
+    return node.get();
   }
 
   private List<View> views() {
@@ -202,6 +211,22 @@ public final class DeviceTests extends Instrumentation {
       stateEventScenario();
       return;
     }
+    if (scenario.equals("requests")) {
+      requestsScenario();
+      return;
+    }
+    if (scenario.equals("sliders")) {
+      slidersScenario();
+      return;
+    }
+    if (scenario.equals("speech-timing")) {
+      speechTimingScenario();
+      return;
+    }
+    if (scenario.equals("walk")) {
+      walkScenario();
+      return;
+    }
     if (scenario.equals("lifecycle")) {
       lifecycleScenario();
       return;
@@ -219,19 +244,41 @@ public final class DeviceTests extends Instrumentation {
         if (scenario.equals("download")) {
           byte[] apk = Updater.fetch(parsed.getString("apkUrl"), 40000000);
           String hash = Updater.hex(java.security.MessageDigest.getInstance("SHA-256").digest(apk));
-          require(hash.equalsIgnoreCase(parsed.getString("sha256")), "Public download SHA-256 mismatch");
-          java.io.File file = new java.io.File(getTargetContext().getCacheDir(), "verified-download.apk");
+          require(
+              hash.equalsIgnoreCase(parsed.getString("sha256")),
+              "Public download SHA-256 mismatch");
+          java.io.File file =
+              new java.io.File(getTargetContext().getCacheDir(), "verified-download.apk");
           try {
-            try (java.io.OutputStream out = new java.io.FileOutputStream(file)) { out.write(apk); }
+            try (java.io.OutputStream out = new java.io.FileOutputStream(file)) {
+              out.write(apk);
+            }
             android.content.pm.PackageManager pm = getTargetContext().getPackageManager();
-            android.content.pm.PackageInfo archive = pm.getPackageArchiveInfo(file.getAbsolutePath(), android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
-            android.content.pm.PackageInfo installed = pm.getPackageInfo(getTargetContext().getPackageName(), android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
-            require(archive != null && archive.packageName.equals(parsed.getString("packageName"))
-                && archive.getLongVersionCode() == parsed.getInt("versionCode")
-                && Updater.sameSignatures(installed, archive), "Downloaded package/version/certificate mismatch");
-          } finally { file.delete(); }
-          log("Production fetch on phone verified public APK bytes=" + apk.length + ", SHA-256=" + hash);
-          log("Download verification only; no higher-version update or installation was simulated.");
+            android.content.pm.PackageInfo archive =
+                pm.getPackageArchiveInfo(
+                    file.getAbsolutePath(),
+                    android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
+            android.content.pm.PackageInfo installed =
+                pm.getPackageInfo(
+                    getTargetContext().getPackageName(),
+                    android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
+            require(
+                archive != null
+                    && archive.packageName.equals(parsed.getString("packageName"))
+                    && archive.getLongVersionCode() == parsed.getInt("versionCode")
+                    && Updater.sameSignatures(installed, archive),
+                "Downloaded package/version/certificate mismatch");
+          } finally {
+            file.delete();
+          }
+          log(
+              "Production fetch on phone verified public APK bytes="
+                  + apk.length
+                  + ", SHA-256="
+                  + hash);
+          log(
+              "Download verification only; no higher-version update or installation was"
+                  + " simulated.");
         }
         result.putString("stream", report.toString());
         result.putString("result", "PASS");
@@ -418,11 +465,13 @@ public final class DeviceTests extends Instrumentation {
                       .toString()
                       .equals(english ? "Stop microphone" : "Wyłącz mikrofon")))
             micButtons.add((Button) view);
-          if (view instanceof SeekBar) reference = (SeekBar) view;
+          if (view instanceof SeekBar
+              && (english ? "A reference frequency, Hz" : "Częstotliwość odniesienia A, Hz")
+                  .contentEquals(view.getContentDescription())) reference = (SeekBar) view;
           if (view instanceof Spinner && view.isShown()) {
             Spinner list = (Spinner) view;
             require(
-                list.createAccessibilityNodeInfo()
+                accessible(list)
                     .getContentDescription()
                     .toString()
                     .contains(list.getSelectedItem().toString()),
@@ -691,9 +740,7 @@ public final class DeviceTests extends Instrumentation {
               "Editable value is masked by contentDescription");
           require(
               edit.getHint() != null && edit.getHint().length() > 0, "Numeric field has no hint");
-          require(
-              edit.createAccessibilityNodeInfo().isEditable(),
-              "Numeric field lost editable semantics");
+          require(accessible(edit).isEditable(), "Numeric field lost editable semantics");
         }
       log("Focus assertions=" + assertions + "; PL/EN focus retention and editable labels PASS");
       restoreSettings(saved);
@@ -832,7 +879,8 @@ public final class DeviceTests extends Instrumentation {
           Model.from(new org.json.JSONObject(prefs.getString("settings", "{}"))).json().toString();
       if (scenario.equals("prepare-update")) {
         require(
-            info.getLongVersionCode() <= expectedCode, "Baseline cannot be newer than the candidate");
+            info.getLongVersionCode() <= expectedCode,
+            "Baseline cannot be newer than the candidate");
         prefs
             .edit()
             .putString("updateBaseline", canonical)
@@ -853,7 +901,10 @@ public final class DeviceTests extends Instrumentation {
             prefs.getString("updateTestMarker", "").endsWith("-to-" + expectedCode),
             "App data marker was lost");
         require(
-            canonical.equals(prefs.getString("updateBaseline", "")),
+            canonical.equals(
+                Model.from(new org.json.JSONObject(prefs.getString("updateBaseline", "{}")))
+                    .json()
+                    .toString()),
             "User settings changed during update");
         require(
             certificate.equals(prefs.getString("updateCertificate", "")),
@@ -913,29 +964,56 @@ public final class DeviceTests extends Instrumentation {
   private void localInstallScenario() {
     Bundle output = new Bundle();
     try {
-      activity = (MainActivity) startActivitySync(new Intent(getTargetContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(getTargetContext(), MainActivity.class)
+                      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
       java.io.File candidate = new java.io.File(activity.getCacheDir(), "stroik-update.apk");
       try (java.io.InputStream in = getContext().getAssets().open("candidate.apk");
-          java.io.OutputStream out = new java.io.FileOutputStream(candidate)) { in.transferTo(out); }
+          java.io.OutputStream out = new java.io.FileOutputStream(candidate)) {
+        in.transferTo(out);
+      }
       android.content.pm.PackageManager pm = activity.getPackageManager();
-      android.content.pm.PackageInfo archive = pm.getPackageArchiveInfo(candidate.getAbsolutePath(), android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
-      android.content.pm.PackageInfo installed = pm.getPackageInfo(activity.getPackageName(), android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
-      require(archive != null && activity.getPackageName().equals(archive.packageName)
-          && Updater.sameSignatures(installed, archive), "Local candidate package/signature mismatch");
-      log("Preparing local candidate for SYSTEM confirmation only; not a GitHub updater round trip.");
+      android.content.pm.PackageInfo archive =
+          pm.getPackageArchiveInfo(
+              candidate.getAbsolutePath(),
+              android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
+      android.content.pm.PackageInfo installed =
+          pm.getPackageInfo(
+              activity.getPackageName(),
+              android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
+      require(
+          archive != null
+              && activity.getPackageName().equals(archive.packageName)
+              && Updater.sameSignatures(installed, archive),
+          "Local candidate package/signature mismatch");
+      log(
+          "Preparing local candidate for SYSTEM confirmation only; not a GitHub updater round"
+              + " trip.");
       if (!pm.canRequestPackageInstalls()) {
-        main(() -> activity.startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-            android.net.Uri.parse("package:" + activity.getPackageName()))));
-        output.putString("stream", report + "Allow Stroik as an installation source in the visible system screen, then rerun install-local.\n");
+        main(() ->
+            activity.startActivity(
+                new Intent(
+                    android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    android.net.Uri.parse("package:" + activity.getPackageName()))));
+        output.putString(
+            "stream",
+            report
+                + "Allow Stroik as an installation source in the visible system screen, then rerun"
+                + " install-local.\n");
         finish(Activity.RESULT_OK, output);
         return;
       }
       main(() -> {
         try {
-          java.lang.reflect.Method install = Updater.class.getDeclaredMethod("install", java.io.File.class);
+          java.lang.reflect.Method install =
+              Updater.class.getDeclaredMethod("install", java.io.File.class);
           install.setAccessible(true);
           install.invoke(new Updater(activity), candidate);
-        } catch (Exception error) { throw new IllegalStateException(error); }
+        } catch (Exception error) {
+          throw new IllegalStateException(error);
+        }
       });
       log("System installer opened; waiting for its confirmation and package replacement.");
       SystemClock.sleep(180000);
@@ -969,7 +1047,9 @@ public final class DeviceTests extends Instrumentation {
       waitForIdleSync();
       SystemClock.sleep(60000);
       require(focused.get() >= 3, "TalkBack swipes did not generate enough focus changes");
-      require(stops.size() >= 3, "TalkBack navigation cycles between fewer than three distinct stops: " + stops);
+      require(
+          stops.size() >= 3,
+          "TalkBack navigation cycles between fewer than three distinct stops: " + stops);
       log(
           "TalkBack actual swipe navigation PASS; focus events="
               + focused.get()
@@ -992,7 +1072,10 @@ public final class DeviceTests extends Instrumentation {
       automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
       Context context = getTargetContext();
       saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
-      activity = (MainActivity) startActivitySync(new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
       java.lang.reflect.Field trackField = AudioEngine.class.getDeclaredField("fork");
       trackField.setAccessible(true);
       java.lang.reflect.Field configField = AudioEngine.class.getDeclaredField("config");
@@ -1019,12 +1102,17 @@ public final class DeviceTests extends Instrumentation {
           main(() -> consonance.setSelection(mode));
           previous = awaitTrack(engine, trackField, previous);
           Model actual = (Model) configField.get(engine);
-          require(actual.base() == 60 && actual.interval == mode, "Wrong actual playback configuration");
+          require(
+              actual.base() == 60 && actual.interval == mode,
+              "Wrong actual playback configuration");
           if (mode != 0) {
             double lower = Model.hz(actual.base(), actual.reference);
             double upper = Model.hz(actual.base() + actual.semitones(), actual.reference);
-            double[] pair = Dsp.together(Arrays.copyOf(Dsp.fork(lower, upper, 44100), 65536), 44100, lower, mode);
-            require(pair != null && Math.abs(pair[0] - lower) < .15 && Math.abs(pair[1] - upper) < .15,
+            double[] pair =
+                Dsp.together(
+                    Arrays.copyOf(Dsp.fork(lower, upper, 44100), 65536), 44100, lower, mode);
+            require(
+                pair != null && Math.abs(pair[0] - lower) < .15 && Math.abs(pair[1] - upper) < .15,
                 "Generator lacks both components after UI configuration");
           }
           require(consonance.isAttachedToWindow(), "Consonance selector replaced");
@@ -1039,12 +1127,18 @@ public final class DeviceTests extends Instrumentation {
         });
         for (int expected : new int[] {62, 64, 65, 67, 69, 71, 72}) {
           log("Fork key expected=" + expected);
-          main(() -> activity.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_DOWN)));
+          main(() ->
+              activity.dispatchKeyEvent(
+                  new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_DOWN)));
           previous = awaitTrack(engine, trackField, previous);
           require(activity.model.target == expected, "Native key dispatch skipped a white key");
         }
-        CheckBox automatic = findCheck(english ? "Strike tuning fork automatically" : "Uderzaj kamerton automatycznie");
-        main(() -> { if (!automatic.isChecked()) automatic.performClick(); });
+        CheckBox automatic =
+            findCheck(
+                english ? "Strike tuning fork automatically" : "Uderzaj kamerton automatycznie");
+        main(() -> {
+          if (!automatic.isChecked()) automatic.performClick();
+        });
         main(() -> {
           notes.setSelection(108 - 21 + 1);
           consonance.setSelection(1);
@@ -1060,32 +1154,53 @@ public final class DeviceTests extends Instrumentation {
         int before = generation.getInt(engine);
         previousConfig.graphics = !previousConfig.graphics;
         main(() -> engine.configure(previousConfig));
-        require(generation.getInt(engine) == before, "Appearance change reset acoustic measurement");
+        require(
+            generation.getInt(engine) == before, "Appearance change reset acoustic measurement");
       }
-      log("Fork UI refresh, real AudioTrack replacement, expected pair synthesis, dispatch keys and range-pause assertions=" + assertions);
-      log("AudioTrack/generator checks do not establish speaker frequency response or human listening.");
+      log(
+          "Fork UI refresh, real AudioTrack replacement, expected pair synthesis, dispatch keys and"
+              + " range-pause assertions="
+              + assertions);
+      log(
+          "AudioTrack/generator checks do not establish speaker frequency response or human"
+              + " listening.");
       output.putString("result", "PASS");
     } catch (Throwable error) {
       log("FAIL: " + error);
       output.putString("result", "FAIL");
-    } finally { restoreSettings(saved); }
+    } finally {
+      restoreSettings(saved);
+    }
     output.putString("stream", report.toString());
-    finish("PASS".equals(output.getString("result")) ? Activity.RESULT_OK : Activity.RESULT_CANCELED, output);
+    finish(
+        "PASS".equals(output.getString("result")) ? Activity.RESULT_OK : Activity.RESULT_CANCELED,
+        output);
   }
 
-  private android.media.AudioTrack awaitTrack(AudioEngine engine, java.lang.reflect.Field field, android.media.AudioTrack previous) throws Exception {
+  private android.media.AudioTrack awaitTrack(
+      AudioEngine engine, java.lang.reflect.Field field, android.media.AudioTrack previous)
+      throws Exception {
     long deadline = SystemClock.elapsedRealtime() + 5000;
     do {
       android.media.AudioTrack current = (android.media.AudioTrack) field.get(engine);
-      if (current != null && current != previous && current.getPlayState() == android.media.AudioTrack.PLAYSTATE_PLAYING) {
+      if (current != null
+          && current != previous
+          && current.getPlayState() == android.media.AudioTrack.PLAYSTATE_PLAYING) {
         require(current.getSampleRate() == 44100, "Unexpected fork playback sample rate");
         return current;
       }
       SystemClock.sleep(80);
     } while (SystemClock.elapsedRealtime() < deadline);
     Model state = TuningSession.get(activity).model;
-    throw new AssertionError("Changed setting did not replace actual AudioTrack; engine=" + field.get(engine)
-        + ", activity active=" + activity.active + ", target=" + state.target + ", interval=" + state.interval);
+    throw new AssertionError(
+        "Changed setting did not replace actual AudioTrack; engine="
+            + field.get(engine)
+            + ", activity active="
+            + activity.active
+            + ", target="
+            + state.target
+            + ", interval="
+            + state.interval);
   }
 
   private void audioScenario() {
@@ -1178,6 +1293,454 @@ public final class DeviceTests extends Instrumentation {
     }
   }
 
+  private AccessibilityNodeInfo nodeByClass(AccessibilityNodeInfo node, String name) {
+    if (node == null) return null;
+    if (name.contentEquals(node.getClassName())) return node;
+    for (int i = 0; i < node.getChildCount(); i++) {
+      AccessibilityNodeInfo found = nodeByClass(node.getChild(i), name);
+      if (found != null) return found;
+    }
+    return null;
+  }
+
+  private void slidersScenario() {
+    Bundle output = new Bundle();
+    String saved = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      android.accessibilityservice.AccessibilityServiceInfo service = automation.getServiceInfo();
+      service.flags |= android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
+      automation.setServiceInfo(service);
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      for (boolean english : new boolean[] {false, true}) {
+        main(() -> {
+          activity.model = new Model();
+          activity.model.english = english;
+          activity.model.updates = false;
+          activity.model.method = 2;
+          invokeRender();
+        });
+        for (String name :
+            new String[] {english ? "Tuner" : "Stroik", english ? "Settings" : "Ustawienia"}) {
+          page(name);
+          // Follow explicit order backwards: each control must lead to the heading once,
+          // even when it is below the viewport. A cycle here reproduces a reading-order trap.
+          Map<Integer, View> stops = new HashMap<>();
+          for (View view : views())
+            if (view.isShown()
+                && (view.getAccessibilityTraversalAfter() != View.NO_ID || view.getId() == 9000))
+              require(stops.put(view.getId(), view) == null, "Duplicate traversal ID");
+          for (View first : stops.values()) {
+            Set<Integer> visited = new HashSet<>();
+            View current = first;
+            while (current != null) {
+              require(visited.add(current.getId()), "Accessibility traversal cycle");
+              int previous = current.getAccessibilityTraversalAfter();
+              if (previous == View.NO_ID) {
+                require(current.getId() == 9000, "Traversal cannot reach heading");
+                break;
+              }
+              current = stops.get(previous);
+              require(current != null, "Traversal references hidden/missing control");
+            }
+          }
+          List<NumberSlider> sliders = new ArrayList<>();
+          for (View view : views())
+            if (view.isShown() && view instanceof NumberSlider) sliders.add((NumberSlider) view);
+          for (NumberSlider slider : sliders) {
+            float previous = accessible(slider).getRangeInfo().getCurrent();
+            main(() ->
+                require(
+                    slider.performAccessibilityAction(AccessibilityNodeInfo.ACTION_CLICK, null),
+                    "Slider numeric action refused"));
+            SystemClock.sleep(350);
+            AccessibilityNodeInfo entry =
+                nodeByClass(automation.getRootInActiveWindow(), "android.widget.EditText");
+            require(entry != null && entry.isEditable(), "Slider did not open numeric editor");
+            Bundle value = new Bundle();
+            value.putCharSequence(
+                AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "999999");
+            require(
+                entry.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, value),
+                "Cannot enter number");
+            List<AccessibilityNodeInfo> buttons =
+                automation
+                    .getRootInActiveWindow()
+                    .findAccessibilityNodeInfosByViewId("android:id/button1");
+            require(
+                buttons.size() == 1
+                    && buttons.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK),
+                "Missing Save action");
+            SystemClock.sleep(150);
+            entry = nodeByClass(automation.getRootInActiveWindow(), "android.widget.EditText");
+            require(entry != null, "Out-of-range value closed editor");
+            value.putCharSequence(
+                AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                String.valueOf(previous));
+            require(
+                entry.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, value),
+                "Cannot replace number");
+            buttons =
+                automation
+                    .getRootInActiveWindow()
+                    .findAccessibilityNodeInfosByViewId("android:id/button1");
+            require(
+                buttons.size() == 1
+                    && buttons.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK),
+                "Cannot save valid number");
+            SystemClock.sleep(150);
+            require(
+                nodeByClass(automation.getRootInActiveWindow(), "android.widget.EditText") == null,
+                "Valid value did not close editor");
+            require(
+                Math.abs(accessible(slider).getRangeInfo().getCurrent() - previous) < .001,
+                "Numeric save changed original value");
+          }
+        }
+      }
+      log(
+          "Numeric dialogs and acyclic traversal assertions="
+              + assertions
+              + " PASS; natural TalkBack flicks remain a separate check.");
+      output.putString("result", "PASS");
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      output.putString("result", "FAIL");
+    } finally {
+      restoreSettings(saved);
+    }
+    output.putString("stream", report.toString());
+    finish(Activity.RESULT_OK, output);
+  }
+
+  private void requestsScenario() {
+    Bundle output = new Bundle();
+    String saved = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      TuningSession session = TuningSession.get(activity);
+      for (boolean english : new boolean[] {false, true}) {
+        main(() -> {
+          session.stop();
+          activity.model = new Model();
+          activity.model.updates = false;
+          activity.model.english = english;
+          session.configure(activity.model);
+          invokeRender();
+        });
+        page(english ? "Tuner" : "Stroik");
+        for (View view : views()) {
+          if (view.isShown() && view instanceof EditText)
+            throw new AssertionError("Settings still contain a bare edit field");
+          if (view.isShown() && view instanceof SeekBar) {
+            SeekBar slider = (SeekBar) view;
+            AccessibilityNodeInfo.RangeInfo range = accessible(slider).getRangeInfo();
+            require(range != null, "Slider has no accessible range");
+            Bundle invalid = new Bundle();
+            invalid.putFloat(
+                AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE, range.getMax() + 1);
+            main(() ->
+                require(
+                    !slider.performAccessibilityAction(
+                        AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.getId(),
+                        invalid),
+                    "Slider accepted invalid value"));
+          }
+        }
+        main(() -> {
+          activity.model.graphics = true;
+          invokeRender();
+        });
+        java.lang.reflect.Field panelField = MainActivity.class.getDeclaredField("visualPanel");
+        panelField.setAccessible(true);
+        View panel = (View) panelField.get(activity);
+        Rect bounds = new Rect();
+        require(
+            panel.getGlobalVisibleRect(bounds) && bounds.height() == panel.getHeight(),
+            "Graphic panel is not fully visible at page start");
+        Spinner notes = findSpinner(english ? "Target note" : "Dźwięk docelowy");
+        require(
+            notes
+                .getSelectedItem()
+                .toString()
+                .contains(activity.model.position(activity.model.base())),
+            "Note-list option has no physical position");
+        for (View view : views())
+          if (view.isShown() && view instanceof Button)
+            require(
+                !((Button) view)
+                    .getText()
+                    .toString()
+                    .equals(english ? "Start microphone" : "Włącz mikrofon"),
+                "Manual fork exposes microphone button");
+        page(english ? "Settings" : "Ustawienia");
+        int sliders = 0;
+        for (View view : views())
+          if (view.isShown()) {
+            require(!(view instanceof EditText), "Settings page contains a bare edit field");
+            if (view instanceof NumberSlider) sliders++;
+          }
+        require(sliders >= 3, "Missing correction/update/speech-rate sliders");
+        page(english ? "Tuner" : "Stroik");
+        for (int method = 0; method < 4; method++) {
+          final int chosen = method;
+          main(() -> {
+            session.stop();
+            activity.model.method = chosen;
+            activity.model.target = 60;
+            activity.model.interval = 0;
+            activity.model.forkTap = false;
+            activity.model.autoFork = false;
+            session.audio.setPaused(false);
+            session.configure(activity.model);
+            invokeRender();
+          });
+          android.media.session.MediaController controller =
+              new android.media.session.MediaController(activity, session.media.token());
+          main(() -> controller.getTransportControls().play());
+          long deadline = SystemClock.elapsedRealtime() + 7000;
+          while (!(chosen == 0 ? session.audio.forkPlaying() : session.audio.running())
+              && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(100);
+          require(
+              chosen == 0 ? session.audio.forkPlaying() : session.audio.running(),
+              "Media Play failed for method " + chosen);
+          if (chosen > 1) {
+            deadline = SystemClock.elapsedRealtime() + 3000;
+            while (!session.audio.forkPlaying() && SystemClock.elapsedRealtime() < deadline)
+              SystemClock.sleep(50);
+            require(session.audio.forkPlaying(), "Hybrid Media Play omitted fork");
+          }
+          if (chosen == 0) {
+            SystemClock.sleep(3300);
+            require(
+                controller.getPlaybackState().getState()
+                    == android.media.session.PlaybackState.STATE_PAUSED,
+                "Finished manual fork left stale Playing media state");
+            main(() -> controller.getTransportControls().play());
+            deadline = SystemClock.elapsedRealtime() + 4000;
+            while (!session.audio.forkPlaying() && SystemClock.elapsedRealtime() < deadline)
+              SystemClock.sleep(50);
+            require(session.audio.forkPlaying(), "Cannot repeat expired fork through media Play");
+          }
+          main(() -> controller.getTransportControls().pause());
+          SystemClock.sleep(200);
+          require(
+              !session.audio.running() && !session.audio.forkPlaying(),
+              "Media Pause failed for method " + chosen);
+          android.media.AudioManager manager =
+              (android.media.AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
+          main(() -> {
+            manager.dispatchMediaKeyEvent(
+                new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE));
+            manager.dispatchMediaKeyEvent(
+                new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE));
+          });
+          deadline = SystemClock.elapsedRealtime() + 7000;
+          while (!(chosen == 0 ? session.audio.forkPlaying() : session.audio.running())
+              && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(100);
+          require(
+              chosen == 0 ? session.audio.forkPlaying() : session.audio.running(),
+              "System play/pause media key failed for method " + chosen);
+          main(() -> {
+            manager.dispatchMediaKeyEvent(
+                new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE));
+            manager.dispatchMediaKeyEvent(
+                new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE));
+          });
+          SystemClock.sleep(250);
+          require(
+              !session.audio.running() && !session.audio.forkPlaying(),
+              "System pause media key failed for method " + chosen);
+          for (boolean automaticAdvance : new boolean[] {false, true}) {
+            main(() -> {
+              activity.model.advance = automaticAdvance;
+              activity.model.target = activity.model.anchor = 108;
+              session.audio.setPaused(false);
+              session.configure(activity.model);
+              if (chosen == 0) session.audio.strike();
+              else session.start();
+            });
+            deadline = SystemClock.elapsedRealtime() + 4000;
+            while (!(chosen == 0 ? session.audio.forkPlaying() : session.audio.running())
+                && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(50);
+            main(activity::advance);
+            require(
+                !session.audio.running() && !session.audio.forkPlaying() && !session.serviceActive,
+                "End-of-plan left audio active (method="
+                    + chosen
+                    + ", checkbox="
+                    + automaticAdvance
+                    + ")");
+          }
+        }
+      }
+      log(
+          "Requested changes assertions="
+              + assertions
+              + "; sliders, note positions, visible graphics, media controls and end-of-plan stop"
+              + " PASS.");
+      output.putString("result", "PASS");
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      output.putString("result", "FAIL");
+    } finally {
+      restoreSettings(saved);
+    }
+    output.putString("stream", report.toString());
+    finish(Activity.RESULT_OK, output);
+  }
+
+  private void speechTimingScenario() {
+    Bundle output = new Bundle();
+    String saved = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      TuningSession session = TuningSession.get(activity);
+      main(() -> {
+        session.stop();
+        activity.model = new Model();
+        activity.model.method = 2;
+        activity.model.updates = false;
+        activity.model.speechRate = .5;
+        session.audio.setPaused(false);
+        session.configure(activity.model);
+        invokeRender();
+        session.start();
+      });
+      long deadline = SystemClock.elapsedRealtime() + 7000;
+      while (!session.audio.running() && SystemClock.elapsedRealtime() < deadline)
+        SystemClock.sleep(100);
+      require(session.audio.running(), "Hybrid capture failed to start");
+      java.lang.reflect.Field rate = TuningSession.class.getDeclaredField("speech");
+      rate.setAccessible(true);
+      android.speech.tts.TextToSpeech tts = (android.speech.tts.TextToSpeech) rate.get(session);
+      main(() ->
+          session.speak(
+              "To jest próba wolnej mowy. Kamerton powinien zaczekać na koniec całego"
+                  + " komunikatu."));
+      deadline = SystemClock.elapsedRealtime() + 7000;
+      while (!tts.isSpeaking() && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(50);
+      require(tts.isSpeaking(), "Actual TTS did not start");
+      java.lang.reflect.Field repeat = AudioEngine.class.getDeclaredField("repeatAt");
+      repeat.setAccessible(true);
+      repeat.setLong(session.audio, SystemClock.elapsedRealtime() - 1);
+      SystemClock.sleep(800);
+      require(
+          tts.isSpeaking() && !session.audio.forkPlaying(),
+          "Fork played before slow TTS completed");
+      long speechStarted = SystemClock.elapsedRealtime();
+      deadline = speechStarted + 45000;
+      while (tts.isSpeaking() && SystemClock.elapsedRealtime() < deadline) {
+        require(!session.audio.forkPlaying(), "Fork overlapped system speech");
+        SystemClock.sleep(150);
+      }
+      require(!tts.isSpeaking(), "TTS did not finish within test deadline");
+      deadline = SystemClock.elapsedRealtime() + 5000;
+      while (!session.audio.forkPlaying() && SystemClock.elapsedRealtime() < deadline)
+        SystemClock.sleep(50);
+      require(session.audio.forkPlaying(), "Fork did not resume after actual utterance completion");
+      log(
+          "Slow system TTS completion gate PASS; actual speech duration observed="
+              + (SystemClock.elapsedRealtime() - speechStarted)
+              + "ms; no overlapping fork.");
+      output.putString("result", "PASS");
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      output.putString("result", "FAIL");
+    } finally {
+      restoreSettings(saved);
+    }
+    output.putString("stream", report.toString());
+    finish(Activity.RESULT_OK, output);
+  }
+
+  private void walkScenario() {
+    Bundle output = new Bundle();
+    String saved = null;
+    java.util.concurrent.CopyOnWriteArrayList<String> visited =
+        new java.util.concurrent.CopyOnWriteArrayList<>();
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      automation.setOnAccessibilityEventListener(event -> {
+        if (event.getEventType() == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED
+            && "pl.proszczok.stroik".contentEquals(event.getPackageName()))
+          visited.add(event.getText() + " / " + event.getContentDescription());
+      });
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      context.getSharedPreferences("stroik", 0).edit().remove("installStatus").apply();
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      main(() -> {
+        activity.model = new Model();
+        activity.model.updates = false;
+        activity.model.method = 1;
+        activity.model.beginner = false;
+        invokeRender();
+      });
+      page("Stroik");
+      SystemClock.sleep(1800);
+      int width = activity.getResources().getDisplayMetrics().widthPixels;
+      int height = activity.getResources().getDisplayMetrics().heightPixels;
+      for (int direction : new int[] {1, -1})
+        for (int step = 0; step < 34; step++) {
+          int start = direction > 0 ? width / 4 : width * 3 / 4,
+              end = direction > 0 ? width * 3 / 4 : width / 4;
+          try (ParcelFileDescriptor command =
+                  automation.executeShellCommand(
+                      "input touchscreen swipe "
+                          + start
+                          + " "
+                          + height / 2
+                          + " "
+                          + end
+                          + " "
+                          + height / 2
+                          + " 140");
+              java.io.InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(command)) {
+            in.readAllBytes();
+          }
+          SystemClock.sleep(120);
+        }
+      Set<String> distinct = new HashSet<>(visited);
+      for (String node : visited) log("Traversal stop: " + node);
+      require(
+          distinct.size() >= 12,
+          "Remote swipe sequence reached only " + distinct.size() + " unique stops");
+      log(
+          "Remote TalkBack forward/backward traversal distinct stops="
+              + distinct.size()
+              + ". Human gesture and pronunciation checks remain separate.");
+      output.putString("result", "PASS");
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      output.putString("result", "FAIL");
+    } finally {
+      restoreSettings(saved);
+    }
+    output.putString("stream", report.toString());
+    finish(Activity.RESULT_OK, output);
+  }
+
   private void screenOffScenario() {
     Bundle output = new Bundle();
     String saved = null;
@@ -1185,11 +1748,17 @@ public final class DeviceTests extends Instrumentation {
       automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
       Context context = getTargetContext();
       saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
-      activity = (MainActivity) startActivitySync(new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
       TuningSession session = TuningSession.get(activity);
       main(() -> {
         session.stop();
-        activity.model.method = 1;
+        activity.model.method = 2;
+        activity.model.target = 60;
+        activity.model.interval = 0;
+        activity.model.speechRate = .5;
         activity.model.updates = false;
         activity.model.graphics = true;
         activity.model.voiceInVisual = false;
@@ -1199,10 +1768,13 @@ public final class DeviceTests extends Instrumentation {
         session.start();
       });
       long deadline = SystemClock.elapsedRealtime() + 10000;
-      while (!session.audio.running() && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(100);
+      while (!session.audio.running() && SystemClock.elapsedRealtime() < deadline)
+        SystemClock.sleep(100);
       require(session.audio.running() && session.serviceActive, "Foreground capture did not start");
       try (ParcelFileDescriptor command = automation.executeShellCommand("input keyevent 223")) {
-        try (java.io.InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(command)) { in.readAllBytes(); }
+        try (java.io.InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(command)) {
+          in.readAllBytes();
+        }
       }
       SystemClock.sleep(2500);
       require(session.screenOff(), "Physical screen did not switch off");
@@ -1210,29 +1782,62 @@ public final class DeviceTests extends Instrumentation {
       java.lang.reflect.Field record = AudioEngine.class.getDeclaredField("recorder");
       record.setAccessible(true);
       android.media.AudioRecord microphone = (android.media.AudioRecord) record.get(session.audio);
-      require(microphone != null && microphone.getRecordingState() == android.media.AudioRecord.RECORDSTATE_RECORDING,
+      require(
+          microphone != null
+              && microphone.getRecordingState() == android.media.AudioRecord.RECORDSTATE_RECORDING,
           "Screen-off AudioRecord is not recording");
       java.lang.reflect.Field speech = TuningSession.class.getDeclaredField("speech");
       speech.setAccessible(true);
       android.speech.tts.TextToSpeech tts = (android.speech.tts.TextToSpeech) speech.get(session);
-      main(() -> session.result(activity.t("Stroik. Próba odczytu przy wygaszonym ekranie. g razkreślne. Mikrofon nadal działa.",
-          "Stroik. Screen-off spoken feedback test. G in the one-line octave. Microphone is still running.")));
+      main(() ->
+          session.result(
+              activity.t(
+                  "Stroik. Próba odczytu przy wygaszonym ekranie. g razkreślne. Mikrofon nadal"
+                      + " działa.",
+                  "Stroik. Screen-off spoken feedback test. G in the one-line octave. Microphone is"
+                      + " still running.")));
       boolean speaking = false;
       deadline = SystemClock.elapsedRealtime() + 5000;
-      while (!speaking && SystemClock.elapsedRealtime() < deadline) { speaking = tts.isSpeaking(); SystemClock.sleep(50); }
+      while (!speaking && SystemClock.elapsedRealtime() < deadline) {
+        speaking = tts.isSpeaking();
+        SystemClock.sleep(50);
+      }
       require(speaking, "System TTS did not start with screen off and visual voice disabled");
+      java.lang.reflect.Field repeat = AudioEngine.class.getDeclaredField("repeatAt");
+      repeat.setAccessible(true);
+      repeat.setLong(session.audio, SystemClock.elapsedRealtime() - 1);
+      deadline = SystemClock.elapsedRealtime() + 45000;
+      while (tts.isSpeaking() && SystemClock.elapsedRealtime() < deadline) {
+        require(!session.audio.forkPlaying(), "Screen-off fork overlapped slow speech");
+        SystemClock.sleep(150);
+      }
+      require(!tts.isSpeaking(), "Screen-off slow TTS did not finish");
+      deadline = SystemClock.elapsedRealtime() + 5000;
+      while (!session.audio.forkPlaying() && SystemClock.elapsedRealtime() < deadline)
+        SystemClock.sleep(50);
+      require(session.audio.forkPlaying(), "Screen-off fork did not resume after speech");
       main(session::stop);
       SystemClock.sleep(500);
-      require(!session.audio.running() && !session.serviceActive && record.get(session.audio) == null,
+      require(
+          !session.audio.running() && !session.serviceActive && record.get(session.audio) == null,
           "Stop did not release screen-off capture");
-      log("Screen-off assertions=" + assertions + "; actual power off, foreground AudioRecord, TTS dispatch despite visual-voice mute and recording release PASS.");
+      log(
+          "Screen-off assertions="
+              + assertions
+              + "; actual power off, foreground AudioRecord, slow TTS despite visual-voice mute,"
+              + " no overlapping fork, post-speech resume and recording release PASS.");
       log("TTS isSpeaking is not human pronunciation/listening or instrument accuracy.");
       output.putString("result", "PASS");
-    } catch (Throwable error) { log("FAIL: " + error); output.putString("result", "FAIL"); }
-    finally {
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      output.putString("result", "FAIL");
+    } finally {
       try (ParcelFileDescriptor command = automation.executeShellCommand("input keyevent 224")) {
-        try (java.io.InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(command)) { in.readAllBytes(); }
-      } catch (Exception ignored) { }
+        try (java.io.InputStream in = new ParcelFileDescriptor.AutoCloseInputStream(command)) {
+          in.readAllBytes();
+        }
+      } catch (Exception ignored) {
+      }
       restoreSettings(saved);
     }
     output.putString("stream", report.toString());
@@ -1242,7 +1847,8 @@ public final class DeviceTests extends Instrumentation {
   private void stateEventScenario() {
     Bundle output = new Bundle();
     String saved = null;
-    java.util.concurrent.CopyOnWriteArrayList<String> announcements = new java.util.concurrent.CopyOnWriteArrayList<>();
+    java.util.concurrent.CopyOnWriteArrayList<String> announcements =
+        new java.util.concurrent.CopyOnWriteArrayList<>();
     try {
       automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
       automation.setOnAccessibilityEventListener(event -> {
@@ -1252,7 +1858,10 @@ public final class DeviceTests extends Instrumentation {
       });
       Context context = getTargetContext();
       saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
-      activity = (MainActivity) startActivitySync(new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
       TuningSession session = TuningSession.get(activity);
       for (boolean english : new boolean[] {false, true}) {
         main(() -> {
@@ -1272,28 +1881,49 @@ public final class DeviceTests extends Instrumentation {
         announcements.clear();
         main(mic::performClick);
         long deadline = SystemClock.elapsedRealtime() + 7000;
-        while (!session.audio.running() && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(100);
+        while (!session.audio.running() && SystemClock.elapsedRealtime() < deadline)
+          SystemClock.sleep(100);
         require(session.audio.running(), "State-event microphone did not start");
-        require((english ? "Microphone on" : "Mikrofon włączony").contentEquals(mic.getStateDescription()), "Microphone on state missing");
+        require(
+            (english ? "Microphone on" : "Mikrofon włączony")
+                .contentEquals(mic.getStateDescription()),
+            "Microphone on state missing");
         main(mic::performClick);
         SystemClock.sleep(500);
         String off = english ? "Microphone off" : "Mikrofon wyłączony";
-        require(!session.audio.running() && off.contentEquals(mic.getStateDescription()), "Microphone off state missing");
-        require(announcements.toString().contains(off), "No immediate microphone off accessibility announcement");
+        require(
+            !session.audio.running() && off.contentEquals(mic.getStateDescription()),
+            "Microphone off state missing");
+        require(
+            announcements.toString().contains(off),
+            "No immediate microphone off accessibility announcement");
         main(() -> activity.result("suppressed automatic reading"));
         SystemClock.sleep(200);
-        require(!announcements.toString().contains("suppressed automatic reading"), "Visual voice option did not suppress automatic reading");
+        require(
+            !announcements.toString().contains("suppressed automatic reading"),
+            "Visual voice option did not suppress automatic reading");
         announcements.clear();
         main(() -> findButton(english ? "Next note" : "Następny dźwięk").performClick());
         SystemClock.sleep(300);
         String note = activity.model.spokenNote(activity.model.base());
-        require(announcements.toString().contains(note), "Next note omitted its concise announcement");
-        require(!announcements.toString().contains(english ? "Next note" : "Następny dźwięk"), "App announcement includes button label");
+        require(
+            announcements.toString().contains(note), "Next note omitted its concise announcement");
+        require(
+            !announcements.toString().contains(english ? "Next note" : "Następny dźwięk"),
+            "App announcement includes button label");
       }
-      log("State/voice event assertions=" + assertions + "; explicit microphone off and concise Next announcements with muted visual results PASS.");
+      log(
+          "State/voice event assertions="
+              + assertions
+              + "; explicit microphone off and concise Next announcements with muted visual results"
+              + " PASS.");
       output.putString("result", "PASS");
-    } catch (Throwable error) { log("FAIL: " + error); output.putString("result", "FAIL"); }
-    finally { restoreSettings(saved); }
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      output.putString("result", "FAIL");
+    } finally {
+      restoreSettings(saved);
+    }
     output.putString("stream", report.toString());
     finish(Activity.RESULT_OK, output);
   }
