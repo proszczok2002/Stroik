@@ -222,4 +222,24 @@ Polski: końcowy APK przeszedł wszystkie powyższe próby na Pixelu z włączon
 
 Local JVM checks passed for all six locales, note/position names, speech locale selection, language validation and the existing DSP/gesture regressions. Shared catalog checks cover 306 templates per added language, including format placeholders. Signed production APK and device-test harness compiled successfully. A new `languages` instrumentation scenario covers six-language controls, selected notes, JSON round trips and localized guide/change assets without suppressing accessibility services.
 
-This session has no connected ADB device. mDNS found none; the previous Pixel endpoint 192.168.0.103:43247 refused the connection. The languages scenario, system update 107→108 and TalkBack interactions HAVE NOT RUN on a phone for this release. Earlier 1.07 results above remain historical, not evidence for 1.08. No human pronunciation, natural gestures, instrument, Moto or Xiaomi checks are claimed. The owner was asked for the current wireless-debugging endpoint.
+At the initial publication checkpoint no ADB device was connected: mDNS found none and the previous endpoint refused the connection. The languages scenario, system update 107→108 and TalkBack interactions were pending at that point. The follow-up below records later device results. Earlier 1.07 results above remain historical, not evidence for 1.08. No human pronunciation, natural gestures, instrument, Moto or Xiaomi checks are claimed. The owner was asked for the current wireless-debugging endpoint.
+
+
+## 1.08 follow-up — Pixel 11, Android 17 / API 37, 16 November 2026
+
+The owner re-enabled the Pixel connection. TalkBack, AutoSpeaker and PixelSpeechEQ remained enabled. The installed baseline was production **1.07 / 107**.
+
+A real public GitHub update completed **107 → 108**: the old application displayed the new-version dialog and Polish changes, downloaded the public APK, opened Android’s Update confirmation and went through the standard Play Protect scan. Only the instrumentation package used `adb install -r`; production Stroik was updated by Android’s installer. The installed APK was pulled: **132268 bytes**, SHA-256 **028EA31F97E4F2C26EB242C0CD7935E0EE925DB1E6435E5C936C5DF9BB7EA78A**, identical to the published APK. The persistence scenario confirmed version108, unchanged signing certificate, all model settings and the saved app-data marker. The original production fetch had also independently verified the public manifest, package, version, signer and hash before installation.
+
+| Check on installed 1.08 | Result | Scope |
+| --- | --- | --- |
+| Six-language scenario | 2154 assertions PASS | PL/EN/DE/RU/FR/ES, four methods, controls, selected note/language, JSON language round trip, TTS locale selection, guides and change assets |
+| Focus | 177 assertions PASS | PL/EN actual accessibility focus retained after method/interval/target/octave/tab/instrument/theme/language changes |
+| State events | 14 assertions PASS | Immediate microphone-off announcement and concise next-note message, muted automatic visual-mode readings |
+| Injected swipe experiment | FAIL, not counted | Reached only the heading, as with the earlier experiment; this does not establish natural TalkBack traversal or diagnose an app loop |
+| Owner gesture observation | 86 focus events, PASS | No remote swipes were injected in this one-minute window; observed movement across lists, sliders, buttons and dialogs in the Polish beginner screen |
+| Additional interface sweep | INVALID, not counted | Phone was locked/Dozing: zero visible controls and focus events. The sweep was not treated as an app regression; lifecycle/sliders repetitions were not started |
+
+Evidence: ignored `android/device-results/pixel11-1.08-20261116/`. Real-instrument accuracy, human pronunciation/listening, physical headphones, Moto/Xiaomi and full natural gesture coverage remain separate checks.
+
+The owner’s one-minute gesture observation is recorded in `natural-gestures-window.txt`. It establishes those observed focus changes, not exhaustive gesture coverage or human pronunciation quality. A subsequent broad interface sweep ran after the screen locked and returned zero visible controls, so its failure was classified as an invalid locked-screen test; it does not supersede the valid six-language, focus and state-event checks. No additional unlock was requested just to repeat unchanged legacy checks.
