@@ -13,7 +13,16 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Test and package
         shell: pwsh
-        run: ./build-release.ps1
+        run: |
+          dotnet run --project tools/Localization/Localization.csproj
+          if ($LASTEXITCODE -ne 0) { throw 'Source extraction failed' }
+          python tools/Localization/collect_android.py
+          if ($LASTEXITCODE -ne 0) { throw 'Android extraction failed' }
+          python tools/Localization/check.py
+          if ($LASTEXITCODE -ne 0) { throw 'Translation coverage failed' }
+          python tools/Localization/generate_android.py --check
+          if ($LASTEXITCODE -ne 0) { throw 'Localization checks failed' }
+          ./build-release.ps1
       - uses: actions/upload-artifact@v4
         with:
           name: Stroik-Windows-x64

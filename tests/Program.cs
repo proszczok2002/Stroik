@@ -26,6 +26,16 @@ if(args.Contains("--speech-probe")) {
     if(failure!=null)throw failure;
     return;
 }
+if(args.Contains("--nvda-probe")) {
+    if(!NvdaReader.Available)throw new Exception("NVDA controller is unavailable");
+    var read=NvdaReader.ReadAsync("Stroik. Próba oczekiwania na zakończenie wskazówek. Kamerton rozpocznie się dopiero po zakończeniu tej wypowiedzi.");
+    bool speaking=false;
+    while(!read.IsCompleted){speaking|=NvdaReader.IsSpeaking;await Task.Delay(50);}
+    if(!await read || !speaking)throw new Exception("NVDA speech completion was not observed");
+    Console.WriteLine("Actual NVDA synchronous guidance and speaking/completion transition PASS.");
+    return;
+}
+if(args.Contains("--guidance-probe")) {CurrentReleaseChecks.GuidanceProbe();return;}
 
 int natural = 60;
 foreach (int expectedNatural in new[] {62, 64, 65, 67, 69, 71, 72})
@@ -92,10 +102,12 @@ foreach (int badInterval in new[] { 0, 1441 })
     catch (InvalidDataException) { }
 }
 var tap = new TapNavigator();
+tap.Observe(0,0.008,cycleStart.AddMilliseconds(-300),1200);tap.Observe(0,0.008,cycleStart.AddMilliseconds(-100),1200);
 if (tap.Observe(0.03, 0.008, cycleStart, 1200)) throw new Exception("Jeden stuk przesuwa cel.");
 tap.Observe(0, 0.008, cycleStart.AddMilliseconds(200), 1200);
 if (!tap.Observe(0.018, 0.008, cycleStart.AddMilliseconds(800), 1200)) throw new Exception("Dwa stuki nie przesuwają celu.");
 tap.Reset();
+tap.Observe(0,0.008,cycleStart.AddMilliseconds(-300),500);tap.Observe(0,0.008,cycleStart.AddMilliseconds(-100),500);
 tap.Observe(0.03, 0.008, cycleStart, 500);
 tap.Observe(0, 0.008, cycleStart.AddMilliseconds(200), 500);
 if (tap.Observe(0.03, 0.008, cycleStart.AddMilliseconds(800), 500)) throw new Exception("Przekroczono czas dwóch stuków.");
@@ -382,8 +394,8 @@ var uiThread = new Thread(() =>
         var visualMode = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_visualMode", flags)!.GetValue(form)!;
         var showOctave = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_showOctave", flags)!.GetValue(form)!;
         var doubleStrike = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_doubleStrike", flags)!.GetValue(form)!;
-        var calibration = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_calibration", flags)!.GetValue(form)!;
-        var doubleStrikeWindow = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_doubleStrikeWindow", flags)!.GetValue(form)!;
+        var calibration = (EditableNumber)typeof(TunerForm).GetField("_calibration", flags)!.GetValue(form)!;
+        var doubleStrikeWindow = (EditableNumber)typeof(TunerForm).GetField("_doubleStrikeWindow", flags)!.GetValue(form)!;
         var target = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_target", flags)!.GetValue(form)!;
         var octave = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_octave", flags)!.GetValue(form)!;
         var view = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_view", flags)!.GetValue(form)!;
@@ -553,7 +565,7 @@ var uiThread = new Thread(() =>
         var applyView = typeof(TunerForm).GetMethod("ApplyViewUI", flags)!;
         var consonance = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_consonance", flags)!.GetValue(form)!;
         var automaticUpdates = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_automaticUpdates", flags)!.GetValue(form)!;
-        var updateMinutes = (System.Windows.Forms.NumericUpDown)typeof(TunerForm).GetField("_updateMinutes", flags)!.GetValue(form)!;
+        var updateMinutes = (EditableNumber)typeof(TunerForm).GetField("_updateMinutes", flags)!.GetValue(form)!;
         var forkTap = (System.Windows.Forms.CheckBox)typeof(TunerForm).GetField("_forkTap", flags)!.GetValue(form)!;
         automaticUpdates.Checked = false;
         // A profile switch must end an existing capture/cycle before changing methods.
@@ -572,12 +584,13 @@ var uiThread = new Thread(() =>
         instrument.SelectedIndex = 0;
         typeof(TunerForm).GetMethod("SelectTarget", flags)!.Invoke(form, [67]);
         target.Focus();
-        foreach (var navigation in new[] { (System.Windows.Forms.Keys.Down, 69), (System.Windows.Forms.Keys.Up, 67), (System.Windows.Forms.Keys.Right, 68), (System.Windows.Forms.Keys.Left, 67) })
+        foreach (var navigation in new[] { (System.Windows.Forms.Keys.Down, 69), (System.Windows.Forms.Keys.Up, 67), (System.Windows.Forms.Keys.Right, 68), (System.Windows.Forms.Keys.Left, 66) })
         {
             object?[] arrowArgs = [System.Windows.Forms.Message.Create(IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero), navigation.Item1];
             if ((bool)processCmdKey.Invoke(form, arrowArgs)! != true || (int)typeof(TunerForm).GetField("_targetMidi", flags)!.GetValue(form)! != navigation.Item2)
                 throw new Exception("Strzałki nie zachowują kroku ton/półton na zamkniętej liście.");
         }
+        CurrentReleaseChecks.Run(form);
         ReleaseRegression.Navigation(form);
         ReleaseRegression.ForkConfiguration(form);
         foreach (TunerView mode in Enum.GetValues<TunerView>())

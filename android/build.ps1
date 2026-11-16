@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$Sdk = 'F:\YouTube Downloader by Proszczok\.android-sdk',
     [string]$JavaBin = 'C:\Program Files\Java\jdk-25.0.2\bin',
     [switch]$Ci,
@@ -64,7 +64,7 @@ if(-not $Ci){
     }
 }
 Copy-Item -LiteralPath $apk,(Join-Path $stage "$name.sha256") -Destination $output
-foreach($doc in @('README.md','README.en.md')){Copy-Item -LiteralPath (Join-Path $root $doc) -Destination $output}
+foreach($doc in @('README.md','README.en.md','README.de.md','README.ru.md','README.fr.md','README.es.md')){Copy-Item -LiteralPath (Join-Path $root $doc) -Destination $output}
 Copy-Item -LiteralPath (Join-Path $root '..\LICENSE') -Destination $output
 [IO.File]::WriteAllText((Join-Path $output 'build-version.txt'),"$version ($code)`n",[Text.Encoding]::ASCII)
 Write-Output "APK $version ($code): $hash"

@@ -12,10 +12,11 @@ internal sealed class PracticeCycle
     {
         lock (_sync)
         {
-        if (_phase == 1 && now >= _until) _phase = 2;
-        return _phase == 2;
+            if (_phase == 1 && now >= _until) _phase = 2;
+            return _phase == 2;
         }
     }
-    internal void Result(DateTime now) { lock (_sync) { _phase = 3; _until = now.AddSeconds(5); } }
+    internal void Result(DateTime now, int pauseSeconds = 5) { lock (_sync) { _phase = 3; _until = now.AddSeconds(pauseSeconds); } }
+    internal void Speech(DateTime now, int pauseSeconds) { lock (_sync) if (_phase == 3) _until = now.AddSeconds(pauseSeconds); }
     internal bool NeedsFork(DateTime now) { lock (_sync) return _phase == 3 && now >= _until; }
 }

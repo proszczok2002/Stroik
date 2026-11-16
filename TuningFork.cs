@@ -67,8 +67,13 @@ internal sealed class TuningFork : IDisposable
     {
         double phase = 2 * Math.PI * frequency * time;
         // Quiet upper partials help small speakers reproduce bass identity without transposition.
-        return Math.Sin(phase) + (frequency < 130 ? 0.12 : 0.015) * Math.Sin(2 * phase)
-            + (frequency < 130 ? 0.06 : 0) * Math.Sin(3 * phase);
+        double support = Math.Clamp((55 - frequency) / 27.5, 0, 1);
+        double second = (frequency < 130 ? .12 : .015) + .18 * support;
+        double third = (frequency < 130 ? .06 : 0) + .16 * support;
+        return (Math.Sin(phase) + second * Math.Sin(2 * phase) + third * Math.Sin(3 * phase)
+            + support * (.26 * Math.Sin(4 * phase) + .14 * Math.Sin(5 * phase) + .20 * Math.Sin(6 * phase) + .12 * Math.Sin(8 * phase)))
+            / (1 + .62 * support);
+
     }
 
     public void Dispose() => Stop();

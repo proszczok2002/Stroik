@@ -4,12 +4,16 @@ on:
     branches: [main]
     paths:
       - 'android/**'
+      - 'locales/**'
+      - 'tools/Localization/**'
       - '.github/workflows/android.yml'
     tags:
       - 'android-v*'
   pull_request:
     paths:
       - 'android/**'
+      - 'locales/**'
+      - 'tools/Localization/**'
       - '.github/workflows/android.yml'
   workflow_dispatch:
 jobs:
@@ -29,6 +33,10 @@ jobs:
       - name: Core tests and build with CI-only key
         shell: pwsh
         run: |
+          python tools/Localization/check.py
+          if ($LASTEXITCODE -ne 0) { throw 'Translation coverage failed' }
+          python tools/Localization/generate_android.py --check
+          if ($LASTEXITCODE -ne 0) { throw 'Generated translations differ' }
           ./android/test-core.ps1 -JavaBin "$env:JAVA_HOME/bin"
           ./android/build.ps1 -Sdk $env:ANDROID_HOME -JavaBin "$env:JAVA_HOME/bin" -Ci
       - uses: actions/upload-artifact@v4

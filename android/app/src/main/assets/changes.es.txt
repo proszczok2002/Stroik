@@ -1,0 +1,3 @@
+Stroik Android 1.08
+
+Se añaden alemán, ruso, francés y español al polaco e inglés. Se traducen interfaz, mensajes de voz, notas, octavas, posiciones de teclas, guía y cambios. El idioma se conserva en ajustes y perfiles JSON; los perfiles antiguos PL/EN siguen siendo compatibles. La voz de la aplicación usa el idioma elegido; debe instalarse su voz de Android. Las notas de versión admiten seis idiomas y manifiestos anteriores. Las actualizaciones siguen requiriendo confirmación del sistema Android.

@@ -44,9 +44,11 @@ public final class Updater {
 
   static byte[] fetch(String url, int max) throws Exception {
     for (int attempt = 0; ; attempt++) {
-      try { return fetchOnce(url, max); }
-      catch (IOException error) {
-        if (attempt >= 2 || Thread.currentThread().isInterrupted()
+      try {
+        return fetchOnce(url, max);
+      } catch (IOException error) {
+        if (attempt >= 2
+            || Thread.currentThread().isInterrupted()
             || error instanceof HttpError && !((HttpError) error).temporary()) throw error;
         Thread.sleep(400L << attempt);
       }
@@ -55,8 +57,15 @@ public final class Updater {
 
   private static final class HttpError extends IOException {
     final int status;
-    HttpError(int value) { super("HTTP " + value); status = value; }
-    boolean temporary() { return status == 408 || status == 429 || status >= 500; }
+
+    HttpError(int value) {
+      super("HTTP " + value);
+      status = value;
+    }
+
+    boolean temporary() {
+      return status == 408 || status == 429 || status >= 500;
+    }
   }
 
   private static byte[] fetchOnce(String url, int max) throws Exception {
@@ -89,12 +98,14 @@ public final class Updater {
           byte[] buffer = new byte[16384];
           int n;
           while ((n = in.read(buffer)) != -1) {
-            if (Thread.currentThread().isInterrupted() || SystemClock.elapsedRealtime() - started > 600000)
+            if (Thread.currentThread().isInterrupted()
+                || SystemClock.elapsedRealtime() - started > 600000)
               throw new java.io.InterruptedIOException("Download interrupted or timed out");
             if (out.size() + n > max) throw new IOException("Download too large");
             out.write(buffer, 0, n);
           }
-          if (c.getContentLengthLong() >= 0 && c.getContentLengthLong() != out.size()) throw new EOFException("Incomplete download");
+          if (c.getContentLengthLong() >= 0 && c.getContentLengthLong() != out.size())
+            throw new EOFException("Incomplete download");
           return out.toByteArray();
         }
       } finally {
@@ -112,10 +123,14 @@ public final class Updater {
         if (old.exists()) old.delete();
         file.renameTo(old);
       }
-      try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true), java.nio.charset.StandardCharsets.UTF_8))) {
+      try (PrintWriter writer =
+          new PrintWriter(
+              new OutputStreamWriter(
+                  new FileOutputStream(file, true), java.nio.charset.StandardCharsets.UTF_8))) {
         writer.println(new java.util.Date() + " " + text + (error == null ? "" : ": " + error));
       }
-    } catch (IOException ignored) { }
+    } catch (IOException ignored) {
+    }
   }
 
   public void check(boolean quiet) {
@@ -152,8 +167,11 @@ public final class Updater {
           offered = code;
           String notes =
               j.optString(
-                  activity.model.english ? "notesEn" : "notesPl",
-                  activity.t("Brak opisu zmian.", "Release notes unavailable."));
+                  "notes"
+                      + Character.toUpperCase(activity.model.code().charAt(0))
+                      + activity.model.code().substring(1),
+                  j.optString(
+                      "notesEn", activity.t("Brak opisu zmian.", "Release notes unavailable.")));
           activity.showText(
               activity.t("Nowa wersja ", "New version ") + j.optString("versionName"),
               notes
@@ -219,7 +237,14 @@ public final class Updater {
             || archive.getLongVersionCode() <= installed.getLongVersionCode()
             || !sameSignatures(installed, archive))
           throw new IOException("APK package, version or certificate mismatch");
-        log("APK verified: version=" + archive.getLongVersionCode() + ", bytes=" + data.length + ", SHA-256=" + actual, null);
+        log(
+            "APK verified: version="
+                + archive.getLongVersionCode()
+                + ", bytes="
+                + data.length
+                + ", SHA-256="
+                + actual,
+            null);
         activity.runOnUiThread(() -> {
           busy = false;
           if (!activity.active) return;

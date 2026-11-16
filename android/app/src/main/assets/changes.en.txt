@@ -1,11 +1,3 @@
-Stroik Android 1.07
+Stroik Android 1.08
 
-Classic hides guidance, including the 440 Hz standard hint and piano advice for ukulele. Choose the view only on Tuner; the duplicate Settings checkbox is removed.
-
-Hybrid microphone controls also start its reference. Manual strike, fork automation and interval controls appear only in Fork; hybrids keep their separate acoustic double-strike checkbox. In-tune confirmed advance belongs to Electronic. Both attacks require fresh pitch at the expected note within the chosen tolerance. Detuning cancels arming; a normal reading alone does not change target. A new reference starts a fresh capture epoch, rejecting stale pending results. The fork waits for its own TTS utterance to actually finish.
-
-Shift+Alt+N and Shift+Ctrl+N select the previous planned note. Numeric entry opens the numeric keyboard and accepts either decimal separator; the slider and profile retain the entered value. Speech rate remains in Settings.
-
-Stronger bass levels and a smooth tone ending reduce weak lows and end clicks. A fifth from C4 contains C4 and G4, 261.63 and 392.00 Hz at A=440; spectrum tests cover five octaves and reject half-frequency components. Small speakers still limit bass audibility. The target key changes from blue to red when detuned or green inside the selected tolerance. Color supplements text.
-
-Pixel checks with TalkBack enabled are documented in DEVICE_TESTS.md. Structural, event and audio-state tests do not establish human pronunciation, natural gestures or real-instrument tuning on every phone.
+Added German, Russian, French and Spanish alongside Polish and English. Interface, spoken messages, notes, octaves, key positions, guide and latest changes are translated. Language persists in settings and JSON profiles; older PL/EN profiles remain compatible. App speech selects the chosen language; its Android voice must be installed. New releases can include notes in all six languages, with fallback for older manifests. Updates still require Android system confirmation.

@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.*;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.*;
-import java.util.Locale;
 import java.util.function.DoubleConsumer;
 
 /** One accessibility stop: native adjustable range plus an explicit numeric-entry action. */
@@ -86,8 +85,7 @@ final class NumberSlider extends SeekBar {
 
   private String formatted() {
     int decimals = step >= 1 ? 0 : step >= .1 ? 1 : 2;
-    return String.format(
-        owner.model.english ? Locale.US : new Locale("pl"), "%." + decimals + "f", value);
+    return String.format(owner.model.locale(), "%." + decimals + "f", value);
   }
 
   private void assign(double next, boolean notify) {

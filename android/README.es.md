@@ -1,0 +1,42 @@
+# Stroik Android 1.08 — Guía
+
+Afinador de Android accesible para músicos ciegos, con baja visión y videntes.
+Idioma y tema oscuro se eligen en Ajustes. Idiomas: Polski, English, Deutsch,
+Русский, Français, Español. La elección se conserva en los perfiles JSON.
+
+## Métodos
+
+Diapasón: referencia manual o automática para afinar de oído. Electrónico: active el micrófono, toque una nota y apáguela; el resultado indica dirección y desviación. Híbrido con altavoces: referencia, extinción, medición del instrumento, lectura del resultado y repetición. Híbrido con auriculares: referencia y micrófono simultáneos. Active la monitorización del micrófono solo con auriculares para evitar realimentación acústica.
+
+## Instrumentos y medición
+
+Piano, guitarra, ukelele, violín, bajo y modo cromático. Rango de piano A0–C8;
+objetivo inicial sol4 según la numeración científica. Quinta y octava se forman
+hacia arriba: do4+sol4 o do4+do5 en esa numeración. La medición simultánea es
+experimental: un armónico puede simular una segunda nota. Compruebe también
+por separado. Las quintas temperadas pueden producir batimientos; el piano
+puede necesitar octavas estiradas.
+
+Los golpes demasiado débiles o fuertes falsean las lecturas. Toque uniformemente,
+evite la saturación y ajuste la sensibilidad. 440 Hz es el estándar; consulte
+a un técnico antes de aumentar la tensión de un instrumento antiguo. Corrija
+el micrófono solo con una referencia conocida. El audio no se guarda. Los
+armónicos ayudan a las notas graves; los altavoces pequeños siguen limitados.
+Rojo indica desafinado y verde dentro de tolerancia; el texto sigue disponible.
+
+## Perfiles, actualizaciones y proyecto
+
+JSON guarda método, instrumento, nota, idioma, tema y opciones de actualización.
+Puede desactivar la comprobación automática y ajustar su intervalo. Las versiones
+nuevas muestran los cambios; la descarga se verifica con SHA-256. Android solicita confirmación antes de cada instalación.
+
+Creado por Proszczok con Codex. Idea original: Witold. Licencia MIT.
+
+https://github.com/proszczok2002/Stroik · https://proszczok.pl/
+
+Apoyo: https://paypal.me/proszczok · https://revolut.me/r_rosiejka
+
+
+## Android / TalkBack
+
+Use TalkBack para navegar. Los tres botones de página están abajo en una fila. Los deslizadores cambian números; un doble toque abre la entrada numérica. Un único botón alterna el micrófono. Con la pantalla apagada, la síntesis del sistema puede leer resultados; velocidad y pantalla activa están en Ajustes. La voz elegida debe instalarse en Android. El híbrido con altavoces espera a su propia síntesis de voz. Las actualizaciones siempre requieren confirmación de Android; no se instalan en silencio.

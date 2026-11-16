@@ -1,5 +1,15 @@
 # Android changelog / Historia zmian Android
 
+## 1.08 / 108 — 2026-11-16
+
+PL:
+
+Dodano niemiecki, rosyjski, francuski i hiszpański obok polskiego i angielskiego. Przetłumaczono interfejs, komunikaty głosowe, nuty, oktawy, położenia klawiszy, instrukcję i ostatnie zmiany. Wybór języka zapisuje się w ustawieniach i profilach JSON; stare profile PL/EN pozostają zgodne. Własny syntezator aplikacji wybiera język zgodny z ustawieniem; potrzebny jest odpowiedni głos Androida. Nowe wydania mogą zawierać opisy zmian we wszystkich sześciu językach, ze zgodnym odczytem starszych manifestów. Zasady systemowego potwierdzania aktualizacji pozostają zachowane.
+
+EN:
+
+Added German, Russian, French and Spanish alongside Polish and English. Interface, spoken messages, notes, octaves, key positions, guide and latest changes are translated. Language persists in settings and JSON profiles; older PL/EN profiles remain compatible. App speech selects the chosen language; its Android voice must be installed. New releases can include notes in all six languages, with fallback for older manifests. Updates still require Android system confirmation.
+
 ## 1.07 / 107 — 2026-11-16
 
 PL:

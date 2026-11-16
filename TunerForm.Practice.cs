@@ -19,11 +19,11 @@ internal sealed partial class TunerForm
         int upper = lower + IntervalAnalysis.Semitones(_consonanceKind);
         _consonanceHelp.Text = upper > NoteCatalog.HighestMidi
             ? T("Górny dźwięk poza zakresem — wybierz niższy dźwięk docelowy.", "Upper note is out of range — choose a lower target.")
-            : T($"Od dołu: {NoteCatalog.Label(lower, false)} i {NoteCatalog.Label(upper, false)}. ", $"Bottom up: {NoteCatalog.Label(lower, true)} and {NoteCatalog.Label(upper, true)}. ") +
+            : Tf($"Od dołu: {NoteCatalog.Label(lower, Locale)} i {NoteCatalog.Label(upper, Locale)}. ", $"Bottom up: {NoteCatalog.Label(lower, Locale)} and {NoteCatalog.Label(upper, Locale)}. ") +
               (_together ? T("Zagraj razem przez około 2 sekundy. Wynik eksperymentalny: harmoniczna może udawać drugi dźwięk. Sprawdź także osobno.", "Play together for about 2 seconds. Experimental: a harmonic can mimic a second note. Also check separately.")
               : T("Zagraj dolny dźwięk, wycisz, potem górny i wycisz. Dudnienia są szacowane dla idealnych harmonicznych; pianino może wymagać rozciągnięcia oktaw.", "Play lower, mute, then upper and mute. Beats are estimated for ideal harmonics; a piano may need stretched octaves."));
         if (_activeMethod == TuningMethod.TuningFork && upper <= NoteCatalog.HighestMidi)
-            _consonanceHelp.Text = T($"Kamerton zagra razem: {NoteCatalog.Label(lower, false)} i {NoteCatalog.Label(upper, false)}. Wybrany dźwięk jest dolnym dźwiękiem pary. Odstęp równomiernie temperowany.", $"The fork plays together: {NoteCatalog.Label(lower, true)} and {NoteCatalog.Label(upper, true)}. The selected note is the lower note of the pair. Equal-tempered interval.");
+            _consonanceHelp.Text = Tf($"Kamerton zagra razem: {NoteCatalog.Label(lower, Locale)} i {NoteCatalog.Label(upper, Locale)}. Wybrany dźwięk jest dolnym dźwiękiem pary. Odstęp równomiernie temperowany.", $"The fork plays together: {NoteCatalog.Label(lower, Locale)} and {NoteCatalog.Label(upper, Locale)}. The selected note is the lower note of the pair. Equal-tempered interval.");
         _consonance.AccessibleDescription = _consonanceHelp.Text;
     }
     private void ReceiveIntervalNote(double frequency)
@@ -34,7 +34,7 @@ internal sealed partial class TunerForm
         double expected = PitchDetector.NoteFromMidi(wanted, _reference).Frequency;
         if (Math.Abs(1200 * Math.Log2(frequency / expected)) > 90)
         {
-            Announce(T($"Nie ten dźwięk. Zagraj {NoteCatalog.Label(wanted, false)}.", $"Wrong note. Play {NoteCatalog.Label(wanted, true)}."));
+            Announce(Tf($"Nie ten dźwięk. Zagraj {NoteCatalog.Label(wanted, Locale)}.", $"Wrong note. Play {NoteCatalog.Label(wanted, Locale)}."));
             _ignoreUntil = DateTime.UtcNow.AddMilliseconds(1500); return;
         }
         if (_lowerIntervalFrequency is null)
@@ -76,12 +76,12 @@ internal sealed partial class TunerForm
     private void ShowInterval(IntervalReading reading, bool experimental)
     {
         string prefix = experimental ? T("Eksperymentalny pomiar składowych. ", "Experimental component measurement. ") : "";
-        var culture = CultureInfo.GetCultureInfo(_english ? "en-US" : "pl-PL");
+        var culture = UiLanguages.Culture(Locale);
         string cents = reading.Cents.ToString("+0.0;-0.0;0.0", culture), beats = reading.Beats.ToString("0.00", culture);
-        _result.Text = prefix + T($"Odchyłka od stroju równomiernego: {cents} centów. Szacowane dudnienia: {beats} na sekundę.", $"Deviation from equal temperament: {cents} cents. Estimated beats: {beats} per second.");
+        _result.Text = prefix + Tf($"Odchyłka od stroju równomiernego: {cents} centów. Szacowane dudnienia: {beats} na sekundę.", $"Deviation from equal temperament: {cents} cents. Estimated beats: {beats} per second.");
         _details.Text = $"{reading.Lower.ToString("0.00", culture)} Hz / {reading.Upper.ToString("0.00", culture)} Hz";
         _lastAnnouncement = _result.Text; _repeat.Enabled = true; Announce(_result.Text);
         _ignoreUntil = DateTime.UtcNow.AddSeconds(4);
-        if (_activeMethod == TuningMethod.HybridSpeakers && _microphone is not null) { _acceptAudio = false; _practice.Result(DateTime.UtcNow); }
+        if (_activeMethod == TuningMethod.HybridSpeakers && _microphone is not null) { _acceptAudio = false; _practice.Result(DateTime.UtcNow, (int)_hybridPause.Value); }
     }
 }

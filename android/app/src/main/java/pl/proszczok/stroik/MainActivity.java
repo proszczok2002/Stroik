@@ -94,7 +94,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       model = new Model();
     }
     boolean firstLaunch = !getSharedPreferences("stroik", 0).contains("settings");
-    if (firstLaunch) model.english = !Locale.getDefault().getLanguage().equals("pl");
+    if (firstLaunch) {
+      String code = Locale.getDefault().getLanguage();
+      model.language = Translations.supported(code) ? code : "en";
+      model.english = !model.language.equals("pl");
+    }
     if (state != null) {
       int oldPage = state.getInt("stroik.page", 0);
       page =
@@ -1012,7 +1016,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         new String[] {
           t("Pianino / fortepian", "Piano"),
           t("Gitara", "Guitar"),
-          "Ukulele",
+          t("Ukulele", "Ukulele"),
           t("Skrzypce", "Violin"),
           t("Gitara basowa", "Bass guitar"),
           t("Chromatyczny", "Chromatic")
@@ -1085,10 +1089,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private void settings() {
     choice(
         t("Język", "Language"),
-        new String[] {"Polski", "English"},
-        model.english ? 1 : 0,
+        Translations.NAMES,
+        java.util.Arrays.asList(Translations.CODES).indexOf(model.code()),
         v -> {
-          model.english = v == 1;
+          model.language = Translations.CODES[v];
+          model.english = v != 0;
           render();
         });
     check(
@@ -1171,7 +1176,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         () ->
             showText(
                 t("Ostatnie zmiany", "Latest changes"),
-                asset(model.english ? "changes.en.txt" : "changes.pl.txt"),
+                asset("changes." + model.code() + ".txt"),
                 null));
     button(
         t("O programie", "About Stroik"),
@@ -1204,7 +1209,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
 
   private void help() {
     text(t("Instrukcja i dostępność", "Guide and accessibility"), true);
-    text(asset(model.english ? "guide.en.txt" : "guide.pl.txt"), false);
+    text(asset("guide." + model.code() + ".txt"), false);
     button(
         t("Sprawdź komunikat czytnika ekranu", "Test screen reader announcement"),
         () -> say(t("Stroik. Komunikaty działają.", "Stroik. Announcements work.")));
@@ -1591,10 +1596,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       canvas.drawText("0", cx, cy - radius - dp(8), paint);
       canvas.drawText(
           valid
-              ? String.format(
-                  model.english ? Locale.US : new Locale("pl"),
-                  model.t("%+.1f centów", "%+.1f cents"),
-                  cents)
+              ? String.format(model.locale(), model.t("%+.1f centów", "%+.1f cents"), cents)
               : model.t("Zagraj dźwięk", "Play a note"),
           cx,
           dp(137),
@@ -1617,11 +1619,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         paint.setStyle(Paint.Style.FILL);
         paint.setTextSize(dp(11));
         paint.setColor(whites[i] == selected ? Color.WHITE : Color.BLACK);
-        canvas.drawText(
-            (model.english ? Model.EN : Model.PL)[whites[i]],
-            left + (i + .5f) * width,
-            dp(200),
-            paint);
+        canvas.drawText(model.pitch(whites[i]), left + (i + .5f) * width, dp(200), paint);
       }
       int[] blacks = {1, 3, 6, 8, 10}, positions = {1, 2, 4, 5, 6};
       for (int i = 0; i < blacks.length; i++) {

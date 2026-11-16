@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Stroik</AssemblyName>
     <RootNamespace>Stroik</RootNamespace>
-    <Version>1.0.19</Version>
+    <Version>1.0.20</Version>
     <Product>Stroik</Product>
     <Authors>Proszczok</Authors>
     <Description>Accessible instrument tuner for blind and visually impaired musicians / Dostępny stroiciel instrumentów dla osób niewidomych i słabowidzących.</Description>
@@ -15,9 +15,14 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="THIRD_PARTY_NOTICES.md" LogicalName="Stroik.THIRD_PARTY_NOTICES.md" />
+    <EmbeddedResource Include="NVDA-LGPL-2.1.txt" LogicalName="Stroik.NVDA-LGPL-2.1.txt" />
     <Compile Remove="tests/**/*.cs" />
+    <Compile Remove="tools/**/*.cs" />
     <Compile Remove="dist/**/*.cs" />
     <Compile Remove="niepotrzebne/**/*.cs" />
     <EmbeddedResource Include="RELEASE_NOTES.md" LogicalName="Stroik.RELEASE_NOTES.md" />
+    <EmbeddedResource Include="vendor/nvda/nvdaControllerClient.dll" LogicalName="Stroik.nvdaControllerClient.dll" />
+    <EmbeddedResource Include="locales/*.json" Exclude="locales/source*.json" LogicalName="Stroik.locale.%(Filename).json" />
   </ItemGroup>
 </Project>

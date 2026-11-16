@@ -1,7 +1,7 @@
 Stroik Android — guide
 
 Accessibility
-Bottom buttons open Tuner, Settings and Help in one row. Use TalkBack gestures to navigate standard buttons, checkboxes, dropdowns and labelled fields. Controls have large touch targets. Android announces checkbox state. Only final readings are announced, not every audio sample. Without TalkBack, system speech may read results. Graphics are optional and off by default. Polish/English and dark theme are in Settings.
+Bottom buttons open Tuner, Settings and Help in one row. Use TalkBack gestures to navigate standard buttons, checkboxes, dropdowns and labelled fields. Controls have large touch targets. Android announces checkbox state. Only final readings are announced, not every audio sample. Without TalkBack, system speech may read results. Graphics are optional and off by default. Polish, English, German, Russian, French, Spanish and dark theme are in Settings.
 
 Methods
 Tuning fork plays a decaying reference. Enable automatic strikes and set an interval or use Strike tuning fork. Pause/resume controls automatic playback.
@@ -38,3 +38,8 @@ Shift+Alt+N and Shift+Ctrl+N select the previous planned note. Numeric entry ope
 Stronger bass levels and a smooth tone ending reduce weak lows and end clicks. A fifth from C4 contains C4 and G4, 261.63 and 392.00 Hz at A=440; spectrum tests cover five octaves and reject half-frequency components. Small speakers still limit bass audibility. The target key changes from blue to red when detuned or green inside the selected tolerance. Color supplements text.
 
 Pixel checks with TalkBack enabled are documented in DEVICE_TESTS.md. Structural, event and audio-state tests do not establish human pronunciation, natural gestures or real-instrument tuning on every phone.
+
+
+Stroik Android 1.08
+
+Added German, Russian, French and Spanish alongside Polish and English. Interface, spoken messages, notes, octaves, key positions, guide and latest changes are translated. Language persists in settings and JSON profiles; older PL/EN profiles remain compatible. App speech selects the chosen language; its Android voice must be installed. New releases can include notes in all six languages, with fallback for older manifests. Updates still require Android system confirmation.

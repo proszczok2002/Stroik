@@ -1,6 +1,11 @@
-# Stroik Android 1.07
+# Stroik Android 1.08
 
-[APK 1.07](https://github.com/proszczok2002/Stroik/releases/download/android-v1.07/Stroik-Android-1.07.apk) · [Release](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.07) · [PL](README.md) / [EN](README.en.md)
+Stroik Android 1.08
+
+Dodano niemiecki, rosyjski, francuski i hiszpański obok polskiego i angielskiego. Przetłumaczono interfejs, komunikaty głosowe, nuty, oktawy, położenia klawiszy, instrukcję i ostatnie zmiany. Wybór języka zapisuje się w ustawieniach i profilach JSON; stare profile PL/EN pozostają zgodne. Własny syntezator aplikacji wybiera język zgodny z ustawieniem; potrzebny jest odpowiedni głos Androida. Nowe wydania mogą zawierać opisy zmian we wszystkich sześciu językach, ze zgodnym odczytem starszych manifestów. Zasady systemowego potwierdzania aktualizacji pozostają zachowane.
+
+
+[APK 1.08](https://github.com/proszczok2002/Stroik/releases/download/android-v1.08/Stroik-Android-1.08.apk) · [Release](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.08) · [PL](README.md) / [EN](README.en.md)
 
 Widok klasyczny ukrywa porady, także standard 440 Hz i wskazówki pianinowe przy ukulele. Widok wybierasz tylko na stronie Stroik; usunięto powtórzone pole w Ustawieniach.
 
@@ -29,3 +34,5 @@ EN: Preserve the private key/password in ignored android/.signing for compatible
 PL: Aktualizacje korzystają z android/update.json. Weryfikowane są SHA-256, pakiet, wersja i podpis. Instalacja wymaga systemowego potwierdzenia Androida. Nie odinstalowuj aplikacji przed aktualizacją. Kanał Windows pozostaje oddzielny.
 
 EN: Updates use android/update.json with SHA-256, package, version and certificate verification. Installation requires Android system confirmation. Do not uninstall before updating. Windows uses a separate release channel.
+
+[Deutsch](README.de.md) · [Русский](README.ru.md) · [Français](README.fr.md) · [Español](README.es.md)

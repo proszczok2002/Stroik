@@ -35,8 +35,9 @@ internal static class ScreenReaderDetector
 internal sealed class PitchMeter : Control
 {
     private double? _cents;
-    private bool _english;
-    internal void SetLanguage(bool english) { _english = english; Invalidate(); }
+    private string _language = "pl";
+    internal void SetLanguage(bool english) => SetLanguage(english ? "en" : "pl");
+    internal void SetLanguage(string language) { _language = language; Invalidate(); }
 
     internal PitchMeter()
     {
@@ -70,8 +71,8 @@ internal sealed class PitchMeter : Control
             e.Graphics.DrawLine(marker, x, y - 23, x, y + 23);
         }
         string caption = _cents is double value
-            ? (_english ? $"Live: {value:+0.0;-0.0;0.0} cents" : $"Na żywo: {value:+0.0;-0.0;0.0} centów")
-            : (_english ? "Play one note" : "Zagraj jeden dźwięk");
+            ? UiLanguages.Format(_language, $"Na żywo: {value:+0.0;-0.0;0.0} centów", $"Live: {value:+0.0;-0.0;0.0} cents")
+            : UiLanguages.Get(_language, "Zagraj jeden dźwięk", "Play one note");
         TextRenderer.DrawText(e.Graphics, caption, Font, new Rectangle(5, 0, Width - 10, 30),
             ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         TextRenderer.DrawText(e.Graphics, "−50", Font, new Point((int)left - 10, Height - 22), ForeColor);
@@ -113,28 +114,28 @@ internal sealed class KeyboardDiagram : Control
         using var outline = new Pen(Color.Gray);
         using var dot = new SolidBrush(Highlight);
         for (int octave = 0; octave < 2; octave++)
-        for (int i = 0; i < 7; i++)
-        {
-            int midi = firstC + octave * 12 + whitePitches[i];
-            float x = 6 + (octave * 7 + i) * whiteWidth;
-            var rect = new RectangleF(x, top, whiteWidth, bottom - top);
-            e.Graphics.FillRectangle(midi == _midi ? dot : whiteBrush, rect);
-            e.Graphics.DrawRectangle(outline, x, top, whiteWidth, bottom - top);
-            if (midi == _midi)
-                e.Graphics.FillEllipse(dot, x + whiteWidth / 2 - 6, bottom - 27, 12, 12);
-        }
+            for (int i = 0; i < 7; i++)
+            {
+                int midi = firstC + octave * 12 + whitePitches[i];
+                float x = 6 + (octave * 7 + i) * whiteWidth;
+                var rect = new RectangleF(x, top, whiteWidth, bottom - top);
+                e.Graphics.FillRectangle(midi == _midi ? dot : whiteBrush, rect);
+                e.Graphics.DrawRectangle(outline, x, top, whiteWidth, bottom - top);
+                if (midi == _midi)
+                    e.Graphics.FillEllipse(dot, x + whiteWidth / 2 - 6, bottom - 27, 12, 12);
+            }
         int[] blackPitches = [1, 3, 6, 8, 10];
         int[] afterWhite = [0, 1, 3, 4, 5];
         for (int octave = 0; octave < 2; octave++)
-        for (int i = 0; i < 5; i++)
-        {
-            int midi = firstC + octave * 12 + blackPitches[i];
-            float width = whiteWidth * 0.62f;
-            float x = 6 + (octave * 7 + afterWhite[i] + 1) * whiteWidth - width / 2;
-            var rect = new RectangleF(x, top, width, (bottom - top) * 0.62f);
-            e.Graphics.FillRectangle(midi == _midi ? dot : blackBrush, rect);
-            if (midi == _midi)
-                e.Graphics.FillEllipse(dot, x + width / 2 - 5, top + 21, 10, 10);
-        }
+            for (int i = 0; i < 5; i++)
+            {
+                int midi = firstC + octave * 12 + blackPitches[i];
+                float width = whiteWidth * 0.62f;
+                float x = 6 + (octave * 7 + afterWhite[i] + 1) * whiteWidth - width / 2;
+                var rect = new RectangleF(x, top, width, (bottom - top) * 0.62f);
+                e.Graphics.FillRectangle(midi == _midi ? dot : blackBrush, rect);
+                if (midi == _midi)
+                    e.Graphics.FillEllipse(dot, x + width / 2 - 5, top + 21, 10, 10);
+            }
     }
 }

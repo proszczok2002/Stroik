@@ -1,4 +1,4 @@
-param([switch]$RebuildSameVersion)
+﻿param([switch]$RebuildSameVersion)
 $ErrorActionPreference = 'Stop'
 $env:DOTNET_CLI_HOME = Join-Path $PSScriptRoot '.dotnet-home'
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = '1'
@@ -80,12 +80,12 @@ try {
     $newHash = (Get-FileHash -LiteralPath $newExe -Algorithm SHA256).Hash.ToLowerInvariant()
     [System.IO.File]::WriteAllText((Join-Path $stage 'Stroik.exe.sha256'),
         $newHash + '  Stroik.exe' + [Environment]::NewLine, [System.Text.Encoding]::ASCII)
-    foreach ($name in @('README.md', 'README.en.md', 'LICENSE')) {
+    foreach ($name in @('README.md', 'README.en.md', 'README.de.md', 'README.ru.md', 'README.fr.md', 'README.es.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'NVDA-LGPL-2.1.txt')) {
         Copy-Item -LiteralPath (Join-Path $repoRoot $name) -Destination (Join-Path $stage $name)
     }
     $zipName = "Stroik-$version-Windows-x64.zip"
     Compress-Archive -LiteralPath $newExe, (Join-Path $stage 'Stroik.exe.sha256'),
-        (Join-Path $stage 'README.md'), (Join-Path $stage 'README.en.md'),
+        (Join-Path $stage 'README.md'), (Join-Path $stage 'README.en.md'), (Join-Path $stage 'README.de.md'), (Join-Path $stage 'README.ru.md'), (Join-Path $stage 'README.fr.md'), (Join-Path $stage 'README.es.md'), (Join-Path $stage 'THIRD_PARTY_NOTICES.md'), (Join-Path $stage 'NVDA-LGPL-2.1.txt'),
         (Join-Path $stage 'LICENSE') -DestinationPath (Join-Path $stage $zipName)
     if ((Get-FileHash -LiteralPath $newExe -Algorithm SHA256).Hash.ToLowerInvariant() -ne $newHash) {
         throw 'EXE changed while packaging.'
@@ -100,13 +100,13 @@ try {
     }
 
     try {
-        foreach ($name in @('Stroik.exe', 'Stroik.exe.sha256', 'README.md', 'README.en.md', 'LICENSE', 'build-version.txt')) {
+        foreach ($name in @('Stroik.exe', 'Stroik.exe.sha256', 'README.md', 'README.en.md', 'README.de.md', 'README.ru.md', 'README.fr.md', 'README.es.md', 'THIRD_PARTY_NOTICES.md', 'NVDA-LGPL-2.1.txt', 'LICENSE', 'build-version.txt')) {
             Move-ToArchive (Join-Path $output $name) (Join-Path 'wydanie' $name)
         }
         foreach ($file in Get-ChildItem -LiteralPath $output -Filter 'Stroik-*-Windows-x64.zip' -File) {
             Move-ToArchive $file.FullName (Join-Path 'wydanie' $file.Name)
         }
-        foreach ($name in @('Stroik.exe', 'Stroik.exe.sha256', 'README.md', 'README.en.md', 'LICENSE', $zipName)) {
+        foreach ($name in @('Stroik.exe', 'Stroik.exe.sha256', 'README.md', 'README.en.md', 'README.de.md', 'README.ru.md', 'README.fr.md', 'README.es.md', 'THIRD_PARTY_NOTICES.md', 'NVDA-LGPL-2.1.txt', 'LICENSE', $zipName)) {
             Copy-Item -LiteralPath (Join-Path $stage $name) -Destination (Join-Path $output $name)
         }
         if ((Get-FileHash -LiteralPath $activeExe -Algorithm SHA256).Hash.ToLowerInvariant() -ne $newHash) {

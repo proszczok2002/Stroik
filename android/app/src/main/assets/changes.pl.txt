@@ -1,11 +1,3 @@
-Stroik Android 1.07
+Stroik Android 1.08
 
-Widok klasyczny ukrywa porady, także standard 440 Hz i wskazówki pianinowe przy ukulele. Widok wybierasz tylko na stronie Stroik; usunięto powtórzone pole w Ustawieniach.
-
-W hybrydzie sterujesz mikrofonem, który uruchamia także kamerton. Ręczne uderzenie, automat i jego odstęp są tylko w metodzie Kamerton; hybryda zachowuje osobne pole dwóch akustycznych stuknięć. Przechodzenie po poprawnym wyniku dotyczy metody Elektroniczny. Oba potwierdzone ataki wymagają wybranej tolerancji, świeżej próbki i właściwej nuty. Rozstrojenie kasuje uzbrojenie; zwykły wynik sam nie zmienia celu. Kolejny wzorzec rozpoczyna świeży pomiar, odrzucając stare oczekujące wyniki. Kamerton po własnym TTS czeka na faktyczne zakończenie wypowiedzi.
-
-Shift+Alt+N i Shift+Ctrl+N wracają do poprzedniego dźwięku według planu. Wpis wartości otwiera klawiaturę numeryczną i przyjmuje kropkę lub przecinek; suwak i profil zapisują podaną liczbę. Ustawienie prędkości mowy pozostaje w Ustawieniach.
-
-Wzmocniono niskie tony kamertonu i wygładzono zakończenie, aby ograniczyć stuk. Kwinta od c razkreślnego zawiera c razkreślne i g razkreślne, 261,63 i 392,00 Hz przy A=440; test widma obejmuje pięć oktaw i brak składowych o oktawę niższych. Małe głośniki nadal ograniczają słyszalność basu. Wizualny klawisz zmienia się z niebieskiego na czerwony przy rozstrojeniu lub zielony w ustawionej tolerancji. Kolor uzupełnia opis tekstowy.
-
-Próby na Pixelu z włączonym TalkBack są opisane w raporcie DEVICE_TESTS.md. Testy struktury, zdarzeń i audio nie potwierdzają wymowy, naturalnych gestów ani strojenia prawdziwego instrumentu na każdym telefonie.
+Dodano niemiecki, rosyjski, francuski i hiszpański obok polskiego i angielskiego. Przetłumaczono interfejs, komunikaty głosowe, nuty, oktawy, położenia klawiszy, instrukcję i ostatnie zmiany. Wybór języka zapisuje się w ustawieniach i profilach JSON; stare profile PL/EN pozostają zgodne. Własny syntezator aplikacji wybiera język zgodny z ustawieniem; potrzebny jest odpowiedni głos Androida. Nowe wydania mogą zawierać opisy zmian we wszystkich sześciu językach, ze zgodnym odczytem starszych manifestów. Zasady systemowego potwierdzania aktualizacji pozostają zachowane.

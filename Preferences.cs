@@ -10,6 +10,7 @@ internal sealed class Preferences
 {
     public int ProfileVersion { get; set; } = 1;
     public bool English { get; set; } = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName != "pl";
+    public string? Language { get; set; }
     public bool DarkTheme { get; set; }
     public TuningMethod Method { get; set; } = TuningMethod.TuningFork;
     public TunerView View { get; set; } = TunerView.Beginner;
@@ -36,6 +37,7 @@ internal sealed class Preferences
     public bool ForkTapAdvance { get; set; }
     public bool MicrophoneMonitor { get; set; }
     public int StrikeIntervalSeconds { get; set; } = 3;
+    public int HybridPauseSeconds { get; set; } = 8;
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private static string FilePath => Path.Combine(
@@ -58,7 +60,7 @@ internal sealed class Preferences
 
     internal void Validate()
     {
-        if (ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) || !Enum.IsDefined(UkuleleTuning) || !Enum.IsDefined(PianoOrder) || !Enum.IsDefined(Consonance) || UpdateMinutes is < 1 or > 1440 ||
+        if ((!string.IsNullOrEmpty(Language) && !UiLanguages.Codes.Contains(Language)) || ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) || !Enum.IsDefined(UkuleleTuning) || !Enum.IsDefined(PianoOrder) || !Enum.IsDefined(Consonance) || UpdateMinutes is < 1 or > 1440 ||
             PlanAnchorMidi is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi ||
             MicrophoneCorrectionCents is < -100 or > 100 ||
             DoubleStrikeWindowMilliseconds is < 500 or > 2500 ||
@@ -66,7 +68,7 @@ internal sealed class Preferences
             SensitivityIndex is < 0 or > 2 || ToleranceCents is < 1 or > 20 ||
             TargetMidi is < -1 or > NoteCatalog.HighestMidi ||
             (TargetMidi >= 0 && TargetMidi < NoteCatalog.LowestMidi) ||
-            StartOctave is < 0 or > 8 || StrikeIntervalSeconds is < 1 or > 10)
+            StartOctave is < 0 or > 8 || StrikeIntervalSeconds is < 1 or > 10 || HybridPauseSeconds is < 3 or > 60)
             throw new InvalidDataException("Invalid Stroik settings file.");
     }
 

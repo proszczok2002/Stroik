@@ -216,3 +216,10 @@ Screenshots were inspected for red/green target keys in both themes, readable na
 **Remaining manual/device checks:** human NVDA/TalkBack pronunciation and notification audibility, natural flick/MagicTap gestures, the previously reported Motorola/Xiaomi loop, real instruments/noisy rooms, headphones and the reporter's perception of fifth octaves/bass response. No headphones were connected. A phone already on107 cannot demonstrate a higher-version public update to107; public download/certificate verification and local system installation are separate stages.
 
 Polski: końcowy APK przeszedł wszystkie powyższe próby na Pixelu z włączonym TalkBackiem. Classic bez porad, poprawione sterowanie hybrydą, pięć rozstrojonych pomiarów bez przejścia dalej, trzy cykle wolnej mowy, rzeczywisty zapis nowej liczby, fokus, grafika i wygaszony ekran — PASS. Odsłuch człowieka, gesty, Moto/Xiaomi, prawdziwy instrument i pełny updater do kolejnego numeru wersji nadal wymagają osobnego potwierdzenia.
+
+
+## 1.08 / 108 — localization, 16 November 2026
+
+Local JVM checks passed for all six locales, note/position names, speech locale selection, language validation and the existing DSP/gesture regressions. Shared catalog checks cover 306 templates per added language, including format placeholders. Signed production APK and device-test harness compiled successfully. A new `languages` instrumentation scenario covers six-language controls, selected notes, JSON round trips and localized guide/change assets without suppressing accessibility services.
+
+This session has no connected ADB device. mDNS found none; the previous Pixel endpoint 192.168.0.103:43247 refused the connection. The languages scenario, system update 107→108 and TalkBack interactions HAVE NOT RUN on a phone for this release. Earlier 1.07 results above remain historical, not evidence for 1.08. No human pronunciation, natural gestures, instrument, Moto or Xiaomi checks are claimed. The owner was asked for the current wireless-debugging endpoint.

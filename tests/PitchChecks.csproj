@@ -7,6 +7,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../THIRD_PARTY_NOTICES.md" LogicalName="Stroik.THIRD_PARTY_NOTICES.md" />
+    <EmbeddedResource Include="../NVDA-LGPL-2.1.txt" LogicalName="Stroik.NVDA-LGPL-2.1.txt" />
+    <Compile Include="../NvdaReader.cs" Link="NvdaReader.cs" />
+    <Compile Include="../UiLanguages.cs" Link="UiLanguages.cs" />
+    <EmbeddedResource Include="../locales/*.json" Exclude="../locales/source*.json" LogicalName="Stroik.locale.%(Filename).json" />
+    <Compile Include="../TunerForm.Guidance.cs" Link="TunerForm.Guidance.cs" />
+    <EmbeddedResource Include="../vendor/nvda/nvdaControllerClient.dll" LogicalName="Stroik.nvdaControllerClient.dll" />
     <Compile Include="../SpeechOutput.cs" Link="SpeechOutput.cs" />
     <Compile Include="../EditableNumber.cs" Link="EditableNumber.cs" />
     <Compile Include="../PitchDetector.cs" Link="PitchDetector.cs" />

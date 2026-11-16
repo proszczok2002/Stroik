@@ -6,7 +6,6 @@ import android.os.*;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import java.lang.ref.WeakReference;
-import java.util.Locale;
 
 /** Owns capture independently of an Activity while the user-started service is active. */
 final class TuningSession implements AudioEngine.Listener {
@@ -83,7 +82,7 @@ final class TuningSession implements AudioEngine.Listener {
     pendingSpeech = value;
     audio.holdForSpeech();
     if (!ready) return;
-    speech.setLanguage(model.english ? Locale.US : new Locale("pl"));
+    speech.setLanguage(model.locale());
     speech.setSpeechRate((float) model.speechRate);
     utterance = "stroik-" + (++speechEpoch);
     String id = utterance;

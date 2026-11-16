@@ -36,6 +36,32 @@ internal static class NoteCatalog
 
     internal static string Spoken(int midi, bool english) => english ? Label(midi, true) :
         PolishPitch[midi % 12] + " " + new[] { "subkontra", "kontra", "wielkie", "małe", "razkreślne", "dwukreślne", "trzykreślne", "czterokreślne", "pięciokreślne" }[Octave(midi)];
+    internal static string Label(int midi, string language) => language is "pl" or "en" ? Label(midi, language == "en") : Pitch(midi % 12, language) + ", " + OctaveLabel(Octave(midi), language);
+    internal static string Spoken(int midi, string language) => language is "pl" or "en" ? Spoken(midi, language == "en") : Label(midi, language);
+    internal static string Pitch(int pitch, string language) => language switch
+    {
+        "de" => new[] { "C", "Cis", "D", "Dis", "E", "F", "Fis", "G", "Gis", "A", "B", "H" }[pitch],
+        "ru" => new[] { "до", "до-диез", "ре", "ре-диез", "ми", "фа", "фа-диез", "соль", "соль-диез", "ля", "си-бемоль", "си" }[pitch],
+        "fr" => new[] { "do", "do dièse", "ré", "ré dièse", "mi", "fa", "fa dièse", "sol", "sol dièse", "la", "si bémol", "si" }[pitch],
+        "es" => new[] { "do", "do sostenido", "re", "re sostenido", "mi", "fa", "fa sostenido", "sol", "sol sostenido", "la", "si bemol", "si" }[pitch],
+        _ => language == "pl" ? PolishPitch[pitch] : EnglishPitch[pitch]
+    };
+    internal static string OctaveLabel(int octave, string language) => language switch
+    {
+        "de" => new[] { "Subkontraoktave", "Kontraoktave", "große Oktave", "kleine Oktave", "eingestrichene Oktave", "zweigestrichene Oktave", "dreigestrichene Oktave", "viergestrichene Oktave", "fünfgestrichene Oktave" }[octave],
+        "ru" => new[] { "субконтроктава", "контроктава", "большая октава", "малая октава", "первая октава", "вторая октава", "третья октава", "четвёртая октава", "пятая октава" }[octave],
+        "fr" => "octave " + octave,
+        "es" => "octava " + octave,
+        _ => OctaveLabel(octave, language == "en")
+    };
+
+    internal static int NextBlack(int current, int direction)
+    {
+        if (direction is not (-1 or 1)) throw new ArgumentOutOfRangeException(nameof(direction));
+        for (int midi = current + direction; midi >= LowestMidi && midi <= HighestMidi; midi += direction)
+            if (midi % 12 is 1 or 3 or 6 or 8 or 10) return midi;
+        return current;
+    }
 
     internal static int NextNatural(int current, int direction)
     {

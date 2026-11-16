@@ -1,6 +1,11 @@
-# Stroik Android 1.07
+# Stroik Android 1.08
 
-[APK 1.07](https://github.com/proszczok2002/Stroik/releases/download/android-v1.07/Stroik-Android-1.07.apk) · [Release](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.07) · [PL](README.md) / [EN](README.en.md)
+Stroik Android 1.08
+
+Added German, Russian, French and Spanish alongside Polish and English. Interface, spoken messages, notes, octaves, key positions, guide and latest changes are translated. Language persists in settings and JSON profiles; older PL/EN profiles remain compatible. App speech selects the chosen language; its Android voice must be installed. New releases can include notes in all six languages, with fallback for older manifests. Updates still require Android system confirmation.
+
+
+[APK 1.08](https://github.com/proszczok2002/Stroik/releases/download/android-v1.08/Stroik-Android-1.08.apk) · [Release](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.08) · [PL](README.md) / [EN](README.en.md)
 
 Classic hides guidance, including the 440 Hz standard hint and piano advice for ukulele. Choose the view only on Tuner; the duplicate Settings checkbox is removed.
 
@@ -29,3 +34,5 @@ EN: Preserve the private key/password in ignored android/.signing for compatible
 PL: Aktualizacje korzystają z android/update.json. Weryfikowane są SHA-256, pakiet, wersja i podpis. Instalacja wymaga systemowego potwierdzenia Androida. Nie odinstalowuj aplikacji przed aktualizacją. Kanał Windows pozostaje oddzielny.
 
 EN: Updates use android/update.json with SHA-256, package, version and certificate verification. Installation requires Android system confirmation. Do not uninstall before updating. Windows uses a separate release channel.
+
+[Deutsch](README.de.md) · [Русский](README.ru.md) · [Français](README.fr.md) · [Español](README.es.md)

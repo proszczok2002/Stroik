@@ -8,6 +8,29 @@ public final class CoreChecks {
   }
 
   public static void main(String[] args) {
+    for (String language : Translations.CODES) {
+      Model translated = new Model();
+      translated.language = language;
+      translated.validate();
+      require(translated.t("Język", "Language").length() > 0, "Language label");
+      require(
+          translated.note(67).length() > 3 && translated.position(67).length() > 10,
+          "Note and position");
+      require(translated.locale().getLanguage().equals(language), "TTS locale");
+      if (!language.equals("pl") && !language.equals("en")) {
+        require(
+            !translated.t("Mikrofon wyłączony", "Microphone off").equals("Microphone off"),
+            "Microphone translation missing");
+        require(!translated.position(67).contains("white key"), "Position translation missing");
+      }
+    }
+    Model invalidLanguage = new Model();
+    invalidLanguage.language = "xx";
+    try {
+      invalidLanguage.validate();
+      throw new AssertionError("Unknown language accepted");
+    } catch (IllegalArgumentException expected) {
+    }
     Model navigation = new Model();
     navigation.english = false;
     require(navigation.voiceInVisual && !navigation.keepScreenOn, "Speech and screen defaults");

@@ -1,5 +1,27 @@
 # Changelog / Historia zmian
 
+## 1.0.20 (Stroik 1.20) — 2026-11-16
+
+PL:
+
+- Dodano niemiecki, rosyjski, francuski i hiszpański obok polskiego i angielskiego: interfejs, komunikaty, nuty, wskazówki, profile i instrukcje.
+- Kamerton ma wyraźniejsze harmoniczne w najniższym rejestrze bez zmiany oktawy. Małe głośniki nadal mogą ograniczać bas.
+- W metodzie Kamerton pole dwóch stuknięć samodzielnie steruje mikrofonem; ukryto osobne przyciski mikrofonu. Rozruch wymaga krótkiej ciszy, aby nie liczyć go jako uderzenia. Automat pozostawia czas na gest.
+- Hybryda dla początkujących czeka na odczyt wskazówek NVDA/SAPI. Inny czytnik otrzymuje dostępne okno z przyciskiem rozpoczęcia po wskazówkach. Klasyczny widok rozpoczyna od razu. Dodano przerwę po wyniku 3–60 sekund, domyślnie 8; NVDA 2026.3+ i SAPI blokują wzorzec podczas mowy.
+- Krótsze odczyty w widoku klasycznym: fortepian, lista nut bez opisów położenia, automat bez dodatkowej instrukcji. Liczby są pojedynczymi polami edycji z obsługą strzałek i wpisu przecinkiem/kropką, bez roli pokrętła.
+- Góra/dół wybierają białe klawisze, lewo/prawo wyłącznie czarne. Następny/poprzedni według planu nadal obejmuje jego wszystkie nuty.
+- Dodano opisy zastosowania czterech metod oraz dostępne z klawiatury wskazówki instrumentu w widoku początkującym; F1 otwiera je także na żądanie.
+
+EN:
+
+- Added German, Russian, French and Spanish alongside Polish and English: interface, messages, notes, guidance, profiles and guides.
+- Stronger upper partials support the lowest fork register without transposing it. Small speakers can still limit bass.
+- In Fork, the two-strike checkbox owns microphone capture; separate microphone buttons are hidden. Startup requires a brief quiet period so it cannot count as an attack. Automatic playback leaves time for the gesture.
+- Beginner hybrid waits for NVDA/SAPI guidance. Other readers get an accessible Start-after-guidance dialog. Classic starts immediately. The new result pause is 3–60 seconds, default 8; NVDA 2026.3+ and SAPI hold the reference while speaking.
+- Shorter Classic feedback: Piano, note lists without positions, automatic checkbox without extra manual-mode text. Numbers use a single editable text control with arrow keys and comma/dot entry, without a spin-button role.
+- Up/Down select white keys; Left/Right select only black keys. Planned Next/Previous still visits all notes in the selected plan.
+- Added purpose descriptions for all four methods and keyboard-accessible instrument guidance in Beginner; F1 also opens it on demand.
+
 ## 1.0.19 (Stroik 1.19) — 2026-11-16
 
 PL:

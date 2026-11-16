@@ -24,7 +24,7 @@ internal static class ReleaseRegression
                 CheckPair(midi, Consonance.Fifth, 440);
                 Field<ComboBox>(form, "_consonance").SelectedIndex = (int)Consonance.Octave;
                 CheckPair(midi, Consonance.Octave, 440);
-                Field<NumericUpDown>(form, "_concertA").Value = 435;
+                Field<EditableNumber>(form, "_concertA").Value = 435;
                 CheckPair(midi, Consonance.Octave, 435);
                 // Direct list and octave changes must work without arrow/Next handlers.
                 Call(form, "SelectTarget", midi + 2);
@@ -75,7 +75,7 @@ internal static class ReleaseRegression
                 IntPtr window = open ? info.List : target.Handle;
                 foreach (int expected in new[] {62,64,65,67,69,71,72}) Key(Keys.Down, expected);
                 foreach (int expected in new[] {71,69,67,65,64,62,60}) Key(Keys.Up, expected);
-                Key(Keys.Right, 61); Key(Keys.Right, 62); Key(Keys.Left, 61); Key(Keys.Up, 60);
+                Key(Keys.Right, 61); Key(Keys.Right, 63); Key(Keys.Left, 61); Key(Keys.Up, 60);
                 target.DroppedDown = false;
                 // The explicit ascending plan includes every chromatic note; arrows choose white keys separately.
                 for (int expected = 61; expected <= 72; expected++)
@@ -113,8 +113,8 @@ internal static class ReleaseRegression
             {
                 Call(form, "ApplySettings", new Preferences { Instrument = InstrumentKind.Piano,
                     TargetMidi = 60, English = english, View = view, AutomaticUpdates = false });
-                if (!target.SelectedItem!.ToString()!.Contains(KeyboardGuide.Position(60, english)))
-                    throw new Exception("Piano note option has no physical key position.");
+                if (target.SelectedItem!.ToString()!.Contains(KeyboardGuide.Position(60, english)) != (view == TunerView.Beginner))
+                    throw new Exception("Piano description visibility does not match the view.");
                 Call(form, "SelectTarget", 61);
                 Call(form, "AnnounceTarget");
                 string expected = NoteCatalog.Spoken(61, english);
@@ -172,8 +172,8 @@ internal static class ReleaseRegression
             if(!(bool)typeof(TunerForm).GetMethod("ProcessCmdKey",Hidden)!.Invoke(form,args)! || Field<int>(form,"_targetMidi")!=60)
                 throw new Exception("Shift+Next did not go backwards.");
         }
-        var edit=Field<NumericUpDown>(form,"_concertA");
-        var input=edit.Controls.OfType<TextBox>().First();
+        var edit=Field<EditableNumber>(form,"_concertA");
+        TextBox input=edit;
         input.Focus(); input.SelectAll();
         string typed="";
         foreach(char key in "435") {

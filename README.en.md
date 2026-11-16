@@ -1,12 +1,14 @@
-# Stroik 1.19
+# Stroik 1.20
 
-Current Windows 1.19 changes are described below; older version sections are historical.
+Current Windows 1.20 changes are described below; older version sections are historical.
 
 [Native Android 1.07](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.07) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
-**An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
+**An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and interfaces in PL, EN, DE, RU, FR and ES.
 
 [Dokumentacja po polsku](README.md) · [Latest release](https://github.com/proszczok2002/Stroik/releases/latest) · [Changelog](CHANGELOG.md)
+
+[Deutsch](README.de.md) · [Русский](README.ru.md) · [Français](README.fr.md) · [Español](README.es.md)
 
 ## Download
 
@@ -20,11 +22,11 @@ Download `Stroik.exe` from GitHub Releases. It is self-contained and needs no .N
 
 ### Hybrid practice and fork navigation in 1.13
 
-Choose **Hybrid — speakers (alternating)** or **Hybrid — headphones**, then **Start microphone**. The speaker variant plays the reference for 3 seconds, ignores microphone samples for 3.4 seconds, then listens to your instrument. After the note stops, it announces the reading, allows about 5 seconds for speech and plays the reference again. Long NVDA speech or reverberation may require a manual repeat. Changing the target plays the new reference. **Stop microphone** ends the cycle.
+Choose **Hybrid — speakers (alternating)** or **Hybrid — headphones**, then **Start microphone**. The speaker variant plays the reference for 3 seconds, ignores microphone samples for 3.4 seconds, then listens to your instrument. After the note stops, it announces the reading, waits for SAPI or NVDA 2026.3+ speech to end plus the selected pause (3–60 seconds, default 8), then repeats the reference. Beginner view reads guidance first using NVDA 2024.1+ synchronous speech; other readers receive an accessible Start-after-guidance dialog. Reverberation can still affect readings. Changing the target plays the new reference. **Stop microphone** ends the cycle.
 
 The headphone variant listens while the tuning fork plays. Optional **Monitor microphone in headphones** is off by default. Put headphones on first: routing the microphone through speakers can cause feedback. Monitoring uses the default Windows devices, changes no system settings and has hardware and driver dependent latency.
 
-**Two strikes advance to the next note in the selected order** works with the fork and hybrid methods. Enabling it in the open app starts the microphone; after restarting the app, press **Start microphone**. Two distinct attacks within the selected time advance according to the tuning plan and play the new reference. This is an acoustic gesture without pitch validation: two incidental noises may also trigger it. Listening waits for the app's own fork tone to decay. Automatic fork strikes are at least 6.5 seconds apart with tap navigation enabled. **Ctrl+N** still advances manually.
+**Two strikes advance to the next note in the selected order** works with the fork and hybrid methods. In Fork, this checkbox alone starts/stops the microphone, including on reopening with the option saved. Separate microphone buttons are hidden. Start hybrids with the microphone button. Two distinct attacks within the selected time advance according to the tuning plan and play the new reference. This is an acoustic gesture without pitch validation: two incidental noises may also trigger it. Listening waits for the app's own fork tone to decay. Automatic fork strikes are at least 6.5 seconds apart with tap navigation enabled. **Ctrl+N** still advances manually.
 
 ### Fifths and octaves
 
@@ -159,3 +161,18 @@ Stroik 1.19
 Validation: PL/EN, typed digits and decimal separators, shortcuts, visibility, five consecutive hybrid results, strict attack tolerance, five-octave fifth spectra, actual SAPI start/completion and existing audio/updater regression. Human NVDA listening and the reporter's real instrument remain unverified.
 
 [SAPI completion API](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee125654(v=vs.85)).
+
+
+## Changes in 1.20
+
+Stroik 1.20
+
+- Added German, Russian, French and Spanish alongside Polish and English: interface, messages, notes, guidance, profiles and guides.
+- Stronger upper partials support the lowest fork register without transposing it. Small speakers can still limit bass.
+- In Fork, the two-strike checkbox owns microphone capture; separate microphone buttons are hidden. Startup requires a brief quiet period so it cannot count as an attack. Automatic playback leaves time for the gesture.
+- Beginner hybrid waits for NVDA/SAPI guidance. Other readers get an accessible Start-after-guidance dialog. Classic starts immediately. The new result pause is 3–60 seconds, default 8; NVDA 2026.3+ and SAPI hold the reference while speaking.
+- Shorter Classic feedback: Piano, note lists without positions, automatic checkbox without extra manual-mode text. Numbers use a single editable text control with arrow keys and comma/dot entry, without a spin-button role.
+- Up/Down select white keys; Left/Right select only black keys. Planned Next/Previous still visits all notes in the selected plan.
+- Added purpose descriptions for all four methods and keyboard-accessible instrument guidance in Beginner; F1 also opens it on demand.
+
+NVDA Controller Client: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), LGPL 2.1.

@@ -11,7 +11,8 @@ internal sealed class SpeechOutput : IDisposable
     {
         get { try { return _voice is not null && !(bool)_voice.WaitUntilDone(0); } catch { return false; } }
     }
-    internal bool Speak(string text, bool english)
+    internal bool Speak(string text, bool english) => Speak(text, english ? "en" : "pl");
+    internal bool Speak(string text, string language)
     {
         try
         {
@@ -20,7 +21,7 @@ internal sealed class SpeechOutput : IDisposable
                 Type type = Type.GetTypeFromProgID("SAPI.SpVoice") ?? throw new InvalidOperationException("SAPI voice unavailable");
                 _voice = Activator.CreateInstance(type)!;
             }
-            dynamic choices = _voice.GetVoices("Language=" + (english ? "409" : "415"), "");
+            dynamic choices = _voice.GetVoices("Language=" + UiLanguages.Culture(language).LCID.ToString("x"), "");
             try { if (choices.Count > 0) _voice.Voice = choices.Item(0); }
             finally { Marshal.ReleaseComObject(choices); }
             _voice.Speak(text, 1 | 2 | 16); // asynchronous, purge previous, plain text

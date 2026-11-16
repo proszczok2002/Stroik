@@ -1,12 +1,14 @@
-# Stroik 1.19
+# Stroik 1.20
 
-Aktualne zmiany Windows 1.19 opisano poniżej; starsze sekcje wersji są historyczne.
+Aktualne zmiany Windows 1.20 opisano poniżej; starsze sekcje wersji są historyczne.
 
 [Natywna wersja Android 1.07](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.07) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
-**Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
+**Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs w językach PL, EN, DE, RU, FR i ES.
 
 [English documentation](README.en.md) · [Najnowsze wydanie](https://github.com/proszczok2002/Stroik/releases/latest) · [Historia zmian](CHANGELOG.md)
+
+[Deutsch](README.de.md) · [Русский](README.ru.md) · [Français](README.fr.md) · [Español](README.es.md)
 
 ## Pobieranie
 
@@ -20,11 +22,11 @@ Przy pierwszym uruchomieniu wybrany jest **Kamerton**. Przycisk **Uderz kamerton
 
 ### Hybryda i sterowanie kamertonem w 1.13
 
-Lista metod zawiera również **Hybrydowy — głośniki (naprzemiennie)** oraz **Hybrydowy — słuchawki**. Naciśnij **Włącz mikrofon**, aby rozpocząć ćwiczenie. W pierwszym wariancie wzorzec gra przez 3 sekundy; mikrofon jest pomijany przez 3,4 sekundy, potem słucha instrumentu. Po wyciszeniu nuty program ogłasza wynik, pozostawia co najmniej 5 sekund na wypowiedź i wraca do wzorca. Własna mowa SAPI dodatkowo blokuje wzorzec do zakończenia wypowiedzi; program nie otrzymuje informacji o zakończeniu mowy NVDA. Długi komunikat NVDA lub pogłos mogą wymagać ręcznego powtórzenia. Zmiana celu uruchamia nowy wzorzec. **Wyłącz mikrofon** kończy cykl.
+Lista metod zawiera również **Hybrydowy — głośniki (naprzemiennie)** oraz **Hybrydowy — słuchawki**. Naciśnij **Włącz mikrofon**, aby rozpocząć ćwiczenie. W pierwszym wariancie wzorzec gra przez 3 sekundy; mikrofon jest pomijany przez 3,4 sekundy, potem słucha instrumentu. Po wyciszeniu nuty program ogłasza wynik, czeka na zakończenie mowy SAPI lub NVDA 2026.3+ i wybraną przerwę (3–60 s, domyślnie 8). W widoku początkującym najpierw odczytuje wskazówki; synchroniczne API wymaga NVDA 2024.1+. Inny czytnik otrzymuje dostępny dialog z przyciskiem rozpoczęcia po wskazówkach. Pogłos nadal może wpływać na pomiar. Zmiana celu uruchamia nowy wzorzec. **Wyłącz mikrofon** kończy cykl.
 
 W wariancie słuchawkowym mikrofon działa równocześnie z kamertonem. **Odsłuch mikrofonu w słuchawkach** jest opcjonalny, domyślnie wyłączony. Najpierw załóż słuchawki: odtwarzanie mikrofonu przez głośniki może spowodować sprzężenie. Odsłuch korzysta z domyślnych urządzeń Windows, nie zmienia ustawień systemowych; opóźnienie zależy od sprzętu i sterowników.
 
-Pole **Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną kolejnością** działa przy kamertonie i hybrydzie. Jego włączenie podczas pracy otwartego okna uruchamia mikrofon; po ponownym uruchomieniu programu użyj **Włącz mikrofon**. Dwa oddzielne ataki w ustawionym czasie wybierają następny cel według planu i odtwarzają jego wzorzec. To gest akustyczny bez sprawdzania wysokości: dwa przypadkowe hałasy też mogą go wywołać. Po własnym tonie kamertonu nasłuch czeka na wybrzmienie. Przy automatycznych uderzeniach i tym polu odstęp wynosi co najmniej 6,5 sekundy, żeby pozostawić czas na gest. **Ctrl+N** pozostaje dostępną metodą ręczną.
+Pole **Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną kolejnością** działa przy kamertonie i hybrydzie. W metodzie Kamerton pole samodzielnie włącza i wyłącza mikrofon; osobne przyciski mikrofonu są ukryte. Zapisany nasłuch rozpoczyna się także po ponownym otwarciu okna. Przy hybrydzie rozpocznij przyciskiem mikrofonu. Dwa oddzielne ataki w ustawionym czasie wybierają następny cel według planu i odtwarzają jego wzorzec. To gest akustyczny bez sprawdzania wysokości: dwa przypadkowe hałasy też mogą go wywołać. Po własnym tonie kamertonu nasłuch czeka na wybrzmienie. Przy automatycznych uderzeniach i tym polu odstęp wynosi co najmniej 6,5 sekundy, żeby pozostawić czas na gest. **Ctrl+N** pozostaje dostępną metodą ręczną.
 
 ### Kwinty i oktawy
 
@@ -161,3 +163,18 @@ Stroik 1.19
 Testy: PL/EN, cyfry i separatory dziesiętne, skróty, widoczność, pięć kolejnych wyników hybrydy, ścisła tolerancja gestu, widmo kwint w pięciu oktawach, SAPI start/koniec oraz dotychczasowe regresje audio/updatera. Nie potwierdzono odsłuchu NVDA ani prawdziwego instrumentu u zgłaszającego.
 
 [SAPI completion API](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee125654(v=vs.85)).
+
+
+## Zmiany w 1.20
+
+Stroik 1.20
+
+- Dodano niemiecki, rosyjski, francuski i hiszpański obok polskiego i angielskiego: interfejs, komunikaty, nuty, wskazówki, profile i instrukcje.
+- Kamerton ma wyraźniejsze harmoniczne w najniższym rejestrze bez zmiany oktawy. Małe głośniki nadal mogą ograniczać bas.
+- W metodzie Kamerton pole dwóch stuknięć samodzielnie steruje mikrofonem; ukryto osobne przyciski mikrofonu. Rozruch wymaga krótkiej ciszy, aby nie liczyć go jako uderzenia. Automat pozostawia czas na gest.
+- Hybryda dla początkujących czeka na odczyt wskazówek NVDA/SAPI. Inny czytnik otrzymuje dostępne okno z przyciskiem rozpoczęcia po wskazówkach. Klasyczny widok rozpoczyna od razu. Dodano przerwę po wyniku 3–60 sekund, domyślnie 8; NVDA 2026.3+ i SAPI blokują wzorzec podczas mowy.
+- Krótsze odczyty w widoku klasycznym: fortepian, lista nut bez opisów położenia, automat bez dodatkowej instrukcji. Liczby są pojedynczymi polami edycji z obsługą strzałek i wpisu przecinkiem/kropką, bez roli pokrętła.
+- Góra/dół wybierają białe klawisze, lewo/prawo wyłącznie czarne. Następny/poprzedni według planu nadal obejmuje jego wszystkie nuty.
+- Dodano opisy zastosowania czterech metod oraz dostępne z klawiatury wskazówki instrumentu w widoku początkującym; F1 otwiera je także na żądanie.
+
+NVDA Controller Client: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), LGPL 2.1.

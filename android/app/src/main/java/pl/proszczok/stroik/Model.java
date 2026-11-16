@@ -4,6 +4,7 @@ import java.util.*;
 import org.json.JSONObject;
 
 public final class Model {
+  public String language = "";
   public boolean english,
       dark,
       beginner = true,
@@ -58,14 +59,23 @@ public final class Model {
     "five-line"
   };
 
+  public String code() {
+    return language.isEmpty() ? (english ? "en" : "pl") : language;
+  }
+
+  public Locale locale() {
+    return Locale.forLanguageTag(code());
+  }
+
   public String t(String pl, String en) {
-    return english ? en : pl;
+    return Translations.get(code(), pl, en);
   }
 
   public String note(int midi) {
     if (midi < 21 || midi > 108) return t("Poza zakresem", "Out of range");
     int o = midi / 12 - 1;
-    return english
+    if (!code().equals("pl") && !code().equals("en")) return pitch(midi % 12) + ", " + octave(o);
+    return code().equals("en")
         ? EN[midi % 12] + ", " + OCT_EN[o] + " octave"
         : PL[midi % 12] + " w oktawie " + OCT_PL[o];
   }
@@ -82,11 +92,44 @@ public final class Model {
       "czterokreślna",
       "pięciokreślna"
     };
-    return english ? OCT_EN[o] + " octave" : "Oktawa " + nominative[o];
+    switch (code()) {
+      case "de":
+        return new String[] {
+              "Subkontraoktave",
+              "Kontraoktave",
+              "große Oktave",
+              "kleine Oktave",
+              "eingestrichene Oktave",
+              "zweigestrichene Oktave",
+              "dreigestrichene Oktave",
+              "viergestrichene Oktave",
+              "fünfgestrichene Oktave"
+            }
+            [o];
+      case "ru":
+        return new String[] {
+              "субконтроктава",
+              "контроктава",
+              "большая октава",
+              "малая октава",
+              "первая октава",
+              "вторая октава",
+              "третья октава",
+              "четвёртая октава",
+              "пятая октава"
+            }
+            [o];
+      case "fr":
+        return "octave " + o;
+      case "es":
+        return "octava " + o;
+      default:
+        return code().equals("en") ? OCT_EN[o] + " octave" : "Oktawa " + nominative[o];
+    }
   }
 
   public String spokenNote(int midi) {
-    if (english) return note(midi);
+    if (!code().equals("pl")) return note(midi);
     return PL[midi % 12]
         + " "
         + new String[] {
@@ -231,7 +274,78 @@ public final class Model {
       "third black of three",
       "white after three black keys"
     };
-    return (english ? en : pl)[midi % 12];
+    String[] full = {
+      "white key immediately before a group of two black keys",
+      "first black key in a group of two",
+      "white key between the two black keys in a group of two",
+      "second black key in a group of two",
+      "white key immediately after a group of two black keys",
+      "white key immediately before a group of three black keys",
+      "first black key in a group of three",
+      "white key between the first and second black keys in a group of three",
+      "second black key in a group of three",
+      "white key between the second and third black keys in a group of three",
+      "third black key in a group of three",
+      "white key immediately after a group of three black keys"
+    };
+    return t(pl[midi % 12], full[midi % 12]);
+  }
+
+  public String pitch(int n) {
+    switch (code()) {
+      case "de":
+        return new String[] {"C", "Cis", "D", "Dis", "E", "F", "Fis", "G", "Gis", "A", "B", "H"}[n];
+      case "ru":
+        return new String[] {
+              "до",
+              "до-диез",
+              "ре",
+              "ре-диез",
+              "ми",
+              "фа",
+              "фа-диез",
+              "соль",
+              "соль-диез",
+              "ля",
+              "си-бемоль",
+              "си"
+            }
+            [n];
+      case "fr":
+        return new String[] {
+              "do",
+              "do dièse",
+              "ré",
+              "ré dièse",
+              "mi",
+              "fa",
+              "fa dièse",
+              "sol",
+              "sol dièse",
+              "la",
+              "si bémol",
+              "si"
+            }
+            [n];
+      case "es":
+        return new String[] {
+              "do",
+              "do sostenido",
+              "re",
+              "re sostenido",
+              "mi",
+              "fa",
+              "fa sostenido",
+              "sol",
+              "sol sostenido",
+              "la",
+              "si bemol",
+              "si"
+            }
+            [n];
+      default:
+        return (code().equals("pl") ? PL : EN)[n];
+    }
   }
 
   public String guide() {
@@ -263,7 +377,8 @@ public final class Model {
     Model m = new Model();
     for (java.lang.reflect.Field f : Model.class.getFields()) {
       if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || !j.has(f.getName())) continue;
-      if (f.getType() == boolean.class) f.setBoolean(m, j.getBoolean(f.getName()));
+      if (f.getType() == String.class) f.set(m, j.getString(f.getName()));
+      else if (f.getType() == boolean.class) f.setBoolean(m, j.getBoolean(f.getName()));
       else if (f.getType() == int.class) f.setInt(m, j.getInt(f.getName()));
       else if (f.getType() == double.class) f.setDouble(m, j.getDouble(f.getName()));
     }
@@ -272,6 +387,8 @@ public final class Model {
   }
 
   public void validate() {
+    if (language == null || (!language.isEmpty() && !Translations.supported(language)))
+      throw new IllegalArgumentException("Language");
     if (method < 0
         || method > 3
         || instrument < 0

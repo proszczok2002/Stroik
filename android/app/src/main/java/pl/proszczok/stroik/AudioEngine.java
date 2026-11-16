@@ -363,11 +363,7 @@ public final class AudioEngine implements AutoCloseable {
             + ", "
             + direction
             + ", "
-            + String.format(
-                m.english ? java.util.Locale.US : new java.util.Locale("pl"),
-                "%+.1f Hz; %+.1f ",
-                done - expected,
-                cents)
+            + String.format(m.locale(), "%+.1f Hz; %+.1f ", done - expected, cents)
             + m.t("centów.", "cents.");
     post(messageGeneration, () -> listener.result(text));
     muteUntil = now + 1800;
@@ -388,7 +384,7 @@ public final class AudioEngine implements AutoCloseable {
                 ? m.t("Eksperymentalny pomiar składowych. ", "Experimental component measurement. ")
                 : "")
             + String.format(
-                m.english ? java.util.Locale.US : new java.util.Locale("pl"),
+                m.locale(),
                 m.t(
                     "Odchyłka od stroju równomiernego: %+.1f centów. Szacowane dudnienia: %.2f na"
                         + " sekundę.",

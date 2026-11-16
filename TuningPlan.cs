@@ -78,6 +78,8 @@ internal static class KeyboardGuide
         "white key immediately after a group of three black keys"
     ];
     internal static string Position(int midi, bool english) => (english ? English : Polish)[midi % 12];
+    internal static string Position(int midi, string language) => UiLanguages.Get(language, Polish[midi % 12], English[midi % 12]);
+    internal static string Describe(int midi, string language) => NoteCatalog.Label(midi, language) + ": " + Position(midi, language) + ".";
     internal static string Describe(int midi, bool english) =>
         english ? $"{NoteCatalog.Label(midi, true)}: {English[midi % 12]}." :
                   $"{NoteCatalog.Label(midi, false)}: {Polish[midi % 12]}.";

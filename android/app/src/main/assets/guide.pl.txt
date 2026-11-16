@@ -1,7 +1,7 @@
 Stroik Android — instrukcja
 
 Dostępność
-Dolne przyciski otwierają Stroik, Ustawienia i Pomoc w jednej linii. Każdy przycisk ma duże pole dotykowe. Przechodź między kontrolkami gestami TalkBack. Listy rozwijają się po dwukrotnym stuknięciu; stan pól wyboru zgłasza Android. Wyniki są wypowiadane po pomiarze, nie przy każdej próbce. Przy wyłączonym TalkBack wyniki może czytać syntezator systemowy. Grafika jest opcjonalna i domyślnie wyłączona. Język polski/angielski i ciemny motyw są w Ustawieniach.
+Dolne przyciski otwierają Stroik, Ustawienia i Pomoc w jednej linii. Każdy przycisk ma duże pole dotykowe. Przechodź między kontrolkami gestami TalkBack. Listy rozwijają się po dwukrotnym stuknięciu; stan pól wyboru zgłasza Android. Wyniki są wypowiadane po pomiarze, nie przy każdej próbce. Przy wyłączonym TalkBack wyniki może czytać syntezator systemowy. Grafika jest opcjonalna i domyślnie wyłączona. Język polski, angielski, niemiecki, rosyjski, francuski lub hiszpański i ciemny motyw są w Ustawieniach.
 
 Metody
 Kamerton odtwarza gasnący wzorzec wybranej nuty. Wybierz automatyczne uderzenia i odstęp lub naciskaj Uderz kamerton. Przycisk pauzy zatrzymuje lub wznawia automat.
@@ -38,3 +38,8 @@ Shift+Alt+N i Shift+Ctrl+N wracają do poprzedniego dźwięku według planu. Wpi
 Wzmocniono niskie tony kamertonu i wygładzono zakończenie, aby ograniczyć stuk. Kwinta od c razkreślnego zawiera c razkreślne i g razkreślne, 261,63 i 392,00 Hz przy A=440; test widma obejmuje pięć oktaw i brak składowych o oktawę niższych. Małe głośniki nadal ograniczają słyszalność basu. Wizualny klawisz zmienia się z niebieskiego na czerwony przy rozstrojeniu lub zielony w ustawionej tolerancji. Kolor uzupełnia opis tekstowy.
 
 Próby na Pixelu z włączonym TalkBack są opisane w raporcie DEVICE_TESTS.md. Testy struktury, zdarzeń i audio nie potwierdzają wymowy, naturalnych gestów ani strojenia prawdziwego instrumentu na każdym telefonie.
+
+
+Stroik Android 1.08
+
+Dodano niemiecki, rosyjski, francuski i hiszpański obok polskiego i angielskiego. Przetłumaczono interfejs, komunikaty głosowe, nuty, oktawy, położenia klawiszy, instrukcję i ostatnie zmiany. Wybór języka zapisuje się w ustawieniach i profilach JSON; stare profile PL/EN pozostają zgodne. Własny syntezator aplikacji wybiera język zgodny z ustawieniem; potrzebny jest odpowiedni głos Androida. Nowe wydania mogą zawierać opisy zmian we wszystkich sześciu językach, ze zgodnym odczytem starszych manifestów. Zasady systemowego potwierdzania aktualizacji pozostają zachowane.

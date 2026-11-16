@@ -8,21 +8,25 @@ internal static class ReleaseNotes
     private const string ResourceName = "Stroik.RELEASE_NOTES.md";
 
     internal static string Current(bool english)
+        => Current(english ? "en" : "pl");
+    internal static string Current(string language)
     {
         using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName)
             ?? throw new InvalidDataException("The embedded release notes are missing.");
         using var reader = new StreamReader(stream);
-        return ForLanguage(reader.ReadToEnd(), english);
+        return ForLanguage(reader.ReadToEnd(), language);
     }
 
     internal static string ForLanguage(string? markdown, bool english)
+        => ForLanguage(markdown, english ? "en" : "pl");
+    internal static string ForLanguage(string? markdown, string language)
     {
-        string fallback = english ? "No release notes are available for this version."
-            : "Opis zmian tej wersji nie jest dostępny.";
+        bool english = language != "pl";
+        string fallback = UiLanguages.Get(language, "Opis zmian tej wersji nie jest dostępny.", "No release notes are available for this version.");
         if (string.IsNullOrWhiteSpace(markdown)) return fallback;
 
         string[] lines = markdown.Replace("\r\n", "\n").Split('\n');
-        string heading = english ? "## English" : "## Polski";
+        string heading = "## " + UiLanguages.Names[Array.IndexOf(UiLanguages.Codes, language)];
         int start = Array.FindIndex(lines, line => line.Trim().Equals(heading, StringComparison.OrdinalIgnoreCase));
         if (start < 0) return fallback;
 

@@ -17,8 +17,8 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
-  private int expectedCode = 107;
-  private String expectedName = "1.07";
+  private int expectedCode = 108;
+  private String expectedName = "1.08";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
@@ -26,8 +26,8 @@ public final class DeviceTests extends Instrumentation {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
     if (args != null) {
-      expectedCode = args.getInt("expectedCode", 107);
-      expectedName = args.getString("expectedName", "1.07");
+      expectedCode = args.getInt("expectedCode", 108);
+      expectedName = args.getString("expectedName", "1.08");
     }
     start();
   }
@@ -187,6 +187,10 @@ public final class DeviceTests extends Instrumentation {
 
   @Override
   public void onStart() {
+    if (scenario.equals("languages")) {
+      languagesScenario();
+      return;
+    }
     if (scenario.equals("focus")) {
       focusScenario();
       return;
@@ -2163,6 +2167,85 @@ public final class DeviceTests extends Instrumentation {
               + assertions
               + "; explicit microphone off and concise Next announcements with muted visual results"
               + " PASS.");
+      output.putString("result", "PASS");
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      output.putString("result", "FAIL");
+    } finally {
+      restoreSettings(saved);
+    }
+    output.putString("stream", report.toString());
+    finish(Activity.RESULT_OK, output);
+  }
+
+  private void languagesScenario() {
+    Bundle output = new Bundle();
+    String saved = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      for (String code : Translations.CODES) {
+        main(() -> {
+          TuningSession.get(activity).stop();
+          activity.model = new Model();
+          activity.model.language = code;
+          activity.model.updates = false;
+          invokeRender();
+        });
+        Model model = activity.model;
+        require(
+            Model.from(model.json()).code().equals(code), "Language profile round trip: " + code);
+        require(model.locale().getLanguage().equals(code), "Speech locale: " + code);
+        page(model.t("Stroik", "Tuner"));
+        inspect(code + " tuner");
+        require(
+            findSpinner(model.t("Dźwięk docelowy", "Target note"))
+                .getSelectedItem()
+                .toString()
+                .contains(model.note(67)),
+            "Selected translated note missing");
+        for (int method = 0; method < 4; method++) {
+          final int index = method;
+          main(() -> findSpinner(model.t("Metoda strojenia", "Tuning method")).setSelection(index));
+          inspect(code + " method " + method);
+        }
+        page(model.t("Ustawienia", "Settings"));
+        inspect(code + " settings");
+        Spinner language = findSpinner(model.t("Język", "Language"));
+        require(language.getCount() == 6, "Six language choices missing");
+        require(
+            language
+                .getSelectedItem()
+                .toString()
+                .equals(Translations.NAMES[Arrays.asList(Translations.CODES).indexOf(code)]),
+            "Selected language not exposed");
+        String nextCode =
+            Translations.CODES[(Arrays.asList(Translations.CODES).indexOf(code) + 1) % 6];
+        main(() -> language.setSelection(Arrays.asList(Translations.CODES).indexOf(nextCode)));
+        require(activity.model.code().equals(nextCode), "Language selector did not update");
+        Model selected = activity.model;
+        page(selected.t("Pomoc", "Help"));
+        inspect(nextCode + " help");
+        for (String asset : new String[] {"guide.", "changes."}) {
+          try (java.io.InputStream stream = context.getAssets().open(asset + code + ".txt")) {
+            String text =
+                new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            require(
+                text.length() > 200 && !text.contains("\ufffd"),
+                "Missing or corrupt localized asset: " + asset + code);
+          }
+        }
+      }
+      log(
+          "Six-language controls, profile, speech locales, selected notes, help and change assets: "
+              + assertions
+              + " assertions PASS. Human pronunciation and natural TalkBack gestures are not tested"
+              + " by this scenario.");
       output.putString("result", "PASS");
     } catch (Throwable error) {
       log("FAIL: " + error);

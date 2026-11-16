@@ -1,29 +1,37 @@
-# Stroik Android 1.07
+# Stroik Android 1.08
 
 ## Polski
 
-Stroik Android 1.07
+Stroik Android 1.08
 
-Widok klasyczny ukrywa porady, także standard 440 Hz i wskazówki pianinowe przy ukulele. Widok wybierasz tylko na stronie Stroik; usunięto powtórzone pole w Ustawieniach.
-
-W hybrydzie sterujesz mikrofonem, który uruchamia także kamerton. Ręczne uderzenie, automat i jego odstęp są tylko w metodzie Kamerton; hybryda zachowuje osobne pole dwóch akustycznych stuknięć. Przechodzenie po poprawnym wyniku dotyczy metody Elektroniczny. Oba potwierdzone ataki wymagają wybranej tolerancji, świeżej próbki i właściwej nuty. Rozstrojenie kasuje uzbrojenie; zwykły wynik sam nie zmienia celu. Kolejny wzorzec rozpoczyna świeży pomiar, odrzucając stare oczekujące wyniki. Kamerton po własnym TTS czeka na faktyczne zakończenie wypowiedzi.
-
-Shift+Alt+N i Shift+Ctrl+N wracają do poprzedniego dźwięku według planu. Wpis wartości otwiera klawiaturę numeryczną i przyjmuje kropkę lub przecinek; suwak i profil zapisują podaną liczbę. Ustawienie prędkości mowy pozostaje w Ustawieniach.
-
-Wzmocniono niskie tony kamertonu i wygładzono zakończenie, aby ograniczyć stuk. Kwinta od c razkreślnego zawiera c razkreślne i g razkreślne, 261,63 i 392,00 Hz przy A=440; test widma obejmuje pięć oktaw i brak składowych o oktawę niższych. Małe głośniki nadal ograniczają słyszalność basu. Wizualny klawisz zmienia się z niebieskiego na czerwony przy rozstrojeniu lub zielony w ustawionej tolerancji. Kolor uzupełnia opis tekstowy.
-
-Próby na Pixelu z włączonym TalkBack są opisane w raporcie DEVICE_TESTS.md. Testy struktury, zdarzeń i audio nie potwierdzają wymowy, naturalnych gestów ani strojenia prawdziwego instrumentu na każdym telefonie.
+Dodano niemiecki, rosyjski, francuski i hiszpański obok polskiego i angielskiego. Przetłumaczono interfejs, komunikaty głosowe, nuty, oktawy, położenia klawiszy, instrukcję i ostatnie zmiany. Wybór języka zapisuje się w ustawieniach i profilach JSON; stare profile PL/EN pozostają zgodne. Własny syntezator aplikacji wybiera język zgodny z ustawieniem; potrzebny jest odpowiedni głos Androida. Nowe wydania mogą zawierać opisy zmian we wszystkich sześciu językach, ze zgodnym odczytem starszych manifestów. Zasady systemowego potwierdzania aktualizacji pozostają zachowane.
 
 ## English
 
-Stroik Android 1.07
+Stroik Android 1.08
 
-Classic hides guidance, including the 440 Hz standard hint and piano advice for ukulele. Choose the view only on Tuner; the duplicate Settings checkbox is removed.
+Added German, Russian, French and Spanish alongside Polish and English. Interface, spoken messages, notes, octaves, key positions, guide and latest changes are translated. Language persists in settings and JSON profiles; older PL/EN profiles remain compatible. App speech selects the chosen language; its Android voice must be installed. New releases can include notes in all six languages, with fallback for older manifests. Updates still require Android system confirmation.
 
-Hybrid microphone controls also start its reference. Manual strike, fork automation and interval controls appear only in Fork; hybrids keep their separate acoustic double-strike checkbox. In-tune confirmed advance belongs to Electronic. Both attacks require fresh pitch at the expected note within the chosen tolerance. Detuning cancels arming; a normal reading alone does not change target. A new reference starts a fresh capture epoch, rejecting stale pending results. The fork waits for its own TTS utterance to actually finish.
+## Deutsch
 
-Shift+Alt+N and Shift+Ctrl+N select the previous planned note. Numeric entry opens the numeric keyboard and accepts either decimal separator; the slider and profile retain the entered value. Speech rate remains in Settings.
+Stroik Android 1.08
 
-Stronger bass levels and a smooth tone ending reduce weak lows and end clicks. A fifth from C4 contains C4 and G4, 261.63 and 392.00 Hz at A=440; spectrum tests cover five octaves and reject half-frequency components. Small speakers still limit bass audibility. The target key changes from blue to red when detuned or green inside the selected tolerance. Color supplements text.
+Deutsch, Russisch, Französisch und Spanisch ergänzen Polnisch und Englisch. Oberfläche, Sprachmeldungen, Töne, Oktaven, Tastenpositionen, Anleitung und Versionshinweise sind übersetzt. Sprache bleibt in Einstellungen und JSON-Profilen erhalten; alte PL/EN-Profile bleiben kompatibel. Die App-Stimme verwendet die gewählte Sprache; die passende Android-Stimme muss installiert sein. Versionshinweise unterstützen alle sechs Sprachen und ältere Manifeste. Updates erfordern weiterhin die Android-Systembestätigung.
 
-Pixel checks with TalkBack enabled are documented in DEVICE_TESTS.md. Structural, event and audio-state tests do not establish human pronunciation, natural gestures or real-instrument tuning on every phone.
+## Русский
+
+Stroik Android 1.08
+
+Добавлены немецкий, русский, французский и испанский наряду с польским и английским. Переведены интерфейс, голосовые сообщения, ноты, октавы, расположение клавиш, руководство и изменения. Язык сохраняется в настройках и профилях JSON; старые профили PL/EN совместимы. Речь приложения использует выбранный язык; соответствующий голос Android должен быть установлен. Описания обновлений поддерживают шесть языков и старые манифесты. Установка по-прежнему требует системного подтверждения Android.
+
+## Français
+
+Stroik Android 1.08
+
+Ajout de l’allemand, du russe, du français et de l’espagnol au polonais et à l’anglais. Interface, messages vocaux, notes, octaves, positions des touches, guide et modifications sont traduits. La langue est conservée dans les réglages et profils JSON ; les anciens profils PL/EN restent compatibles. La voix de l’application utilise la langue choisie ; sa voix Android doit être installée. Les notes de version acceptent six langues et les anciens manifestes. Les mises à jour demandent toujours la confirmation système Android.
+
+## Español
+
+Stroik Android 1.08
+
+Se añaden alemán, ruso, francés y español al polaco e inglés. Se traducen interfaz, mensajes de voz, notas, octavas, posiciones de teclas, guía y cambios. El idioma se conserva en ajustes y perfiles JSON; los perfiles antiguos PL/EN siguen siendo compatibles. La voz de la aplicación usa el idioma elegido; debe instalarse su voz de Android. Las notas de versión admiten seis idiomas y manifiestos anteriores. Las actualizaciones siguen requiriendo confirmación del sistema Android.
