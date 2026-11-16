@@ -194,7 +194,8 @@ internal static class ReleaseRegression
         if(keyboard.Highlight!=System.Drawing.Color.Firebrick) throw new Exception("Detuned key is not red.");
         keyboard.SetReading(0,5);
         if(keyboard.Highlight!=System.Drawing.Color.ForestGreen) throw new Exception("Tuned key is not green.");
-        Call(form,"ApplySettings",new Preferences {Method=TuningMethod.HybridSpeakers,TargetMidi=69,AutomaticUpdates=false,DoubleStrikeAdvance=true,ForkTapAdvance=false,VisualMode=true,VoiceInVisualMode=false});
+        foreach(bool english in new[]{false,true}) {
+        Call(form,"ApplySettings",new Preferences {English=english,Method=TuningMethod.HybridSpeakers,TargetMidi=69,AutomaticUpdates=false,DoubleStrikeAdvance=true,ForkTapAdvance=false,VisualMode=true,VoiceInVisualMode=false});
         DateTime origin=DateTime.UtcNow;
         for(int cycle=0;cycle<5;cycle++) {
             DateTime at=origin.AddSeconds(cycle*12+4);
@@ -209,8 +210,9 @@ internal static class ReleaseRegression
             for(int frame=8;frame<16;frame++) Call(form,"ProcessFrameAt",new short[4096],at.AddMilliseconds(frame*86));
             Application.DoEvents();
             if(!Field<bool>(form,"_hasResult") || Math.Abs(Field<double>(form,"_lastMeasured")-hz)>.7 || Field<int>(form,"_targetMidi")!=69 ||
-               (cycle%2==1 && !Field<TextBox>(form,"_result").Text.Contains("za wysoko")))
+               (cycle%2==1 && !Field<TextBox>(form,"_result").Text.Contains(english ? "too high" : "za wysoko")))
                 throw new Exception("Hybrid lost a consecutive result or advanced while detuned: "+cycle);
+        }
         }
         Console.WriteLine("Classic guidance, hybrid controls, UTF-8 labels, reverse shortcuts, numeric entry and key colors: OK");
     }
