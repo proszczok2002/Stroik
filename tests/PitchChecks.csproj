@@ -7,6 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../SpeechOutput.cs" Link="SpeechOutput.cs" />
+    <Compile Include="../EditableNumber.cs" Link="EditableNumber.cs" />
     <Compile Include="../PitchDetector.cs" Link="PitchDetector.cs" />
     <Compile Include="../TapNavigator.cs" Link="TapNavigator.cs" />
     <Compile Include="../PracticeCycle.cs" Link="PracticeCycle.cs" />

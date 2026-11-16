@@ -5,7 +5,7 @@ namespace Stroik;
 internal sealed class DoubleStrikeNavigator
 {
     private int _targetMidi = -1;
-    private double _targetFrequency, _envelope;
+    private double _targetFrequency, _envelope, _tolerance = 5;
     private DateTime _armedAt, _lastAttack, _firstConfirmed, _quietSince, _candidateAt;
     private bool _sound, _candidate;
     private int _confirmed;
@@ -21,11 +21,12 @@ internal sealed class DoubleStrikeNavigator
         _quietSince = DateTime.MinValue;
     }
 
-    internal void Arm(int midi, double frequency, DateTime now)
+    internal void Arm(int midi, double frequency, DateTime now, double tolerance = 5)
     {
         Reset();
         _targetMidi = midi;
         _targetFrequency = frequency;
+        _tolerance = tolerance;
         _armedAt = now;
         _quietSince = now;
     }
@@ -59,9 +60,9 @@ internal sealed class DoubleStrikeNavigator
 
         if (_candidate && now - _candidateAt > TimeSpan.FromMilliseconds(420)) _candidate = false;
         if (_confirmed == 1 && now - _firstConfirmed > TimeSpan.FromMilliseconds(maxGapMilliseconds)) _confirmed = 0;
-        if (!_candidate || frequency is not > 0) return null;
+        if (!_candidate || frequency is not > 0 || now - _candidateAt < TimeSpan.FromMilliseconds(180)) return null;
         double cents = 1200 * Math.Log2(frequency.Value / _targetFrequency);
-        if (Math.Abs(cents) > 35) return null;
+        if (Math.Abs(cents) > _tolerance) { Reset(); return null; }
         _candidate = false;
         if (_confirmed == 0)
         {

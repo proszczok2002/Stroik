@@ -60,6 +60,7 @@ internal static class ReleaseRegression
         var target = Field<ComboBox>(form, "_target");
         try
         {
+            RequestedFixes(form);
             foreach (bool english in new[] {false, true})
             foreach (bool automatic in new[] {false, true})
             foreach (bool open in new[] {false, true})
@@ -143,6 +144,78 @@ internal static class ReleaseRegression
         finally { target.DroppedDown = false; Call(form, "ApplySettings", saved); }
         Console.WriteLine("Native note-list arrows, PL/EN, open/closed, manual/automatic fork, ascending wave frequencies and interval bounds: OK");
     }
+
+    private static void RequestedFixes(TunerForm form)
+    {
+        foreach (bool english in new[] {false, true})
+        foreach (InstrumentKind instrument in Enum.GetValues<InstrumentKind>())
+        {
+            Call(form, "ApplySettings", new Preferences {English=english, Instrument=instrument, View=TunerView.Classic, AutomaticUpdates=false, VisualMode=true, VoiceInVisualMode=false});
+            foreach (string name in new[] {"_beginnerHint","_playingHelp","_concertHelp","_orderHelp","_guideText","_noteHelp","_forkHelp","_strikeHelp"})
+                if (Field<Control>(form,name).Visible) throw new Exception("Classic view exposes guidance: "+name);
+            if (Field<Label>(form,"_concertTitle").Text.Contains("440")) throw new Exception("Classic reference still says standard 440.");
+            foreach (TuningMethod method in new[] {TuningMethod.HybridSpeakers,TuningMethod.HybridHeadphones})
+            {
+                Field<ComboBox>(form,"_method").SelectedIndex=(int)method;
+                foreach (string name in new[] {"_strike","_autoStrike","_interval","_doubleStrike"})
+                    if(Field<Control>(form,name).Visible) throw new Exception("Hybrid exposes fork/electronic control: "+name);
+            }
+            foreach(object item in Field<ComboBox>(form,"_method").Items)
+                if(item.ToString()!.Contains('?')) throw new Exception("Corrupt hybrid label.");
+        }
+        Call(form,"ApplySettings",new Preferences {TargetMidi=60, PlanAnchorMidi=60, AutomaticUpdates=false, VisualMode=true, VoiceInVisualMode=false});
+        foreach(Keys modifier in new[] {Keys.Alt,Keys.Control})
+        {
+            object?[] args=[Message.Create(form.Handle,0x100,(IntPtr)Keys.N,IntPtr.Zero),modifier|Keys.N];
+            typeof(TunerForm).GetMethod("ProcessCmdKey",Hidden)!.Invoke(form,args);
+            args[1]=modifier|Keys.Shift|Keys.N;
+            if(!(bool)typeof(TunerForm).GetMethod("ProcessCmdKey",Hidden)!.Invoke(form,args)! || Field<int>(form,"_targetMidi")!=60)
+                throw new Exception("Shift+Next did not go backwards.");
+        }
+        var edit=Field<NumericUpDown>(form,"_concertA");
+        var input=edit.Controls.OfType<TextBox>().First();
+        input.Focus(); input.SelectAll();
+        string typed="";
+        foreach(char key in "435") {
+            SendCharacter(input.Handle,0x0102,(IntPtr)key,IntPtr.Zero);
+            typed+=key;
+            if(input.Text!=typed) throw new Exception("Numeric typing changes partial input: "+input.Text+" expected "+typed);
+        }
+        edit.Text="435";
+        form.ValidateChildren();
+        if(edit.Value!=435) throw new Exception("Cannot type reference frequency.");
+        edit.Text="440"; form.ValidateChildren();
+        foreach(string value in new[]{"435,5","435.5"}) {
+            edit.Text=value; form.ValidateChildren();
+            if(edit.Value!=435.5M) throw new Exception("Decimal separator entry failed: "+value);
+        }
+        var keyboard=Field<KeyboardDiagram>(form,"_keyboard");
+        keyboard.SetReading(20,5);
+        if(keyboard.Highlight!=System.Drawing.Color.Firebrick) throw new Exception("Detuned key is not red.");
+        keyboard.SetReading(0,5);
+        if(keyboard.Highlight!=System.Drawing.Color.ForestGreen) throw new Exception("Tuned key is not green.");
+        Call(form,"ApplySettings",new Preferences {Method=TuningMethod.HybridSpeakers,TargetMidi=69,AutomaticUpdates=false,DoubleStrikeAdvance=true,ForkTapAdvance=false,VisualMode=true,VoiceInVisualMode=false});
+        DateTime origin=DateTime.UtcNow;
+        for(int cycle=0;cycle<5;cycle++) {
+            DateTime at=origin.AddSeconds(cycle*12+4);
+            Field<PracticeCycle>(form,"_practice").Fork(at.AddSeconds(-4));
+            typeof(TunerForm).GetField("_acceptAudio",Hidden)!.SetValue(form,false);
+            double hz=440+cycle*2;
+            for(int frame=0;frame<8;frame++) {
+                short[] samples=new short[4096];
+                for(int i=0;i<samples.Length;i++) samples[i]=(short)(6000*Math.Sin(2*Math.PI*hz*(i+frame*4096)/48000));
+                Call(form,"ProcessFrameAt",samples,at.AddMilliseconds(frame*86));
+            }
+            for(int frame=8;frame<16;frame++) Call(form,"ProcessFrameAt",new short[4096],at.AddMilliseconds(frame*86));
+            Application.DoEvents();
+            if(!Field<bool>(form,"_hasResult") || Math.Abs(Field<double>(form,"_lastMeasured")-hz)>.7 || Field<int>(form,"_targetMidi")!=69 ||
+               (cycle%2==1 && !Field<TextBox>(form,"_result").Text.Contains("za wysoko")))
+                throw new Exception("Hybrid lost a consecutive result or advanced while detuned: "+cycle);
+        }
+        Console.WriteLine("Classic guidance, hybrid controls, UTF-8 labels, reverse shortcuts, numeric entry and key colors: OK");
+    }
+    [DllImport("user32.dll", EntryPoint="SendMessageW")]
+    private static extern IntPtr SendCharacter(IntPtr window,uint message,IntPtr key,IntPtr data);
 
     internal static async Task UpdateFiles()
     {

@@ -65,12 +65,12 @@ public final class AudioEngine implements AutoCloseable {
   public void speechFinished() {
     // Leave a small tail after the synthesizer's actual completion callback.
     muteUntil = Math.max(muteUntil, SystemClock.elapsedRealtime() + 300);
-    speechPending = false;
     if (strikeAfterSpeech) {
       strikeAfterSpeech = false;
       if (!paused && running && config.method == 2) repeatAt = SystemClock.elapsedRealtime() + 300;
       else if (!paused && config.method != 1) ui.post(this::strike);
     }
+    speechPending = false;
   }
 
   public void configure(Model m) {
@@ -172,205 +172,14 @@ public final class AudioEngine implements AutoCloseable {
   }
 
   private void capture() {
-    short[] frame = new short[4096], window = new short[8192], pair = new short[65536];
-    int count = 0, pairCount = 0, g = -1;
-    long lastVisual = 0, lastFork = 0, lastPair = 0;
-    double storedLower = 0;
-    Dsp.Session session = new Dsp.Session();
-    Dsp.Taps taps = new Dsp.Taps();
-    boolean armed = false;
-    long armedAt = 0;
+    short[] frame = new short[4096];
+    Capture state = new Capture();
     try {
       while (running) {
         int n = recorder.read(frame, 0, frame.length, AudioRecord.READ_BLOCKING);
         if (!running) break;
         if (n <= 0) throw new IllegalStateException("AudioRecord error " + n);
-        long now = SystemClock.elapsedRealtime();
-        Model m = config;
-        int current = generation;
-        if (g != current) {
-          g = current;
-          count = pairCount = 0;
-          storedLower = 0;
-          session.reset();
-          taps.reset();
-          armed = false;
-        }
-        final int messageGeneration = g;
-        if (m.method == 3 && m.monitor) {
-          if (!headphones(manager))
-            throw new IllegalStateException(
-                m.t(
-                    "Podłącz słuchawki przed odsłuchem mikrofonu.",
-                    "Connect headphones before microphone monitoring."));
-          writeMonitor(frame, n);
-        } else stopMonitor();
-        if (m.method == 2 && repeatAt > 0 && now >= repeatAt && !paused && !speechPending) {
-          repeatAt = 0;
-          strike();
-        }
-        if (speechPending || now < muteUntil || (m.method == 2 && repeatAt > 0)) {
-          count = pairCount = 0;
-          session.reset();
-          taps.reset();
-          continue;
-        }
-        if ((m.method == 0 || m.method == 3)
-            && m.autoFork
-            && !paused
-            && now - lastFork
-                >= Math.max(m.forkSeconds * 1000, m.method == 0 && m.forkTap ? 6500 : 1000)) {
-          lastFork = now;
-          strike();
-          continue;
-        }
-        double rms = Dsp.rms(frame, n),
-            threshold = new double[] {.004, .008, .016}[m.sensitivity],
-            frequency = 0;
-        if (m.forkTap && m.method != 1 && taps.observe(rms, threshold, now, m.gap)) {
-          muteUntil = now + 2000;
-          post(g, listener::advance);
-          continue;
-        }
-        if (m.interval != 0 && m.method != 0 && m.pairMode == 1) {
-          if (rms < threshold) {
-            pairCount = 0;
-            continue;
-          }
-          int take = Math.min(n, pair.length - pairCount);
-          System.arraycopy(frame, 0, pair, pairCount, take);
-          pairCount += take;
-          if (pairCount == pair.length) {
-            pairCount = 0;
-            if (now - lastPair < 3000) continue;
-            lastPair = now;
-            double[] v =
-                m.base() + m.semitones() <= 108
-                    ? Dsp.together(
-                        pair,
-                        rate,
-                        Model.hz(m.base(), m.reference) / Math.pow(2, m.correction / 1200),
-                        m.interval)
-                    : null;
-            if (v == null) {
-              post(
-                  g,
-                  () ->
-                      listener.result(
-                          m.t(
-                              "Nie wykryto dwóch składowych. Spróbuj osobno.",
-                              "Two components not found. Try separately.")));
-            } else {
-              double correction = Math.pow(2, m.correction / 1200);
-              reportInterval(
-                  m, Dsp.compare(v[0] * correction, v[1] * correction, m.interval), true, g);
-            }
-            muteUntil = now + 4000;
-            if (m.method == 2) repeatAt = now + 5000;
-          }
-          continue;
-        }
-        if (rms >= threshold) {
-          int take = Math.min(n, window.length);
-          if (count + take > window.length) {
-            int overflow = count + take - window.length;
-            System.arraycopy(window, overflow, window, 0, count - overflow);
-            count -= overflow;
-          }
-          System.arraycopy(frame, n - take, window, count, take);
-          count += take;
-          if (count == window.length)
-            frequency = Dsp.pitch(window, rate) * Math.pow(2, m.correction / 1200);
-        } else count = 0;
-        if (m.graphics && frequency > 0 && now - lastVisual > 200) {
-          lastVisual = now;
-          double cents =
-              1200
-                  * Math.log(frequency / Model.hz(m.resolved(frequency), m.reference))
-                  / Math.log(2);
-          post(g, () -> listener.reading(cents));
-        }
-        if (m.method == 0) continue;
-        if (m.advance && !m.forkTap && m.interval == 0 && armed) {
-          if (now - armedAt > 20000) {
-            armed = false;
-            taps.reset();
-          } else if (taps.observe(rms, threshold, now, m.gap)
-              && frequency > 0
-              && Math.abs(
-                      1200
-                          * Math.log(frequency / Model.hz(m.resolved(frequency), m.reference))
-                          / Math.log(2))
-                  < 35) {
-            muteUntil = now + 2000;
-            armed = false;
-            post(g, listener::advance);
-            continue;
-          }
-        }
-        double done = session.observe(frequency, now);
-        if (done <= 0) continue;
-        if (m.interval != 0) {
-          int wanted = m.base() + (storedLower > 0 ? m.semitones() : 0);
-          if (wanted > 108) {
-            post(g, () -> listener.result(m.t("Wybierz niższą nutę.", "Choose a lower note.")));
-            muteUntil = now + 2000;
-            continue;
-          }
-          if (Math.abs(1200 * Math.log(done / Model.hz(wanted, m.reference)) / Math.log(2)) > 90) {
-            post(
-                g,
-                () ->
-                    listener.result(
-                        m.t("Zagraj właściwą nutę: ", "Play the expected note: ")
-                            + m.note(wanted)));
-            muteUntil = now + 2000;
-            continue;
-          }
-          if (storedLower == 0) {
-            storedLower = done;
-            post(
-                g,
-                () ->
-                    listener.result(
-                        m.t(
-                            "Dolny zapisany. Zagraj górny i wycisz.",
-                            "Lower stored. Play upper and mute.")));
-            muteUntil = now + 2000;
-          } else {
-            reportInterval(m, Dsp.compare(storedLower, done, m.interval), false, g);
-            storedLower = 0;
-            muteUntil = now + 4000;
-            if (m.method == 2) repeatAt = now + 5000;
-          }
-          continue;
-        }
-        int midi = m.resolved(done);
-        double expected = Model.hz(midi, m.reference),
-            cents = 1200 * Math.log(done / expected) / Math.log(2);
-        String direction =
-            Math.abs(cents) <= m.tolerance
-                ? m.t("dobrze", "in tune")
-                : cents < 0 ? m.t("za nisko", "too low") : m.t("za wysoko", "too high");
-        String text =
-            m.note(midi)
-                + ", "
-                + direction
-                + ", "
-                + String.format(
-                    m.english ? java.util.Locale.US : new java.util.Locale("pl"),
-                    "%+.1f Hz; %+.1f ",
-                    done - expected,
-                    cents)
-                + m.t("centów.", "cents.");
-        post(messageGeneration, () -> listener.result(text));
-        muteUntil = now + 1800;
-        if (m.method == 2) repeatAt = now + 5000;
-        if (m.advance && Math.abs(cents) <= m.tolerance) {
-          armed = true;
-          armedAt = now;
-          taps.reset();
-        }
+        process(frame, n, SystemClock.elapsedRealtime(), state);
       }
     } catch (Exception e) {
       if (running) {
@@ -379,6 +188,197 @@ public final class AudioEngine implements AutoCloseable {
       }
     } finally {
       stopMonitor();
+    }
+  }
+
+  static final class Capture {
+    final short[] window = new short[8192], pair = new short[65536];
+    int count, pairCount, g = -1;
+    long lastVisual, lastFork, lastPair;
+    double storedLower;
+    final Dsp.Session session = new Dsp.Session();
+    final Dsp.Taps taps = new Dsp.Taps();
+    final Dsp.ConfirmedStrikes confirmed = new Dsp.ConfirmedStrikes();
+  }
+
+  void process(short[] frame, int n, long now, Capture state) {
+    Model m = config;
+    int current = generation;
+    if (state.g != current) {
+      state.g = current;
+      state.count = state.pairCount = 0;
+      state.storedLower = 0;
+      state.session.reset();
+      state.taps.reset();
+      state.confirmed.reset();
+    }
+    final int messageGeneration = state.g;
+    if (m.method == 3 && m.monitor) {
+      if (!headphones(manager))
+        throw new IllegalStateException(
+            m.t(
+                "Podłącz słuchawki przed odsłuchem mikrofonu.",
+                "Connect headphones before microphone monitoring."));
+      writeMonitor(frame, n);
+    } else stopMonitor();
+    if (m.method == 2 && repeatAt > 0 && now >= repeatAt && !paused && !speechPending) {
+      repeatAt = 0;
+      strike();
+    }
+    if (speechPending || now < muteUntil || (m.method == 2 && repeatAt > 0)) {
+      state.count = state.pairCount = 0;
+      state.session.reset();
+      state.taps.reset();
+      return;
+    }
+    if (m.method == 0
+        && m.autoFork
+        && !paused
+        && now - state.lastFork
+            >= Math.max(m.forkSeconds * 1000, m.method == 0 && m.forkTap ? 6500 : 1000)) {
+      state.lastFork = now;
+      strike();
+      return;
+    }
+    double rms = Dsp.rms(frame, n),
+        threshold = new double[] {.004, .008, .016}[m.sensitivity],
+        frequency = 0;
+    if (m.forkTap && m.method != 1 && state.taps.observe(rms, threshold, now, m.gap)) {
+      muteUntil = now + 2000;
+      post(state.g, listener::advance);
+      return;
+    }
+    if (m.interval != 0 && m.method != 0 && m.pairMode == 1) {
+      if (rms < threshold) {
+        state.pairCount = 0;
+        return;
+      }
+      int take = Math.min(n, state.pair.length - state.pairCount);
+      System.arraycopy(frame, 0, state.pair, state.pairCount, take);
+      state.pairCount += take;
+      if (state.pairCount == state.pair.length) {
+        state.pairCount = 0;
+        if (now - state.lastPair < 3000) return;
+        state.lastPair = now;
+        double[] v =
+            m.base() + m.semitones() <= 108
+                ? Dsp.together(
+                    state.pair,
+                    rate,
+                    Model.hz(m.base(), m.reference) / Math.pow(2, m.correction / 1200),
+                    m.interval)
+                : null;
+        if (v == null) {
+          post(
+              state.g,
+              () ->
+                  listener.result(
+                      m.t(
+                          "Nie wykryto dwóch składowych. Spróbuj osobno.",
+                          "Two components not found. Try separately.")));
+        } else {
+          double correction = Math.pow(2, m.correction / 1200);
+          reportInterval(
+              m, Dsp.compare(v[0] * correction, v[1] * correction, m.interval), true, state.g);
+        }
+        muteUntil = now + 4000;
+        if (m.method == 2) repeatAt = now + 5000;
+      }
+      return;
+    }
+    if (rms >= threshold) {
+      int take = Math.min(n, state.window.length);
+      if (state.count + take > state.window.length) {
+        int overflow = state.count + take - state.window.length;
+        System.arraycopy(state.window, overflow, state.window, 0, state.count - overflow);
+        state.count -= overflow;
+      }
+      System.arraycopy(frame, n - take, state.window, state.count, take);
+      state.count += take;
+      if (state.count == state.window.length)
+        frequency = Dsp.pitch(state.window, rate) * Math.pow(2, m.correction / 1200);
+    } else state.count = 0;
+    if (m.graphics && frequency > 0 && now - state.lastVisual > 200) {
+      state.lastVisual = now;
+      double cents =
+          1200 * Math.log(frequency / Model.hz(m.resolved(frequency), m.reference)) / Math.log(2);
+      post(state.g, () -> listener.reading(cents));
+    }
+    if (m.method == 0) return;
+    if (m.method == 1
+        && m.advance
+        && m.interval == 0
+        && state.confirmed.observe(rms, threshold, frequency, now, m.gap)) {
+      muteUntil = now + 2000;
+      state.session.reset();
+      state.count = 0;
+      post(state.g, listener::advance);
+      return;
+    }
+    double done = state.session.observe(frequency, now);
+    if (done <= 0) return;
+    if (m.interval != 0) {
+      int wanted = m.base() + (state.storedLower > 0 ? m.semitones() : 0);
+      if (wanted > 108) {
+        post(state.g, () -> listener.result(m.t("Wybierz niższą nutę.", "Choose a lower note.")));
+        muteUntil = now + 2000;
+        return;
+      }
+      if (Math.abs(1200 * Math.log(done / Model.hz(wanted, m.reference)) / Math.log(2)) > 90) {
+        post(
+            state.g,
+            () ->
+                listener.result(
+                    m.t("Zagraj właściwą nutę: ", "Play the expected note: ") + m.note(wanted)));
+        muteUntil = now + 2000;
+        return;
+      }
+      if (state.storedLower == 0) {
+        state.storedLower = done;
+        post(
+            state.g,
+            () ->
+                listener.result(
+                    m.t(
+                        "Dolny zapisany. Zagraj górny i wycisz.",
+                        "Lower stored. Play upper and mute.")));
+        muteUntil = now + 2000;
+      } else {
+        reportInterval(m, Dsp.compare(state.storedLower, done, m.interval), false, state.g);
+        state.storedLower = 0;
+        muteUntil = now + 4000;
+        if (m.method == 2) repeatAt = now + 5000;
+      }
+      return;
+    }
+    int midi = m.resolved(done);
+    double expected = Model.hz(midi, m.reference),
+        cents = 1200 * Math.log(done / expected) / Math.log(2);
+    String direction =
+        Math.abs(cents) <= m.tolerance
+            ? m.t("dobrze", "in tune")
+            : cents < 0 ? m.t("za nisko", "too low") : m.t("za wysoko", "too high");
+    String text =
+        m.note(midi)
+            + ", "
+            + direction
+            + ", "
+            + String.format(
+                m.english ? java.util.Locale.US : new java.util.Locale("pl"),
+                "%+.1f Hz; %+.1f ",
+                done - expected,
+                cents)
+            + m.t("centów.", "cents.");
+    post(messageGeneration, () -> listener.result(text));
+    muteUntil = now + 1800;
+    if (m.method == 2) repeatAt = now + 5000;
+    if (Math.abs(cents) > m.tolerance) {
+      state.confirmed.reset();
+      state.taps.reset();
+    }
+    if (m.method == 1 && m.advance && Math.abs(cents) <= m.tolerance) {
+      state.confirmed.arm(expected, m.tolerance, now);
+      state.taps.reset();
     }
   }
 
@@ -406,6 +406,8 @@ public final class AudioEngine implements AutoCloseable {
       return;
     }
     Model m = config;
+    generation++;
+    repeatAt = 0;
     int base = m.base();
     if (m.interval != 0 && base + m.semitones() > 108) {
       setPaused(true);

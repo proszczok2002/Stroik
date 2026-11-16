@@ -151,14 +151,26 @@ public final class Model {
   }
 
   public int next() {
+    return move(1);
+  }
+
+  public int move(int direction) {
+    if (direction != -1 && direction != 1) throw new IllegalArgumentException("Direction");
     int highest = method == 1 || interval == 0 ? 108 : 108 - semitones();
     if (strings()) {
       int[] n = stringsMidi();
-      for (int i = 0; i < n.length - 1; i++)
-        if (n[i] == base()) for (int j = i + 1; j < n.length; j++) if (n[j] <= highest) return n[j];
+      for (int i = 0; i < n.length; i++)
+        if (n[i] == base())
+          for (int j = i + direction; j >= 0 && j < n.length; j += direction)
+            if (n[j] <= highest) return n[j];
       return base();
     }
-    if (order == 0) return base() < highest ? base() + 1 : base();
+    if (order == 0)
+      return (direction > 0 || base() + direction >= anchor)
+              && base() + direction >= 21
+              && base() + direction <= highest
+          ? base() + direction
+          : base();
     List<Integer> p = new ArrayList<>();
     p.add(anchor);
     int step = order == 2 ? 2 : 1;
@@ -169,7 +181,9 @@ public final class Model {
           if (v >= 21 && v <= 108) p.add(v);
         }
     int at = p.indexOf(base());
-    if (at >= 0) for (int i = at + 1; i < p.size(); i++) if (p.get(i) <= highest) return p.get(i);
+    if (at >= 0)
+      for (int i = at + direction; i >= 0 && i < p.size(); i += direction)
+        if (p.get(i) <= highest) return p.get(i);
     return base();
   }
 

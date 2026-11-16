@@ -52,10 +52,9 @@ internal sealed class TuningFork : IDisposable
             {
                 double time = (double)i / rate;
                 double attack = Math.Min(1, time / 0.012);
-                double envelope = attack * Math.Exp(-1.6 * time);
-                double phase = 2 * Math.PI * frequency * time;
-                double sample = Level(frequency) * envelope * (Math.Sin(phase) + 0.015 * Math.Sin(2 * phase));
-                if (upper is double second) sample = (sample + Level(second) * envelope * Math.Sin(2 * Math.PI * second * time)) / 2;
+                double envelope = attack * Math.Min(1, (seconds - time) / 0.08) * Math.Exp(-1.2 * time);
+                double sample = Level(frequency) * envelope * Oscillator(frequency, time);
+                if (upper is double second) sample = (sample + Level(second) * envelope * Oscillator(second, time)) / 1.55;
                 writer.Write((short)Math.Round(Math.Clamp(sample, -1, 1) * short.MaxValue));
             }
         }
@@ -63,7 +62,14 @@ internal sealed class TuningFork : IDisposable
         return stream;
     }
 
-    internal static double Level(double frequency) => Math.Clamp(0.14 * Math.Sqrt(440 / frequency), 0.045, 0.34);
+    internal static double Level(double frequency) => Math.Clamp(0.18 * Math.Pow(440 / frequency, 0.65), 0.045, 0.6);
+    internal static double Oscillator(double frequency, double time)
+    {
+        double phase = 2 * Math.PI * frequency * time;
+        // Quiet upper partials help small speakers reproduce bass identity without transposition.
+        return Math.Sin(phase) + (frequency < 130 ? 0.12 : 0.015) * Math.Sin(2 * phase)
+            + (frequency < 130 ? 0.06 : 0) * Math.Sin(3 * phase);
+    }
 
     public void Dispose() => Stop();
 }

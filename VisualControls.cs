@@ -82,6 +82,10 @@ internal sealed class PitchMeter : Control
 internal sealed class KeyboardDiagram : Control
 {
     private int _midi = NoteCatalog.DefaultMidi;
+    private double? _cents;
+    private double _tolerance = 5;
+    internal Color Highlight => _cents is double value ? Math.Abs(value) <= _tolerance ? Color.ForestGreen : Color.Firebrick : Color.DeepSkyBlue;
+    internal void SetReading(double? cents, double tolerance) { _cents = cents; _tolerance = tolerance; Invalidate(); }
     internal KeyboardDiagram()
     {
         Height = 110;
@@ -107,14 +111,14 @@ internal sealed class KeyboardDiagram : Control
         using var whiteBrush = new SolidBrush(Color.White);
         using var blackBrush = new SolidBrush(Color.FromArgb(24, 24, 24));
         using var outline = new Pen(Color.Gray);
-        using var dot = new SolidBrush(Color.DeepSkyBlue);
+        using var dot = new SolidBrush(Highlight);
         for (int octave = 0; octave < 2; octave++)
         for (int i = 0; i < 7; i++)
         {
             int midi = firstC + octave * 12 + whitePitches[i];
             float x = 6 + (octave * 7 + i) * whiteWidth;
             var rect = new RectangleF(x, top, whiteWidth, bottom - top);
-            e.Graphics.FillRectangle(whiteBrush, rect);
+            e.Graphics.FillRectangle(midi == _midi ? dot : whiteBrush, rect);
             e.Graphics.DrawRectangle(outline, x, top, whiteWidth, bottom - top);
             if (midi == _midi)
                 e.Graphics.FillEllipse(dot, x + whiteWidth / 2 - 6, bottom - 27, 12, 12);
@@ -128,7 +132,7 @@ internal sealed class KeyboardDiagram : Control
             float width = whiteWidth * 0.62f;
             float x = 6 + (octave * 7 + afterWhite[i] + 1) * whiteWidth - width / 2;
             var rect = new RectangleF(x, top, width, (bottom - top) * 0.62f);
-            e.Graphics.FillRectangle(blackBrush, rect);
+            e.Graphics.FillRectangle(midi == _midi ? dot : blackBrush, rect);
             if (midi == _midi)
                 e.Graphics.FillEllipse(dot, x + width / 2 - 5, top + 21, 10, 10);
         }

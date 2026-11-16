@@ -31,12 +31,15 @@ internal static class TuningPlan
     }
 
     internal static int? Next(int anchor, int current, PianoOrder order, int highest = NoteCatalog.HighestMidi)
+        => Move(anchor, current, order, 1, highest);
+    internal static int? Move(int anchor, int current, PianoOrder order, int direction, int highest = NoteCatalog.HighestMidi)
     {
+        if (direction is not (-1 or 1)) throw new ArgumentOutOfRangeException(nameof(direction));
         IReadOnlyList<int> notes = Build(anchor, order);
         int index = -1;
         for (int i = 0; i < notes.Count; i++) if (notes[i] == current) { index = i; break; }
         if (index >= 0)
-            for (int next = index + 1; next < notes.Count; next++)
+            for (int next = index + direction; next >= 0 && next < notes.Count; next += direction)
                 if (notes[next] <= highest) return notes[next];
         return null;
     }

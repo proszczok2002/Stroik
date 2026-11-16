@@ -46,12 +46,29 @@ public final class CoreChecks {
     require(
         Dsp.level(110) > Dsp.level(440) && Dsp.level(440) > Dsp.level(1760),
         "Bounded pitch-dependent gain");
-    require(Dsp.level(27.5) <= .34 && Dsp.level(4186) >= .045, "Fork gain limits");
+    require(Dsp.level(27.5) <= .6 && Dsp.level(4186) >= .045, "Fork gain limits");
     for (int midi : new int[] {21, 40, 60, 67, 69, 95, 108}) {
       short[] tone = Dsp.fork(Model.hz(midi, 440), 0, 44100);
       for (short sample : tone) require(Math.abs((int) sample) < 32767, "Fork clipped");
     }
     int count = 0;
+    Dsp.ConfirmedStrikes confirmed = new Dsp.ConfirmedStrikes();
+    confirmed.arm(440, 5, 0);
+    require(
+        !confirmed.observe(.03, .008, 440, 400, 1.2), "Attack cannot use stale pitch immediately");
+    confirmed.observe(.025, .008, 440, 600, 1.2);
+    confirmed.observe(0, .008, 0, 700, 1.2);
+    confirmed.observe(.03, .008, 440, 1000, 1.2);
+    require(!confirmed.observe(.025, .008, 448, 1200, 1.2), "Detuned second strike advanced");
+    confirmed.arm(440, 5, 2000);
+    confirmed.observe(.03, .008, 440, 2400, 1.2);
+    confirmed.observe(.025, .008, 440, 2600, 1.2);
+    confirmed.observe(0, .008, 0, 2700, 1.2);
+    confirmed.observe(.03, .008, 440, 3000, 1.2);
+    require(confirmed.observe(.025, .008, 440, 3200, 1.2), "Two in-tune strikes did not advance");
+    navigation.target = 61;
+    navigation.anchor = 60;
+    require(navigation.move(-1) == 60, "Previous target shortcut plan");
     for (int rate : new int[] {44100, 48000})
       for (double frequency :
           new double[] {27.5, 41.203, 65.406, 110, 261.625565, 440, 880, 2093, 4186}) {
@@ -96,6 +113,16 @@ public final class CoreChecks {
     short[] fork = Dsp.fork(261.625565, fifth, 44100);
     double[] v = Dsp.together(Arrays.copyOf(fork, 65536), 44100, 261.625565, 1);
     require(v != null && Math.abs(v[1] - fifth) < .2, "Fork pair");
+    for (int midi : new int[] {36, 48, 60, 72, 84}) {
+      double a = Model.hz(midi, 440), b = Model.hz(midi + 7, 440);
+      short[] signal = Arrays.copyOf(Dsp.fork(a, b, 44100), 65536);
+      double aa = projection(signal, a), bb = projection(signal, b);
+      require(aa > 100 && bb > 100, "Missing fifth fundamentals MIDI " + midi);
+      require(
+          projection(signal, a / 2) < Math.min(aa, bb) * .05
+              && projection(signal, b / 2) < Math.min(aa, bb) * .05,
+          "Fifth contains suboctave MIDI " + midi);
+    }
     Dsp.Taps taps = new Dsp.Taps();
     require(!taps.observe(.03, .008, 1000, 1.2), "Single strike");
     taps.observe(0, .008, 1200, 1.2);
@@ -108,5 +135,15 @@ public final class CoreChecks {
         "Core checks PASS: "
             + count
             + " pitch/interval cases plus silence, noise, DC, recovery, fork and taps.");
+  }
+
+  private static double projection(short[] signal, double frequency) {
+    double re = 0, im = 0;
+    for (int i = 0; i < signal.length; i++) {
+      double angle = 2 * Math.PI * frequency * i / 44100;
+      re += signal[i] * Math.cos(angle);
+      im += signal[i] * Math.sin(angle);
+    }
+    return Math.hypot(re, im) / signal.length;
   }
 }

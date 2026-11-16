@@ -21,7 +21,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   Model model;
   boolean active;
   private LinearLayout root, body, nav;
-  private TextView heading, result, guide, status;
+  private TextView heading, result, guide, status, referenceHelp, beginnerHelp;
   private ScrollView scroll;
   private Spinner targetList, octaveList;
   private final Button[] tabs = new Button[3];
@@ -33,7 +33,12 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private String consonanceLabel;
   private Spinner consonanceList;
   private final Map<Spinner, int[]> selections = new IdentityHashMap<>();
-  private View pairControls, micControls, forkControls, monitorControls, advanceControls;
+  private View pairControls,
+      micControls,
+      forkControls,
+      monitorControls,
+      advanceControls,
+      forkTapControls;
   private View ukuleleControls, orderControls;
   private CheckBox monitorCheck;
   private int renderedPage = -1, renderGeneration, restoredFocus = View.NO_ID;
@@ -61,7 +66,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           if (!active) return;
           if (model.autoFork
               && !autoPaused
-              && (model.method == 0 || model.method == 3)
+              && model.method == 0
               && !audio.running()
               && SystemClock.elapsedRealtime() - lastFork >= (long) (model.forkSeconds * 1000)) {
             lastFork = SystemClock.elapsedRealtime();
@@ -327,7 +332,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     View focused = accessibilityFocus(root);
     visible(pairControls, model.interval != 0 && model.method != 0);
     visible(micControls, model.method != 0);
-    visible(forkControls, model.method != 1);
+    visible(forkControls, model.method == 0);
+    visible(forkTapControls, model.method != 1);
     visible(monitorControls, model.method == 3);
     visible(advanceControls, model.method == 1);
     if (focused != null)
@@ -391,7 +397,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
 
   private void referenceControl() {
     number(
-        t("Częstotliwość odniesienia A, Hz", "A reference frequency, Hz"),
+        t("Częstotliwość, Hz", "Frequency, Hz"),
         model.reference,
         390,
         466,
@@ -436,14 +442,23 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     int generation = ++renderGeneration;
     boolean restore = samePage || restoredFocus != View.NO_ID;
     restoredFocus = View.NO_ID;
-    root.post(() -> {
-      if (generation != renderGeneration || isFinishing() || isDestroyed()) return;
-      scroll.scrollTo(0, scrollY);
-      View target = restore && focusId != View.NO_ID ? root.findViewById(focusId) : null;
-      if (target != null && target.isShown() && !target.isAccessibilityFocused())
-        target.performAccessibilityAction(
-            android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
-    });
+    root.postDelayed(
+        () -> {
+          if (generation != renderGeneration || isFinishing() || isDestroyed()) return;
+          scroll.scrollTo(0, scrollY);
+          View target = restore && focusId != View.NO_ID ? root.findViewById(focusId) : null;
+          View current = accessibilityFocus(root);
+          if (target != null
+              && target.isShown()
+              && !target.isAccessibilityFocused()
+              && (current == null || current == heading)) {
+            target.requestRectangleOnScreen(
+                new Rect(0, 0, target.getWidth(), target.getHeight()), true);
+            target.performAccessibilityAction(
+                android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
+          }
+        },
+        150);
     root.requestApplyInsets();
     rebuildTraversal();
   }
@@ -606,12 +621,12 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         return true;
       }
       if (key == KeyEvent.KEYCODE_N) {
-        advance();
+        moveTarget(event.isShiftPressed() ? -1 : 1);
         return true;
       }
     }
     if (event.isAltPressed() && key == KeyEvent.KEYCODE_N) {
-      advance();
+      moveTarget(event.isShiftPressed() ? -1 : 1);
       return true;
     }
     if (targetList != null
@@ -715,17 +730,17 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     targetsBox = (LinearLayout) section(this::targets);
     guide = text("", false);
     updateGuide();
-    if (model.beginner)
-      text(
-          t(
-              "Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty. Graj"
-                  + " równomiernie, bez przesterowania. Stare pianino powinien ocenić technik przed"
-                  + " podnoszeniem naciągu. Zacznij od środka, zmieniaj strony równomiernie i"
-                  + " wytłumiaj pozostałe struny.",
-              "Strikes that are too weak or too strong can cause inaccurate readings. Play evenly"
-                  + " without clipping. Have an old piano assessed before raising tension. Start"
-                  + " near the middle, work evenly on both sides and mute unused strings."),
-          false);
+    beginnerHelp =
+        text(
+            t(
+                "Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty. Graj"
+                    + " równomiernie, bez przesterowania. Stare pianino powinien ocenić technik"
+                    + " przed podnoszeniem naciągu. Zacznij od środka, zmieniaj strony równomiernie"
+                    + " i wytłumiaj pozostałe struny.",
+                "Strikes that are too weak or too strong can cause inaccurate readings. Play evenly"
+                    + " without clipping. Have an old piano assessed before raising tension. Start"
+                    + " near the middle, work evenly on both sides and mute unused strings."),
+            false);
     status =
         text(
             audio.running()
@@ -778,6 +793,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
               1,
               10,
               v -> model.forkSeconds = v);
+        });
+    forkTapControls =
+        section(() -> {
           check(
               t(
                   "Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną"
@@ -917,10 +935,19 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   private void updateGuide() {
+    visible(referenceHelp, model.beginner && model.instrument == 0);
+    visible(beginnerHelp, model.beginner);
+    if (beginnerHelp != null) beginnerHelp.setText(beginnerGuidance());
     if (guide == null) return;
     String value = "";
-    if (meter != null) meter.invalidate();
-    if (model.interval != 0) {
+    if (meter != null) {
+      if (meter.target != model.base()) {
+        meter.cents = Double.NaN;
+        meter.target = model.base();
+      }
+      meter.invalidate();
+    }
+    if (model.beginner && model.interval != 0) {
       int upper = model.base() + model.semitones();
       value +=
           "\n"
@@ -955,6 +982,28 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                   + model.note(model.base() + model.semitones()));
     if (!value.contentEquals(guide.getText())) guide.setText(value);
     guide.setVisibility(value.isEmpty() ? View.GONE : View.VISIBLE);
+  }
+
+  private String beginnerGuidance() {
+    String common =
+        t(
+            "Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty. Graj"
+                + " równomiernie, bez przesterowania. ",
+            "Strikes that are too weak or too strong can cause inaccurate readings. Play evenly"
+                + " without clipping. ");
+    if (model.instrument == 0)
+      return common
+          + t(
+              "Stare pianino powinien ocenić technik przed podnoszeniem naciągu. Zacznij od środka,"
+                  + " zmieniaj strony równomiernie i wytłumiaj pozostałe struny.",
+              "Have an old piano assessed before raising tension. Start near the middle, work"
+                  + " evenly on both sides and mute unused strings.");
+    return common
+        + (model.strings()
+            ? t(
+                "Graj jedną pustą strunę naraz. Kolejność strun i ich nazwy są na liście dźwięków.",
+                "Play one open string at a time. String order and names are in the note list.")
+            : t("Graj jeden dźwięk naraz.", "Play one note at a time."));
   }
 
   private void instrument() {
@@ -1005,15 +1054,16 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                   model.anchor = model.base();
                 }));
     referenceControl();
-    text(
-        t(
-            "Standard to 440 Hz. Wiek pianina nie określa bezpiecznej wysokości stroju; przed"
-                + " podniesieniem naciągu starego instrumentu poproś technika o ocenę. Ukulele G/A"
-                + " można zamienić. Do innych strojów użyj trybu chromatycznego.",
-            "440 Hz is standard. A piano's age alone does not determine a safe pitch; have a"
-                + " technician assess old instruments before raising tension. Ukulele G/A can be"
-                + " swapped. Use chromatic mode for other tunings."),
-        false);
+    referenceHelp =
+        text(
+            t(
+                "Standard to 440 Hz. Wiek pianina nie określa bezpiecznej wysokości stroju; przed"
+                    + " podniesieniem naciągu starego instrumentu poproś technika o ocenę. Ukulele"
+                    + " G/A można zamienić. Do innych strojów użyj trybu chromatycznego.",
+                "440 Hz is standard. A piano's age alone does not determine a safe pitch; have a"
+                    + " technician assess old instruments before raising tension. Ukulele G/A can"
+                    + " be swapped. Use chromatic mode for other tunings."),
+            false);
     choice(
         t("Czułość mikrofonu", "Microphone sensitivity"),
         new String[] {
@@ -1054,10 +1104,6 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           root.setBackgroundColor(model.dark ? Color.rgb(30, 30, 30) : Color.WHITE);
           styleTabs();
         });
-    check(
-        t("Widok dla początkujących z podpowiedziami", "Beginner view with guidance"),
-        model.beginner,
-        v -> model.beginner = v);
     check(
         t("Pokazuj wskaźnik na żywo i klawiaturę", "Show live meter and keyboard"),
         model.graphics,
@@ -1318,13 +1364,19 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   public void advance() {
-    int next = model.next();
+    moveTarget(1);
+  }
+
+  private void moveTarget(int direction) {
+    int next = model.move(direction);
     if (next == model.base()) {
-      session.endSequence();
+      if (direction > 0) session.endSequence();
       sayAction(
-          t(
-              "Koniec wybranej kolejności. Strojenie zatrzymane.",
-              "End of selected order. Tuning stopped."),
+          direction < 0
+              ? t("To początek wybranej kolejności.", "Start of the selected order.")
+              : t(
+                  "Koniec wybranej kolejności. Strojenie zatrzymane.",
+                  "End of selected order. Tuning stopped."),
           targetList);
       return;
     }
@@ -1487,6 +1539,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
 
   private final class Meter extends View {
     double cents = Double.NaN;
+    int target = -1;
     final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     Meter(Context context) {
@@ -1548,10 +1601,14 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           paint);
       int[] whites = {0, 2, 4, 5, 7, 9, 11};
       int selected = model.base() % 12;
+      int highlight =
+          valid
+              ? Math.abs(cents) <= model.tolerance ? Color.rgb(0, 130, 50) : Color.rgb(185, 35, 35)
+              : Color.rgb(0, 115, 190);
       float left = dp(12), width = (getWidth() - dp(24)) / 7f;
       for (int i = 0; i < whites.length; i++) {
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(whites[i] == selected ? Color.rgb(0, 115, 190) : Color.WHITE);
+        paint.setColor(whites[i] == selected ? highlight : Color.WHITE);
         canvas.drawRect(left + i * width, dp(147), left + (i + 1) * width, dp(205), paint);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(dp(1));
@@ -1569,7 +1626,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       int[] blacks = {1, 3, 6, 8, 10}, positions = {1, 2, 4, 5, 6};
       for (int i = 0; i < blacks.length; i++) {
         float center = left + positions[i] * width;
-        paint.setColor(blacks[i] == selected ? Color.rgb(0, 115, 190) : Color.BLACK);
+        paint.setColor(blacks[i] == selected ? highlight : Color.BLACK);
         canvas.drawRect(center - width * .28f, dp(147), center + width * .28f, dp(181), paint);
         if (blacks[i] == selected) {
           paint.setColor(Color.WHITE);

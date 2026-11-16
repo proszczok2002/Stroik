@@ -32,9 +32,10 @@ internal sealed partial class TunerForm : Form
     private readonly ComboBox _consonance = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _intervalInput = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly CheckBox _forkTap = new() { AutoSize = true }, _monitor = new() { AutoSize = true }, _automaticUpdates = new() { AutoSize = true };
-    private readonly NumericUpDown _updateMinutes = new() { Minimum = 1, Maximum = 1440, Value = 5 };
+    private readonly EditableNumber _updateMinutes = new() { Minimum = 1, Maximum = 1440, Value = 5 };
     private readonly System.Windows.Forms.Timer _practiceTimer = new() { Interval = 100 };
     private readonly PracticeCycle _practice = new();
+    private readonly SpeechOutput _speech = new();
     private readonly TapNavigator _tapNavigator = new();
     private AudioMonitor? _audioMonitor;
     private volatile TuningMethod _activeMethod;
@@ -68,11 +69,11 @@ internal sealed partial class TunerForm : Form
     private readonly CheckBox _voiceInVisual = new() { AutoSize = true, Checked = true };
     private readonly PitchMeter _meter = new();
     private readonly KeyboardDiagram _keyboard = new();
-    private readonly NumericUpDown _concertA = new() { Minimum = 390, Maximum = 466, DecimalPlaces = 1, Increment = 0.1M, Value = 440 };
-    private readonly NumericUpDown _tolerance = new() { Minimum = 1, Maximum = 20, Value = 5 };
-    private readonly NumericUpDown _interval = new() { Minimum = 1, Maximum = 10, Value = 3 };
-    private readonly NumericUpDown _doubleStrikeWindow = new() { Minimum = 0.5M, Maximum = 2.5M, DecimalPlaces = 1, Increment = 0.1M, Value = 1.2M };
-    private readonly NumericUpDown _calibration = new() { Minimum = -100, Maximum = 100, DecimalPlaces = 1, Increment = 0.1M };
+    private readonly EditableNumber _concertA = new() { Minimum = 390, Maximum = 466, DecimalPlaces = 1, Increment = 0.1M, Value = 440 };
+    private readonly EditableNumber _tolerance = new() { Minimum = 1, Maximum = 20, Value = 5 };
+    private readonly EditableNumber _interval = new() { Minimum = 1, Maximum = 10, Value = 3 };
+    private readonly EditableNumber _doubleStrikeWindow = new() { Minimum = 0.5M, Maximum = 2.5M, DecimalPlaces = 1, Increment = 0.1M, Value = 1.2M };
+    private readonly EditableNumber _calibration = new() { Minimum = -100, Maximum = 100, DecimalPlaces = 1, Increment = 0.1M };
     private readonly System.Windows.Forms.Timer _strikeTimer = new();
     private readonly System.Windows.Forms.Timer _updateTimer = new() { Interval = UpdateCheckState.IntervalMilliseconds };
     private readonly UpdateCheckState _updateChecks = new();
@@ -236,7 +237,7 @@ internal sealed partial class TunerForm : Form
         _monitor.CheckedChanged += (_, _) => { _monitorEnabled = _monitor.Checked; if (!_monitor.Checked) { _audioMonitor?.Dispose(); _audioMonitor = null; } else if (_microphone is not null && _activeMethod == TuningMethod.HybridHeadphones) _audioMonitor = new AudioMonitor(); Persist(); };
         _automaticUpdates.CheckedChanged += (_, _) => { ConfigureUpdateTimer(); Persist(); };
         _updateMinutes.ValueChanged += (_, _) => { ConfigureUpdateTimer(); Persist(); };
-        _practiceTimer.Tick += (_, _) => { if (_microphone is not null && _activeMethod == TuningMethod.HybridSpeakers && _practice.NeedsFork(DateTime.UtcNow)) Strike(); };
+        _practiceTimer.Tick += (_, _) => { if (_microphone is not null && _activeMethod == TuningMethod.HybridSpeakers && !_speech.IsSpeaking && _practice.NeedsFork(DateTime.UtcNow)) Strike(); };
         foreach (CheckBox checkBox in new[] { _autoStrike, _doubleStrike, _showOctave, _visualMode, _voiceInVisual, _dark, _forkTap, _monitor, _automaticUpdates })
             checkBox.Click += (_, _) => AnnounceCheckBoxState(checkBox);
         _calibration.ValueChanged += (_, _) => { Volatile.Write(ref _correctionFactor, Math.Pow(2, (double)_calibration.Value / 1200)); ResetResult(); Persist(); };
@@ -250,9 +251,10 @@ internal sealed partial class TunerForm : Form
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        if (keyData == (Keys.Alt | Keys.N) || keyData == (Keys.Control | Keys.N))
+        if (keyData == (Keys.Alt | Keys.N) || keyData == (Keys.Control | Keys.N) ||
+            keyData == (Keys.Alt | Keys.Shift | Keys.N) || keyData == (Keys.Control | Keys.Shift | Keys.N))
         {
-            AdvanceTarget(_targetMidi < 0 ? _lastResolvedTarget : _targetMidi);
+            MoveTarget(_targetMidi < 0 ? _lastResolvedTarget : _targetMidi, (keyData & Keys.Shift) != 0 ? -1 : 1);
             return true;
         }
         if ((_target.Focused || _target.DroppedDown) && NavigateTargetKey(keyData)) return true;
@@ -296,8 +298,9 @@ internal sealed partial class TunerForm : Form
         if (_instrumentKind == InstrumentKind.Piano && _view.SelectedIndex == (int)TunerView.Beginner)
             name += ": " + KeyboardGuide.Position(_targetMidi, _english);
         _target.AccessibleDescription = name;
-        _target.AccessibilityObject.RaiseAutomationNotification(AutomationNotificationKind.ActionCompleted,
-            AutomationNotificationProcessing.ImportantMostRecent, name);
+        if (!ScreenReaderDetector.IsActive()) _speech.Speak(name, _english);
+        else _target.AccessibilityObject.RaiseAutomationNotification(AutomationNotificationKind.ActionCompleted,
+            AutomationNotificationProcessing.ImportantAll, name);
     }
 
     internal static ForkShortcutAction DecideForkShortcut(bool automaticSelected, bool running) =>
@@ -327,7 +330,7 @@ internal sealed partial class TunerForm : Form
     {
         _initializing = true;
         _method.Items.Clear();
-        _method.Items.AddRange([T("Kamerton", "Tuning fork"), T("Stroik elektroniczny", "Electronic tuner"), T("Hybrydowy ? g?o?niki (naprzemiennie)", "Hybrid ? speakers (alternating)"), T("Hybrydowy ? s?uchawki", "Hybrid ? headphones")]);
+        _method.Items.AddRange([T("Kamerton", "Tuning fork"), T("Stroik elektroniczny", "Electronic tuner"), T("Hybrydowy — głośniki (naprzemiennie)", "Hybrid — speakers (alternating)"), T("Hybrydowy — słuchawki", "Hybrid — headphones")]);
         _method.SelectedIndex = (int)settings.Method;
         _activeMethod = settings.Method;
         _consonance.Items.Clear();
@@ -335,7 +338,7 @@ internal sealed partial class TunerForm : Form
         _consonance.SelectedIndex = (int)settings.Consonance;
         _consonanceKind = settings.Consonance;
         _intervalInput.Items.Clear();
-        _intervalInput.Items.AddRange([T("D?wi?ki osobno: dolny, potem g?rny", "Separate notes: lower, then upper"), T("D?wi?ki razem ? eksperymentalnie", "Together ? experimental")]);
+        _intervalInput.Items.AddRange([T("Dźwięki osobno: dolny, potem górny", "Separate notes: lower, then upper"), T("Dźwięki razem — eksperymentalnie", "Together — experimental")]);
         _intervalInput.SelectedIndex = settings.SimultaneousInterval ? 1 : 0;
         _together = settings.SimultaneousInterval;
         _view.Items.Clear();
@@ -422,38 +425,45 @@ internal sealed partial class TunerForm : Form
         bool canListen = !fork || _forkTap.Checked;
         _forkTapEnabled = _forkTap.Checked; _monitorEnabled = _monitor.Checked;
         _strikeTimer.Stop(); _fork.Stop();
-        foreach (Control control in new Control[] { _strike, _forkHelp }) control.Visible = fork || hybrid;
-        foreach (Control control in new Control[] { _autoStrike, _automaticStatus, _intervalTitle, _interval }) control.Visible = fork || _activeMethod == TuningMethod.HybridHeadphones;
+        _strike.Visible = fork;
+        _forkHelp.Visible = fork;
+        foreach (Control control in new Control[] { _autoStrike, _automaticStatus, _intervalTitle, _interval }) control.Visible = fork;
         foreach (Control control in new Control[] { _start, _stop, _status, _sensitivityTitle, _sensitivity }) control.Visible = canListen;
         foreach (Control control in new Control[] { _repeat, _test, _resultTitle, _result, _details, _toleranceTitle, _tolerance, _doubleStrike, _doubleStrikeWindowTitle, _doubleStrikeWindow, _strikeHelp }) control.Visible = !fork;
         _forkTap.Visible = fork || hybrid;
         _monitor.Visible = _activeMethod == TuningMethod.HybridHeadphones;
-        _doubleStrikeWindow.Visible = _doubleStrikeWindowTitle.Visible = !fork || _forkTap.Checked;
+        _doubleStrike.Visible = _activeMethod == TuningMethod.Electronic;
+        _doubleStrikeWindow.Visible = _doubleStrikeWindowTitle.Visible = _activeMethod == TuningMethod.Electronic || _forkTap.Checked;
         _doubleStrikeWindow.Enabled = _doubleStrike.Checked || _forkTap.Checked;
-        _status.Text = _microphone is null ? T("Mikrofon jest wy??czony.", "Microphone is off.") : T("Mikrofon w??czony.", "Microphone is on.");
+        _status.Text = _microphone is null ? T("Mikrofon jest wyłączony.", "Microphone is off.") : T("Mikrofon włączony.", "Microphone is on.");
         AcceptButton = fork ? _strike : _start;
         UpdateStrikeTimer(); UpdateAutomaticStatus(); ApplyViewUI(); UpdateIntervalHelp();
     }
     private void ApplyViewUI()
     {
         bool beginner = _view.SelectedIndex == 1;
-        _beginnerHint.Visible = _playingHelp.Visible = beginner;
+        _intro.Visible = _beginnerHint.Visible = _playingHelp.Visible = _noteHelp.Visible = beginner;
+        _forkHelp.Visible = beginner && _activeMethod == TuningMethod.TuningFork;
+        _strikeHelp.Visible = beginner && _activeMethod == TuningMethod.Electronic;
         bool fullRange = !InstrumentCatalog.HasStrings(_instrumentKind);
         _showOctave.Visible = false;
         _octaveTitle.Visible = _octave.Visible = fullRange;
-        _concertHelp.Visible = _instrumentKind == InstrumentKind.Piano;
+        _concertHelp.Visible = beginner && _instrumentKind == InstrumentKind.Piano;
         _ukuleleTitle.Visible = _ukuleleTuning.Visible = _instrumentKind == InstrumentKind.Ukulele;
-        _orderTitle.Visible = _pianoOrder.Visible = _orderHelp.Visible = _instrumentKind == InstrumentKind.Piano;
-        _guideText.Visible = _instrumentKind == InstrumentKind.Piano;
+        _orderTitle.Visible = _pianoOrder.Visible = _instrumentKind == InstrumentKind.Piano;
+        _orderHelp.Visible = _guideText.Visible = beginner && _instrumentKind == InstrumentKind.Piano;
+        _concertTitle.Text = T("Częstotliwość, Hz:", "Frequency, Hz:");
+        _concertA.AccessibleName = _concertTitle.Text;
         _keyboard.Visible = _instrumentKind == InstrumentKind.Piano && _visualMode.Checked;
         _meter.Visible = _visualMode.Checked && _activeMethod != TuningMethod.TuningFork && _consonanceKind == Consonance.Off;
         _intervalInput.Visible = _consonanceKind != Consonance.Off && _activeMethod != TuningMethod.TuningFork;
+        _consonanceHelp.Visible = beginner && _consonanceKind != Consonance.Off;
         UpdateIntervalHelp();
     }
     private void UpdateStrikeTimer()
     {
         _strikeTimer.Stop();
-        if (_activeMethod is not (TuningMethod.TuningFork or TuningMethod.HybridHeadphones) || !_autoStrike.Checked || !_automaticStrikesRunning || IsDisposed) return;
+        if (_activeMethod != TuningMethod.TuningFork || !_autoStrike.Checked || !_automaticStrikesRunning || IsDisposed) return;
         _strikeTimer.Interval = (int)_interval.Value * 1000;
         if (_activeMethod == TuningMethod.TuningFork && _forkTap.Checked) _strikeTimer.Interval = Math.Max(6500, _strikeTimer.Interval);
         _strikeTimer.Start();
@@ -569,7 +579,7 @@ internal sealed partial class TunerForm : Form
             "The tuning fork plays a short, decaying tone. If unsure about tuning by ear, first practise on a modest, easy-to-handle instrument such as a ukulele or guitar. A broken string can still cause injury.");
         _resultTitle.Text = T("Ostatni wynik:", "Last result:");
         _settingsTitle.Text = T("Parametry strojenia", "Tuning parameters");
-        _concertTitle.Text = T("Częstotliwość odniesienia A w hercach (standard 440 Hz):", "A reference frequency in hertz (standard 440 Hz):");
+        _concertTitle.Text = T("Częstotliwość, Hz:", "Frequency, Hz:");
         _concertHelp.Text = T("Starszy instrument może wymagać niższego stroju, np. 430–435 Hz, ale wiek nie wyznacza bezpiecznej wartości. Przed podniesieniem naciągu starego pianina do 440 Hz poproś technika o ocenę stanu, konstrukcji i właściwej wysokości stroju.",
             "An older instrument may need a lower pitch, such as 430–435 Hz, but age alone does not determine a safe value. Before raising an old piano to 440 Hz, ask a piano technician to assess its condition, design and suitable pitch.");
         _sensitivityTitle.Text = T("Czułość mikrofonu:", "Microphone sensitivity:");
@@ -738,13 +748,14 @@ internal sealed partial class TunerForm : Form
     }
     private void UpdateGuide()
     {
-        if (_instrumentKind != InstrumentKind.Piano) return;
+        if (_instrumentKind != InstrumentKind.Piano) { _guideText.Text = ""; return; }
         int midi = _targetMidi >= 0 ? _targetMidi : _lastResolvedTarget;
         if (midi is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi) midi = NoteCatalog.DefaultMidi;
         _guideText.Text = KeyboardGuide.Describe(midi, _english);
         _keyboard.SelectNote(midi);
     }
-    private void AdvanceTarget(int current)
+    private void AdvanceTarget(int current) => MoveTarget(current, 1);
+    private void MoveTarget(int current, int direction)
     {
         if (current is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi)
             current = InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind);
@@ -753,7 +764,7 @@ internal sealed partial class TunerForm : Form
         {
             PianoOrder order = (PianoOrder)Math.Max(0, _pianoOrder.SelectedIndex);
             if (!TuningPlan.Build(_planAnchorMidi, order).Contains(current)) _planAnchorMidi = current;
-            next = TuningPlan.Next(_planAnchorMidi, current, order,
+            next = TuningPlan.Move(_planAnchorMidi, current, order, direction,
                 _activeMethod == TuningMethod.Electronic ? NoteCatalog.HighestMidi : IntervalAnalysis.HighestTarget(_consonanceKind));
         }
         else if (InstrumentCatalog.HasStrings(_instrumentKind))
@@ -761,12 +772,13 @@ internal sealed partial class TunerForm : Form
             IReadOnlyList<OpenString> strings = InstrumentCatalog.Strings(_instrumentKind, _ukuleleKind);
             int index = -1;
             for (int i = 0; i < strings.Count; i++) if (strings[i].Midi == current) { index = i; break; }
-            next = index >= 0 && index + 1 < strings.Count ? strings[index + 1].Midi : null;
+            next = index >= 0 && index + direction >= 0 && index + direction < strings.Count ? strings[index + direction].Midi : null;
         }
-        else next = current < NoteCatalog.HighestMidi ? current + 1 : null;
+        else next = current + direction is >= NoteCatalog.LowestMidi and <= NoteCatalog.HighestMidi ? current + direction : null;
         if (next is null || (_activeMethod != TuningMethod.Electronic && next > IntervalAnalysis.HighestTarget(_consonanceKind)))
         {
-            Announce(T("To koniec wybranej kolejności strojenia.", "End of the selected tuning order."));
+            if (direction > 0) { StopMicrophone(false); _fork.Stop(); _automaticStrikesRunning = false; _strikeTimer.Stop(); UpdateAutomaticStatus(); }
+            Announce(direction > 0 ? T("To koniec wybranej kolejności strojenia. Strojenie zatrzymane.", "End of the selected tuning order. Tuning stopped.") : T("To początek wybranej kolejności.", "Start of the selected order."));
             return;
         }
         _advancingTarget = true;
@@ -818,7 +830,8 @@ internal sealed partial class TunerForm : Form
             microphone.Start(); _microphone = microphone;
             _acceptAudio = true;
             if (_activeMethod == TuningMethod.HybridHeadphones && _monitor.Checked) _audioMonitor = new AudioMonitor();
-            if (_activeMethod == TuningMethod.HybridSpeakers) { Strike(); _practiceTimer.Start(); }
+            if (_activeMethod is TuningMethod.HybridSpeakers or TuningMethod.HybridHeadphones) Strike();
+            if (_activeMethod == TuningMethod.HybridSpeakers) _practiceTimer.Start();
             _start.Enabled = false; _stop.Enabled = true;
             _status.Text = _activeMethod == TuningMethod.HybridSpeakers
                 ? T("Hybryda: poczekaj na wybrzmienie wzorca, potem graj i wycisz instrument.", "Hybrid: wait for the reference to decay, then play and mute your instrument.")
@@ -833,12 +846,14 @@ internal sealed partial class TunerForm : Form
     }
     private void StopMicrophone(bool announce = true)
     {
+        _speech.Stop();
         if (_microphone is null) return;
         Microphone microphone = _microphone; _microphone = null;
         Interlocked.Increment(ref _measurementGeneration);
         microphone.FrameReady -= ProcessFrame; microphone.Dispose();
         _practiceTimer.Stop(); _practice.Stop(); _acceptAudio = true;
         _audioMonitor?.Dispose(); _audioMonitor = null;
+        if (_activeMethod is TuningMethod.HybridSpeakers or TuningMethod.HybridHeadphones) _fork.Stop();
         _session.Reset(); lock (_navigationLock) _strikeNavigator.Reset();
         _windowCount = 0; _meter.SetReading(null);
         _start.Enabled = true; _stop.Enabled = false;
@@ -905,7 +920,7 @@ internal sealed partial class TunerForm : Form
         if (frequency is > 0) frequency *= correction;
         int? advance = null;
         bool needsQuickPitch = false;
-        if (_doubleStrikeEnabled && !forkNavigation)
+        if (_doubleStrikeEnabled && _activeMethod == TuningMethod.Electronic && !forkNavigation)
         {
             lock (_navigationLock)
             {
@@ -960,11 +975,12 @@ internal sealed partial class TunerForm : Form
             counting = _strikeNavigator.IsCounting;
             if (!counting)
             {
-                if (_doubleStrikeEnabled && inTune) _strikeNavigator.Arm(resolved, targetFrequency, now);
+                if (_doubleStrikeEnabled && _activeMethod == TuningMethod.Electronic && inTune) _strikeNavigator.Arm(resolved, targetFrequency, now, tolerance);
                 else _strikeNavigator.Reset();
             }
         }
-        if (counting) return;
+        if (counting && inTune) return;
+        if (!inTune) lock (_navigationLock) _strikeNavigator.Reset();
         _ignoreUntil = now.AddMilliseconds(1500);
         try { BeginInvoke((Action)(() => { if (generation == Volatile.Read(ref _measurementGeneration)) ShowResult(result, reference, target, tolerance, instrument, ukulele); })); }
         catch (InvalidOperationException) { }
@@ -979,7 +995,9 @@ internal sealed partial class TunerForm : Form
         if (!_visualMode.Checked || _activeMethod == TuningMethod.TuningFork || _consonanceKind != Consonance.Off) return;
         int target = ResolveTarget(_targetMidi, _instrumentKind, _ukuleleKind, measured, _reference);
         double expected = PitchDetector.NoteFromMidi(target, _reference).Frequency;
-        _meter.SetReading(1200 * Math.Log2(measured / expected));
+        double cents = 1200 * Math.Log2(measured / expected);
+        _meter.SetReading(cents);
+        _keyboard.SelectNote(target); _keyboard.SetReading(cents, _toleranceCents);
     }
     private void ShowResult(double measured, double reference, int targetMidi, double tolerance, InstrumentKind instrument, UkuleleTuning ukulele, bool announce = true)
     {
@@ -1008,6 +1026,7 @@ internal sealed partial class TunerForm : Form
         _lastAnnouncement = announcement; _repeat.Enabled = true;
         if (instrument == InstrumentKind.Piano && targetMidi < 0) UpdateGuide();
         _meter.SetReading(cents);
+        _keyboard.SelectNote(resolved); _keyboard.SetReading(cents, tolerance);
         if (announce) Announce(announcement);
         if (announce && _activeMethod == TuningMethod.HybridSpeakers && _microphone is not null)
         {
@@ -1025,14 +1044,20 @@ internal sealed partial class TunerForm : Form
         _repeat.Enabled = false;
         _details.Text = "";
         _meter.SetReading(null);
+        _keyboard.SetReading(null, _toleranceCents);
         _result.Text = T("Wynik pojawi się po ucichnięciu dźwięku.", "The result appears when the note stops.");
         if (!_initializing && _microphone is not null && _activeMethod != TuningMethod.Electronic) Strike();
     }
     private void Announce(string message)
     {
         if (_visualMode.Checked && !_voiceInVisual.Checked) return;
+        if (!ScreenReaderDetector.IsActive())
+        {
+            if (!_speech.Speak(message, _english)) _details.Text = T("Synteza mowy niedostępna: ", "Speech unavailable: ") + _speech.LastError;
+            return;
+        }
         _result.AccessibilityObject.RaiseAutomationNotification(
-            AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.ImportantMostRecent, message);
+            AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.ImportantAll, message);
     }
     internal static string CheckBoxAnnouncement(string label, bool isChecked, bool english) =>
         english ? $"{label}: {(isChecked ? "checked" : "unchecked")}."
@@ -1139,7 +1164,7 @@ internal sealed partial class TunerForm : Form
     }
     protected override void Dispose(bool disposing)
     {
-        if (disposing) { if (_noteKeyFilter is not null) { Application.RemoveMessageFilter(_noteKeyFilter); _noteKeyFilter = null; } _closing = true; _updateTimer.Dispose(); _practiceTimer.Dispose(); _audioMonitor?.Dispose(); }
+        if (disposing) { if (_noteKeyFilter is not null) { Application.RemoveMessageFilter(_noteKeyFilter); _noteKeyFilter = null; } _closing = true; _updateTimer.Dispose(); _speech.Dispose(); _practiceTimer.Dispose(); _audioMonitor?.Dispose(); }
         base.Dispose(disposing);
     }
     [DllImport("dwmapi.dll")]

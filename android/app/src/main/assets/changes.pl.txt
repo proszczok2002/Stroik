@@ -1,11 +1,11 @@
-Stroik Android 1.06
+Stroik Android 1.07
 
-W kamertonie nie ma przycisku mikrofonu ani osobnego przystanku z jego stanem. Opcjonalny nasłuch dwóch stuknięć włącza się własnym polem wyboru. Po końcu wybranej kolejności kończy się cały aktywny nasłuch i odtwarzanie, również w hybrydzie i przy wyłączonym automatycznym przechodzeniu.
+Widok klasyczny ukrywa porady, także standard 440 Hz i wskazówki pianinowe przy ukulele. Widok wybierasz tylko na stronie Stroik; usunięto powtórzone pole w Ustawieniach.
 
-Wszystkie ustawienia liczbowe są suwakami z bieżącą wartością. Przesuń palec lub użyj gestu regulacji TalkBack; podwójne stuknięcie albo Enter otwiera pole z klawiaturą numeryczną. Wpis poza zakresem pozostaje w dialogu do poprawienia. Ustawienia obejmują prędkość mowy Stroika przy wygaszonym ekranie: 0,5–3, domyślnie 1. Nie zmienia to prędkości TalkBacka. W hybrydzie głośnikowej własny kamerton czeka na rzeczywisty koniec wypowiedzi syntezatora, zamiast zgadywać jej długość.
+W hybrydzie sterujesz mikrofonem, który uruchamia także kamerton. Ręczne uderzenie, automat i jego odstęp są tylko w metodzie Kamerton; hybryda zachowuje osobne pole dwóch akustycznych stuknięć. Przechodzenie po poprawnym wyniku dotyczy metody Elektroniczny. Oba potwierdzone ataki wymagają wybranej tolerancji, świeżej próbki i właściwej nuty. Rozstrojenie kasuje uzbrojenie; zwykły wynik sam nie zmienia celu. Kolejny wzorzec rozpoczyna świeży pomiar, odrzucając stare oczekujące wyniki. Kamerton po własnym TTS czeka na faktyczne zakończenie wypowiedzi.
 
-Lista nut pianina zawiera opisy położenia względem grup czarnych klawiszy. Następny dźwięk w widoku dla początkujących czyta także położenie; widok klasyczny zachowuje krótką nazwę. Uporządkowano kolejność dostępności i usunięto przejmowanie fokusu przez pole wyniku. Naturalne flicki na Motoroli i Xiaomi wymagają jeszcze potwierdzenia użytkownika.
+Shift+Alt+N i Shift+Ctrl+N wracają do poprzedniego dźwięku według planu. Wpis wartości otwiera klawiaturę numeryczną i przyjmuje kropkę lub przecinek; suwak i profil zapisują podaną liczbę. Ustawienie prędkości mowy pozostaje w Ustawieniach.
 
-Podwójne stuknięcie dwoma palcami TalkBack korzysta ze standardowego sterowania mediami: mikrofon w stroiku elektronicznym, kamerton w metodzie kamertonowej, oba w hybrydzie. Przy zamkniętej aplikacji rozpoczęcie mikrofonu wymaga jej otwarcia. Działanie gestu zależy od konfiguracji TalkBack i aktywnych mediów; systemowe zdarzenia Play/Pause sprawdzono na Pixelu, naturalny gest wymaga osobnej próby.
+Wzmocniono niskie tony kamertonu i wygładzono zakończenie, aby ograniczyć stuk. Kwinta od c razkreślnego zawiera c razkreślne i g razkreślne, 261,63 i 392,00 Hz przy A=440; test widma obejmuje pięć oktaw i brak składowych o oktawę niższych. Małe głośniki nadal ograniczają słyszalność basu. Wizualny klawisz zmienia się z niebieskiego na czerwony przy rozstrojeniu lub zielony w ustawionej tolerancji. Kolor uzupełnia opis tekstowy.
 
-Włączona grafika jest nad przewijanymi ustawieniami: półkolisty wskaźnik odchyłki w centach oraz klawiatura z oznaczeniem wybranej nuty. Grafika nie dodaje przystanków TalkBack. Dokumentacja i komunikaty są po polsku i angielsku.
+Próby na Pixelu z włączonym TalkBack są opisane w raporcie DEVICE_TESTS.md. Testy struktury, zdarzeń i audio nie potwierdzają wymowy, naturalnych gestów ani strojenia prawdziwego instrumentu na każdym telefonie.

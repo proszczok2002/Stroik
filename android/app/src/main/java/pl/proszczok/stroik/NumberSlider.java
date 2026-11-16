@@ -145,7 +145,8 @@ final class NumberSlider extends SeekBar {
         android.text.InputType.TYPE_CLASS_NUMBER
             | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
             | (min < 0 ? android.text.InputType.TYPE_NUMBER_FLAG_SIGNED : 0));
-    entry.setText(String.valueOf(value));
+    entry.setText(formatted());
+    entry.setShowSoftInputOnFocus(true);
     entry.selectAll();
     AlertDialog dialog =
         new AlertDialog.Builder(owner)
@@ -156,9 +157,16 @@ final class NumberSlider extends SeekBar {
             .create();
     dialog.setOnShowListener(ignored -> {
       entry.requestFocus();
-      dialog
-          .getWindow()
-          .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+      entry.postDelayed(
+          () -> {
+            if (dialog.isShowing()) {
+              entry.requestFocus();
+              ((android.view.inputmethod.InputMethodManager)
+                      owner.getSystemService(android.content.Context.INPUT_METHOD_SERVICE))
+                  .showSoftInput(entry, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+            }
+          },
+          150);
       dialog
           .getButton(AlertDialog.BUTTON_POSITIVE)
           .setOnClickListener(v -> {

@@ -1,6 +1,8 @@
-# Stroik 1.18
+# Stroik 1.19
 
-[Natywna wersja Android 1.06](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.06) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
+Aktualne zmiany Windows 1.19 opisano poniżej; starsze sekcje wersji są historyczne.
+
+[Natywna wersja Android 1.07](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.07) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs po polsku i angielsku.
 
@@ -18,7 +20,7 @@ Przy pierwszym uruchomieniu wybrany jest **Kamerton**. Przycisk **Uderz kamerton
 
 ### Hybryda i sterowanie kamertonem w 1.13
 
-Lista metod zawiera również **Hybrydowy — głośniki (naprzemiennie)** oraz **Hybrydowy — słuchawki**. Naciśnij **Włącz mikrofon**, aby rozpocząć ćwiczenie. W pierwszym wariancie wzorzec gra przez 3 sekundy; mikrofon jest pomijany przez 3,4 sekundy, potem słucha instrumentu. Po wyciszeniu nuty program ogłasza wynik, pozostawia około 5 sekund na wypowiedź i wraca do wzorca. Długi komunikat NVDA lub pogłos mogą wymagać ręcznego powtórzenia. Zmiana celu uruchamia nowy wzorzec. **Wyłącz mikrofon** kończy cykl.
+Lista metod zawiera również **Hybrydowy — głośniki (naprzemiennie)** oraz **Hybrydowy — słuchawki**. Naciśnij **Włącz mikrofon**, aby rozpocząć ćwiczenie. W pierwszym wariancie wzorzec gra przez 3 sekundy; mikrofon jest pomijany przez 3,4 sekundy, potem słucha instrumentu. Po wyciszeniu nuty program ogłasza wynik, pozostawia co najmniej 5 sekund na wypowiedź i wraca do wzorca. Własna mowa SAPI dodatkowo blokuje wzorzec do zakończenia wypowiedzi; program nie otrzymuje informacji o zakończeniu mowy NVDA. Długi komunikat NVDA lub pogłos mogą wymagać ręcznego powtórzenia. Zmiana celu uruchamia nowy wzorzec. **Wyłącz mikrofon** kończy cykl.
 
 W wariancie słuchawkowym mikrofon działa równocześnie z kamertonem. **Odsłuch mikrofonu w słuchawkach** jest opcjonalny, domyślnie wyłączony. Najpierw załóż słuchawki: odtwarzanie mikrofonu przez głośniki może spowodować sprzężenie. Odsłuch korzysta z domyślnych urządzeń Windows, nie zmienia ustawień systemowych; opóźnienie zależy od sprzętu i sterowników.
 
@@ -143,3 +145,19 @@ Testy sygnału PCM po rzeczywistych zdarzeniach interfejsu obejmują kwinty, okt
 ## Zmiany w 1.18
 
 Opisy położenia klawiszy pianina są częścią opcji na liście dźwięków. W widoku dla początkujących program zgłasza położenie także po wybraniu kolejnego celu; widok klasyczny zachowuje krótką nazwę. Przykład: g razkreślne — biały klawisz między pierwszym a drugim czarnym klawiszem grupy trzech. Opisy obejmują również czarne klawisze.
+
+
+## Zmiany w 1.19
+
+Stroik 1.19
+
+- Widok klasyczny nie pokazuje wskazówek strojenia, opisu standardu 440 Hz ani pozostałości porad pianinowych po wyborze innego instrumentu. Pole ma krótką etykietę Częstotliwość, Hz.
+- Hybryda pokazuje sterowanie mikrofonem i własne pole gestu dwóch stuknięć. Ręczne uderzenie i automat kamertonu są tylko w metodzie Kamerton. Elektroniczne przechodzenie po poprawnym wyniku działa wyłącznie w stroiku elektronicznym. Rozstrojone uderzenia resetują uzbrojony gest; oba ataki muszą zmieścić się w wybranej tolerancji i mieć świeże potwierdzenie wysokości.
+- Shift+Alt+N lub Shift+Ctrl+N wraca do poprzedniego dźwięku według planu. Alt+N i Ctrl+N przechodzą dalej. Koniec planu zatrzymuje aktywne strojenie.
+- Poprawiono polskie nazwy głośników, słuchawek i sposobów pomiaru. Wpis liczbowy przyjmuje kropkę i przecinek. Komunikaty używają powiadomień czytnika; przy braku wykrytego czytnika dodano asynchroniczny głos SAPI. Hybryda czeka na zakończenie własnej mowy SAPI.
+- Niskie tony kamertonu mają większy poziom oraz ciche wyższe składowe pomocne małym głośnikom. Kwinty nadal grają właściwe nuty równocześnie: c razkreślne + g razkreślne to 261,63 i 392,00 Hz przy A=440. Wygładzono zakończenie tonu. Wrażenie oktawy i słyszalność basu zależą także od głośników; nie przesuwamy wzorca do innej oktawy.
+- Klawisz na wizualnej klawiaturze jest czerwony przy rozstrojeniu, zielony w wybranej tolerancji, niebieski przed pomiarem. Kolor uzupełnia wynik tekstowy i wskaźnik.
+
+Testy: PL/EN, cyfry i separatory dziesiętne, skróty, widoczność, pięć kolejnych wyników hybrydy, ścisła tolerancja gestu, widmo kwint w pięciu oktawach, SAPI start/koniec oraz dotychczasowe regresje audio/updatera. Nie potwierdzono odsłuchu NVDA ani prawdziwego instrumentu u zgłaszającego.
+
+[SAPI completion API](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee125654(v=vs.85)).

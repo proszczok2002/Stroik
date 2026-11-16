@@ -17,8 +17,8 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
-  private int expectedCode = 106;
-  private String expectedName = "1.06";
+  private int expectedCode = 107;
+  private String expectedName = "1.07";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
@@ -26,8 +26,8 @@ public final class DeviceTests extends Instrumentation {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
     if (args != null) {
-      expectedCode = args.getInt("expectedCode", 106);
-      expectedName = args.getString("expectedName", "1.06");
+      expectedCode = args.getInt("expectedCode", 107);
+      expectedName = args.getString("expectedName", "1.07");
     }
     start();
   }
@@ -215,6 +215,14 @@ public final class DeviceTests extends Instrumentation {
       requestsScenario();
       return;
     }
+    if (scenario.equals("regression107")) {
+      regression107();
+      return;
+    }
+    if (scenario.equals("visual107")) {
+      visual107();
+      return;
+    }
     if (scenario.equals("sliders")) {
       slidersScenario();
       return;
@@ -351,12 +359,6 @@ public final class DeviceTests extends Instrumentation {
         main(() ->
             findCheck(
                     english
-                        ? "Beginner view with guidance"
-                        : "Widok dla początkujących z podpowiedziami")
-                .performClick());
-        main(() ->
-            findCheck(
-                    english
                         ? "Automatically check for updates"
                         : "Automatycznie sprawdzaj aktualizacje")
                 .performClick());
@@ -466,7 +468,7 @@ public final class DeviceTests extends Instrumentation {
                       .equals(english ? "Stop microphone" : "Wyłącz mikrofon")))
             micButtons.add((Button) view);
           if (view instanceof SeekBar
-              && (english ? "A reference frequency, Hz" : "Częstotliwość odniesienia A, Hz")
+              && (english ? "Frequency, Hz" : "Częstotliwość, Hz")
                   .contentEquals(view.getContentDescription())) reference = (SeekBar) view;
           if (view instanceof Spinner && view.isShown()) {
             Spinner list = (Spinner) view;
@@ -1293,6 +1295,244 @@ public final class DeviceTests extends Instrumentation {
     }
   }
 
+  private void visual107() {
+    Bundle output = new Bundle();
+    String saved = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      TuningSession session = TuningSession.get(activity);
+      main(() -> {
+        session.stop();
+        activity.model = new Model();
+        activity.model.method = 1;
+        activity.model.graphics = true;
+        activity.model.updates = false;
+        activity.model.voiceInVisual = false;
+        session.configure(activity.model);
+        invokeRender();
+        session.start();
+      });
+      long deadline = SystemClock.elapsedRealtime() + 7000;
+      while (!session.audio.running() && SystemClock.elapsedRealtime() < deadline)
+        SystemClock.sleep(50);
+      require(session.audio.running(), "Visual capture not running");
+      for (boolean dark : new boolean[] {false, true})
+        for (double cents : new double[] {20, 0}) {
+          main(() -> {
+            activity.model.dark = dark;
+            activity.setTheme(
+                dark
+                    ? android.R.style.Theme_Material_NoActionBar
+                    : android.R.style.Theme_Material_Light_NoActionBar);
+            invokeRender();
+            activity.reading(cents);
+          });
+          SystemClock.sleep(400);
+          android.graphics.Bitmap shot = automation.takeScreenshot();
+          require(shot != null, "Screenshot unavailable");
+          java.io.File file =
+              new java.io.File(
+                  activity.getExternalFilesDir(null),
+                  "visual107-" + dark + "-" + (int) cents + ".png");
+          try (java.io.FileOutputStream stream = new java.io.FileOutputStream(file)) {
+            shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream);
+          }
+          log("Screenshot: " + file);
+          shot.recycle();
+        }
+      NumberSlider reference = null;
+      for (View view : views())
+        if (view instanceof NumberSlider
+            && "Częstotliwość, Hz".contentEquals(view.getContentDescription()))
+          reference = (NumberSlider) view;
+      final NumberSlider selected = reference;
+      require(selected != null, "Missing reference slider");
+      main(() -> selected.performAccessibilityAction(AccessibilityNodeInfo.ACTION_CLICK, null));
+      SystemClock.sleep(800);
+      java.io.File entryShot =
+          new java.io.File(activity.getExternalFilesDir(null), "visual107-numeric.png");
+      android.graphics.Bitmap entryBitmap = automation.takeScreenshot();
+      try (java.io.FileOutputStream stream = new java.io.FileOutputStream(entryShot)) {
+        entryBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream);
+      }
+      entryBitmap.recycle();
+      log("Screenshot: " + entryShot);
+      java.util.List<AccessibilityNodeInfo> cancel =
+          automation
+              .getRootInActiveWindow()
+              .findAccessibilityNodeInfosByViewId("android:id/button2");
+      require(
+          cancel.size() == 1 && cancel.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK),
+          "Cannot close numeric dialog");
+      output.putString("result", "PASS");
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      output.putString("result", "FAIL");
+    } finally {
+      restoreSettings(saved);
+    }
+    output.putString("stream", report.toString());
+    finish(Activity.RESULT_OK, output);
+  }
+
+  private void regression107() {
+    Bundle output = new Bundle();
+    String saved = null;
+    AudioEngine engine = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity =
+          (MainActivity)
+              startActivitySync(
+                  new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      for (boolean english : new boolean[] {false, true})
+        for (int instrument = 0; instrument < 6; instrument++) {
+          final int selected = instrument;
+          main(() -> {
+            TuningSession.get(activity).stop();
+            activity.model = new Model();
+            activity.model.english = english;
+            activity.model.updates = false;
+            activity.model.beginner = false;
+            activity.model.instrument = selected;
+            invokeRender();
+          });
+          for (View view : views())
+            if (view.isShown() && view instanceof TextView)
+              require(
+                  !((TextView) view)
+                      .getText()
+                      .toString()
+                      .contains(english ? "440 Hz is standard" : "Standard to 440"),
+                  "Classic exposes piano standard hint");
+          for (int method : new int[] {2, 3}) {
+            main(() ->
+                findSpinner(english ? "Tuning method" : "Metoda strojenia").setSelection(method));
+            require(
+                !findButton(english ? "Strike tuning fork" : "Uderz kamerton").isShown(),
+                "Hybrid exposes manual fork");
+            require(
+                !findCheck(
+                        english
+                            ? "Strike tuning fork automatically"
+                            : "Uderzaj kamerton automatycznie")
+                    .isShown(),
+                "Hybrid exposes fork automation");
+          }
+          page(english ? "Settings" : "Ustawienia");
+          for (View view : views())
+            if (view.isShown() && view instanceof CheckBox)
+              require(
+                  !((CheckBox) view)
+                      .getText()
+                      .toString()
+                      .contains(english ? "Beginner" : "początkujących"),
+                  "Duplicate view setting");
+          page(english ? "Tuner" : "Stroik");
+        }
+      java.util.List<String> results = new java.util.concurrent.CopyOnWriteArrayList<>();
+      AtomicInteger advances = new AtomicInteger();
+      Model model = new Model();
+      model.method = 2;
+      model.target = 108;
+      model.forkTap = false;
+      model.advance = true;
+      model.autoFork = true;
+      engine =
+          new AudioEngine(
+              model,
+              new AudioEngine.Listener() {
+                public void result(String text) {
+                  results.add(text);
+                }
+
+                public void reading(double v) {}
+
+                public void advance() {
+                  advances.incrementAndGet();
+                }
+
+                public void failed(String e) {
+                  throw new AssertionError(e);
+                }
+              },
+              (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE));
+      AudioEngine.Capture state = new AudioEngine.Capture();
+      long time = SystemClock.elapsedRealtime() + 4000;
+      for (int cycle = 0; cycle < 5; cycle++) {
+        double hz = Model.hz(108, 440) * Math.pow(2, (cycle % 2 == 0 ? 22 : -18) / 1200.0);
+        for (int frame = 0; frame < 8; frame++) {
+          short[] samples = new short[4096];
+          for (int i = 0; i < samples.length; i++)
+            samples[i] = (short) (6000 * Math.sin(2 * Math.PI * hz * (i + frame * 4096) / 48000));
+          engine.process(samples, samples.length, time, state);
+          time += 86;
+          waitForIdleSync();
+        }
+        for (int frame = 0; frame < 8; frame++) {
+          engine.process(new short[4096], 4096, time, state);
+          time += 86;
+          waitForIdleSync();
+        }
+        require(
+            results.size() == cycle + 1,
+            "Hybrid lost result after cycle " + cycle + ": " + results.size());
+        require(advances.get() == 0, "Detuned hybrid requested navigation at last note");
+        time += 6000;
+        engine.process(new short[4096], 4096, time, state);
+        SystemClock.sleep(150);
+        time += 4000;
+      }
+      // Actual key dispatch must traverse the plan in both directions.
+      main(() -> {
+        activity.model = new Model();
+        activity.model.method = 0;
+        activity.model.anchor = activity.model.target = 60;
+        activity.model.updates = false;
+        invokeRender();
+      });
+      for (int modifier : new int[] {KeyEvent.META_ALT_ON, KeyEvent.META_CTRL_ON}) {
+        final int mod = modifier;
+        main(() ->
+            activity.dispatchKeyEvent(
+                new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_N, 0, mod)));
+        require(activity.model.target == 61, "Next shortcut failed");
+        main(() ->
+            activity.dispatchKeyEvent(
+                new KeyEvent(
+                    0,
+                    0,
+                    KeyEvent.ACTION_DOWN,
+                    KeyEvent.KEYCODE_N,
+                    0,
+                    mod | KeyEvent.META_SHIFT_ON)));
+        require(activity.model.target == 60, "Previous shortcut failed");
+      }
+      log(
+          "1.07 regression assertions="
+              + assertions
+              + " PASS; 5 full detuned hybrid capture cycles, no navigation, classic hints, hybrid"
+              + " controls and reverse shortcuts.");
+      output.putString("result", "PASS");
+    } catch (Throwable error) {
+      log("FAIL: " + error);
+      output.putString("result", "FAIL");
+    } finally {
+      if (engine != null) engine.close();
+      restoreSettings(saved);
+    }
+    output.putString("stream", report.toString());
+    finish(Activity.RESULT_OK, output);
+  }
+
   private AccessibilityNodeInfo nodeByClass(AccessibilityNodeInfo node, String name) {
     if (node == null) return null;
     if (name.contentEquals(node.getClassName())) return node;
@@ -1354,6 +1594,12 @@ public final class DeviceTests extends Instrumentation {
             if (view.isShown() && view instanceof NumberSlider) sliders.add((NumberSlider) view);
           for (NumberSlider slider : sliders) {
             float previous = accessible(slider).getRangeInfo().getCurrent();
+            float replacement =
+                previous == 440
+                    ? 435.5f
+                    : previous + 1 <= accessible(slider).getRangeInfo().getMax()
+                        ? previous + 1
+                        : previous - 1;
             main(() ->
                 require(
                     slider.performAccessibilityAction(AccessibilityNodeInfo.ACTION_CLICK, null),
@@ -1381,7 +1627,7 @@ public final class DeviceTests extends Instrumentation {
             require(entry != null, "Out-of-range value closed editor");
             value.putCharSequence(
                 AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                String.valueOf(previous));
+                String.valueOf(replacement).replace('.', ','));
             require(
                 entry.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, value),
                 "Cannot replace number");
@@ -1398,8 +1644,8 @@ public final class DeviceTests extends Instrumentation {
                 nodeByClass(automation.getRootInActiveWindow(), "android.widget.EditText") == null,
                 "Valid value did not close editor");
             require(
-                Math.abs(accessible(slider).getRangeInfo().getCurrent() - previous) < .001,
-                "Numeric save changed original value");
+                Math.abs(accessible(slider).getRangeInfo().getCurrent() - replacement) < .001,
+                "Numeric save did not apply the replacement value");
           }
         }
       }
@@ -1631,35 +1877,35 @@ public final class DeviceTests extends Instrumentation {
       java.lang.reflect.Field rate = TuningSession.class.getDeclaredField("speech");
       rate.setAccessible(true);
       android.speech.tts.TextToSpeech tts = (android.speech.tts.TextToSpeech) rate.get(session);
-      main(() ->
-          session.speak(
-              "To jest próba wolnej mowy. Kamerton powinien zaczekać na koniec całego"
-                  + " komunikatu."));
-      deadline = SystemClock.elapsedRealtime() + 7000;
-      while (!tts.isSpeaking() && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(50);
-      require(tts.isSpeaking(), "Actual TTS did not start");
-      java.lang.reflect.Field repeat = AudioEngine.class.getDeclaredField("repeatAt");
-      repeat.setAccessible(true);
-      repeat.setLong(session.audio, SystemClock.elapsedRealtime() - 1);
-      SystemClock.sleep(800);
-      require(
-          tts.isSpeaking() && !session.audio.forkPlaying(),
-          "Fork played before slow TTS completed");
-      long speechStarted = SystemClock.elapsedRealtime();
-      deadline = speechStarted + 45000;
-      while (tts.isSpeaking() && SystemClock.elapsedRealtime() < deadline) {
-        require(!session.audio.forkPlaying(), "Fork overlapped system speech");
-        SystemClock.sleep(150);
+      for (int repetition = 0; repetition < 3; repetition++) {
+        main(() ->
+            session.speak(
+                "To jest próba wolnej mowy. Kamerton powinien zaczekać na koniec całego"
+                    + " komunikatu."));
+        deadline = SystemClock.elapsedRealtime() + 7000;
+        while (!tts.isSpeaking() && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(50);
+        require(tts.isSpeaking(), "Actual TTS did not start");
+        java.lang.reflect.Field repeat = AudioEngine.class.getDeclaredField("repeatAt");
+        repeat.setAccessible(true);
+        repeat.setLong(session.audio, SystemClock.elapsedRealtime() - 1);
+        SystemClock.sleep(800);
+        require(
+            tts.isSpeaking() && !session.audio.forkPlaying(),
+            "Fork played before slow TTS completed");
+        long speechStarted = SystemClock.elapsedRealtime();
+        deadline = speechStarted + 45000;
+        while (tts.isSpeaking() && SystemClock.elapsedRealtime() < deadline) {
+          require(!session.audio.forkPlaying(), "Fork overlapped system speech");
+          SystemClock.sleep(150);
+        }
+        require(!tts.isSpeaking(), "TTS did not finish within test deadline");
+        deadline = SystemClock.elapsedRealtime() + 5000;
+        while (!session.audio.forkPlaying() && SystemClock.elapsedRealtime() < deadline)
+          SystemClock.sleep(50);
+        require(
+            session.audio.forkPlaying(), "Fork did not resume after actual utterance completion");
       }
-      require(!tts.isSpeaking(), "TTS did not finish within test deadline");
-      deadline = SystemClock.elapsedRealtime() + 5000;
-      while (!session.audio.forkPlaying() && SystemClock.elapsedRealtime() < deadline)
-        SystemClock.sleep(50);
-      require(session.audio.forkPlaying(), "Fork did not resume after actual utterance completion");
-      log(
-          "Slow system TTS completion gate PASS; actual speech duration observed="
-              + (SystemClock.elapsedRealtime() - speechStarted)
-              + "ms; no overlapping fork.");
+      log("Three slow system TTS/fork cycles PASS; no overlap or stalled resumption.");
       output.putString("result", "PASS");
     } catch (Throwable error) {
       log("FAIL: " + error);

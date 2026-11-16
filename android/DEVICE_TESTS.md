@@ -185,3 +185,34 @@ PL: Na dokładnym APK przeszły powyższe próby suwaków/dialogów, opisów nut
 Screen-off final check: **65 assertions passed** on the same APK. The phone was physically put to sleep in alternating-speaker hybrid mode with graphics enabled, visual speech muted and application speech rate 0.5. Foreground AudioRecord kept recording; system TTS started; a forced overdue fork deadline did not overlap the utterance; the fork resumed after completion; Stop released capture/service. The phone returned to the keyguard afterwards. This observes TTS/AudioTrack state, not human audibility or pronunciation.
 
 Polski: próba przy fizycznie wygaszonym ekranie zakończona — 65 asercji PASS, mikrofon działał, wolny TTS dokończył wypowiedź przed kamertonem, następnie odtwarzanie wróciło, a Stop zwolnił zasoby. Telefon po próbie jest zablokowany.
+
+
+## Final 1.07 / 107 — Pixel 11, 16 November 2026
+
+Final production APK: **86684 bytes**, SHA-256 **C7168767121EF328740AC93B625F1DEC0C0A1954AFBC60E6AE81349CADCDE2DD**. The unchanged signer is **3a07196ac981d8a1d5dda9f2fb140e1c47226128edc25866e2c37a8f65ab1522**. System Update confirmation and Play Protect safe scan were used for candidate replacement; the installed APK was pulled and matched by hash. Settings, signing certificate and the saved data marker were retained. Only the instrumentation package used adb install -r. The first local update moved 1.06 to 1.07; later candidates kept 1.07. This is not a complete GitHub updater round trip.
+
+Device: Pixel 11 (cubs), Android17/API37, wireless debugging. Google TalkBack, AutoSpeaker and PixelSpeechEQ stayed enabled. All final release-* scenarios below ran sequentially on the exact APK; the microphone and service were stopped after tests.
+
+| Scenario | Assertions | What passed |
+| --- | ---: | --- |
+| Regression 1.07 | 514 | PL/EN Classic and six instruments, no duplicate view setting, hybrid controls, reverse shortcuts; five consecutive detuned top-note hybrid capture results without any advance |
+| Previous feature checks | 172 | Sliders/ranges, top graphics, note positions, media start/stop, manual playback completion and end-of-plan stop |
+| Numeric dialogs / traversal | 2608 | Each numeric slider opens a dialog, rejects invalid input, saves a changed value including 440→435.5 entered with a comma; explicit traversal chains are acyclic and reach the heading |
+| Focus | 177 | Actual PL/EN accessibility focus retained across method/interval/instrument/note/tab/language/theme changes |
+| Lifecycle | 845 | Page recreation, model preservation and both themes |
+| Interaction | 48 | Slider/toggle/list/tab semantics and shortcuts |
+| State/voice events | 14 | Immediate mic-off and explicit Next-note feedback |
+| Fork | 60 | UI selection changes replace real AudioTrack, expected pair components, keyboard dispatch and range pause |
+| Audio | 7 | Real AudioRecord/AudioTrack start/stop and speaker-reference guard |
+| Interface | 1746 | Accessible labels/geometry/native states; 6 focus and 12 click events are separate counts |
+| Screen off | 64 | Actual screen sleep, foreground recording, slow TTS despite visual-speech mute, no overlapping fork, post-speech resumption and resource release |
+
+The timing scenario additionally completed **three consecutive real slow-TTS / resumed-fork cycles** at speech rate0.5, with an intentionally overdue repeat deadline. It did not hang after the second cycle. Hybrid sample injection uses the same AudioEngine.process path as live AudioRecord; it is not a substitute for playing a physical instrument. Strict confirmed-strike logic was checked with correct and detuned attacks, including fresh-window waiting. Separate JVM/core tests verify both expected fifth components across C2/C3/C4/C5/C6 and reject half-frequency components. This establishes generated sample frequencies, not the perceived pitch on every speaker.
+
+A candidate focus run failed during language replacement. The app now restores corresponding focus once after layout settles, only if focus is empty/on the heading; it does not steal focus from another user-selected control. The full final focus test passed after this fix. An early high-C8 test reproduced missed sharp readings because the old detector ceiling rejected them; the analysis range now reaches4600Hz. Failed candidate results are retained locally and are not counted as final passing evidence. No new production FATAL exception was found in the inspected 16November crash buffer.
+
+Screenshots were inspected for red/green target keys in both themes, readable native dropdowns, the top gauge/keyboard and visible numeric IME with the selected440.0 value, Save and Cancel. An initial visual capture contained the post-install confirmation dialog; it was repeated after dismissal and the unobstructed screenshots were inspected. The screenshot test calls reading with controlled deviations while capture is active; it does not prove microphone accuracy. Tests/settings are restored afterwards.
+
+**Remaining manual/device checks:** human NVDA/TalkBack pronunciation and notification audibility, natural flick/MagicTap gestures, the previously reported Motorola/Xiaomi loop, real instruments/noisy rooms, headphones and the reporter's perception of fifth octaves/bass response. No headphones were connected. A phone already on107 cannot demonstrate a higher-version public update to107; public download/certificate verification and local system installation are separate stages.
+
+Polski: końcowy APK przeszedł wszystkie powyższe próby na Pixelu z włączonym TalkBackiem. Classic bez porad, poprawione sterowanie hybrydą, pięć rozstrojonych pomiarów bez przejścia dalej, trzy cykle wolnej mowy, rzeczywisty zapis nowej liczby, fokus, grafika i wygaszony ekran — PASS. Odsłuch człowieka, gesty, Moto/Xiaomi, prawdziwy instrument i pełny updater do kolejnego numeru wersji nadal wymagają osobnego potwierdzenia.

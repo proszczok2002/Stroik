@@ -1,6 +1,8 @@
-# Stroik 1.18
+# Stroik 1.19
 
-[Native Android 1.06](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.06) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
+Current Windows 1.19 changes are described below; older version sections are historical.
+
+[Native Android 1.07](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.07) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and Polish and English interfaces.
 
@@ -141,3 +143,19 @@ PCM tests after actual UI events cover fifths, octaves, Off, A=435/440 and manua
 ## Changes in 1.18
 
 Piano key positions are included in note-list options. Beginner target changes also announce position; Classic keeps the short note name. For example, G4 is the white key between the first and second black keys of a three-key group. Descriptions include black keys.
+
+
+## Changes in 1.19
+
+Stroik 1.19
+
+- Classic view hides tuning advice, the 440 Hz standard hint and stale piano guidance after instrument changes. The reference field is labelled Frequency, Hz.
+- Hybrids show microphone controls and their acoustic double-strike option. Manual and automatic fork controls belong only to Fork. In-tune confirmed navigation belongs only to Electronic. Detuned attacks cancel an armed gesture; both attacks must meet the configured tolerance with fresh pitch confirmation.
+- Shift+Alt+N and Shift+Ctrl+N select the previous planned note; Alt+N and Ctrl+N advance. Plan completion stops active tuning.
+- Repair Polish speaker/headphone/interval labels. Numeric entry accepts either decimal separator. Reader notifications are retained; asynchronous SAPI speech is available without a detected screen reader. Speaker hybrid waits for its own SAPI speech to finish.
+- Stronger bass levels with quiet upper partials help small speakers. Fifths still play the selected pair together: C4+G4 is 261.63+392.00 Hz at A=440. Tone endings fade smoothly. Bass audibility and perceived octave still depend on speakers; the reference is not transposed.
+- The visual target key is red when detuned, green within the selected tolerance and blue before a reading. Text and the meter continue to report the result.
+
+Validation: PL/EN, typed digits and decimal separators, shortcuts, visibility, five consecutive hybrid results, strict attack tolerance, five-octave fifth spectra, actual SAPI start/completion and existing audio/updater regression. Human NVDA listening and the reporter's real instrument remain unverified.
+
+[SAPI completion API](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee125654(v=vs.85)).

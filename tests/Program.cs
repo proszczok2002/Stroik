@@ -9,6 +9,23 @@ if (args.Length == 2 && args[0] == "--replacement-probe")
     Console.WriteLine("Helper ready; probe client exits normally.");
     return;
 }
+if(args.Contains("--speech-probe")) {
+    Exception? failure=null;
+    var thread=new Thread(()=>{
+        try {
+            using var speech=new SpeechOutput();
+            if(!speech.Speak("Stroik. Próba syntezy mowy.",false)) throw new Exception(speech.LastError);
+            bool active=speech.IsSpeaking;
+            var until=DateTime.UtcNow.AddSeconds(30);
+            while(speech.IsSpeaking && DateTime.UtcNow<until) Thread.Sleep(50);
+            if(!active || speech.IsSpeaking) throw new Exception("SAPI start/completion not observed");
+            Console.WriteLine("Actual SAPI asynchronous start and completion PASS (not human listening).");
+        } catch(Exception error){failure=error;}
+    });
+    thread.SetApartmentState(ApartmentState.STA);thread.Start();thread.Join();
+    if(failure!=null)throw failure;
+    return;
+}
 
 int natural = 60;
 foreach (int expectedNatural in new[] {62, 64, 65, 67, 69, 71, 72})
@@ -30,7 +47,7 @@ if (TuningPlan.Next(100, 101, PianoOrder.AlternateFiveSemitones, 101) != 99 ||
 
 if (NoteCatalog.Spoken(67, false) != "g razkreślne" || !new Preferences().VoiceInVisualMode)
     throw new Exception("Nieprawidłowa krótka nazwa lub domyślna opcja głosu.");
-if (!(TuningFork.Level(110) > TuningFork.Level(440) && TuningFork.Level(440) > TuningFork.Level(1760)) || TuningFork.Level(27.5) > 0.34)
+if (!(TuningFork.Level(110) > TuningFork.Level(440) && TuningFork.Level(440) > TuningFork.Level(1760)) || TuningFork.Level(27.5) > 0.6)
     throw new Exception("Brak ograniczonej korekty głośności kamertonu.");
 
 var checks = new UpdateCheckState();
@@ -304,36 +321,27 @@ if (!KeyboardGuide.Describe(67, false).Contains("między pierwszym a drugim czar
     throw new Exception("Opis położenia G na klawiaturze jest błędny.");
 var navigator = new DoubleStrikeNavigator();
 DateTime strikes = DateTime.UtcNow;
-navigator.Arm(69, 440, strikes);
-if (navigator.Observe(0.02, 0.008, 440, strikes.AddMilliseconds(100)) is not null ||
-    navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(220)) is not null ||
-    navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(420)) != 69)
-    throw new Exception("Dwa szybkie uderzenia nie przeszły do następnego dźwięku.");
-navigator.Arm(69, 440, strikes);
-navigator.Observe(0.02, 0.008, 466, strikes.AddMilliseconds(100));
-navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(220));
-if (navigator.Observe(0.025, 0.008, 466, strikes.AddMilliseconds(420)) is not null)
-    throw new Exception("Dwa uderzenia o złej wysokości przesunęły cel.");
-navigator.Arm(69, 440, strikes);
-navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(100), 1200);
-navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(300), 1200);
-if (navigator.Observe(0.009, 0.008, 440, strikes.AddMilliseconds(1100), 1200) != 69)
-    throw new Exception("Cichsze drugie uderzenie nie zostało rozpoznane w ustawionym czasie.");
-navigator.Arm(69, 440, strikes);
-navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(100), 500);
-navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(300), 500);
-if (navigator.Observe(0.02, 0.008, 440, strikes.AddMilliseconds(1100), 500) is not null)
-    throw new Exception("Zbyt odległe uderzenia zostały uznane za parę.");
-navigator.Arm(69, 440, strikes);
-navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(100), 1800);
-navigator.Observe(0, 0.008, null, strikes.AddMilliseconds(300), 1800);
-if (navigator.Observe(0.02, 0.008, 440, strikes.AddMilliseconds(1600), 1800) != 69)
-    throw new Exception("Dłuższy ustawiony czas nie pozwala na spokojniejsze dwa uderzenia.");
-navigator.Arm(69, 440, strikes);
-navigator.Observe(0.025, 0.008, 440, strikes.AddMilliseconds(100), 1800);
-if (navigator.Observe(0.018, 0.008, 440, strikes.AddMilliseconds(400), 1800) is not null ||
-    navigator.Observe(0.015, 0.008, 440, strikes.AddMilliseconds(700), 1800) is not null)
-    throw new Exception("Jedno wybrzmiewające uderzenie przesunęło dźwięk.");
+int? Attack(int at,double frequency,double volume=0.025,int gap=1200) {
+    navigator.Observe(volume,0.008,null,strikes.AddMilliseconds(at),gap);
+    return navigator.Observe(volume*.95,0.008,frequency,strikes.AddMilliseconds(at+200),gap);
+}
+foreach(int gap in new[]{500,1200,1800}) {
+    navigator.Arm(69,440,strikes);
+    if(Attack(100,440,gap:gap) is not null) throw new Exception("First strike advanced");
+    navigator.Observe(0,0.008,null,strikes.AddMilliseconds(300),gap);
+    int second=gap==500?900:gap==1200?1100:1600;
+    int? result=Attack(second,440,0.009,gap);
+    if((gap==500 && result is not null)||(gap!=500 && result!=69)) throw new Exception("Strike timing/volume regression");
+}
+foreach(double wrong in new[]{448.0,466.0}) {
+    navigator.Arm(69,440,strikes,5);
+    Attack(100,440);
+    navigator.Observe(0,0.008,null,strikes.AddMilliseconds(300));
+    if(Attack(600,wrong) is not null) throw new Exception("Detuned second strike advanced");
+}
+navigator.Arm(69,440,strikes);
+Attack(100,440);
+if(navigator.Observe(.018,.008,440,strikes.AddMilliseconds(400)) is not null || navigator.Observe(.015,.008,440,strikes.AddMilliseconds(700)) is not null) throw new Exception("Decay counted as second attack");
 using (var wave = TuningFork.BuildWave(440))
 {
     if (wave.Length != 44 + 44100 * 3 * 2)
@@ -343,6 +351,20 @@ using (var wave = TuningFork.BuildWave(440))
     if (System.Text.Encoding.ASCII.GetString(header) != "RIFF")
         throw new Exception("Kamerton nie wygenerował pliku RIFF.");
 }
+foreach(int midi in new[]{36,48,60,72,84}) {
+    double lower=PitchDetector.NoteFromMidi(midi,440).Frequency, upper=PitchDetector.NoteFromMidi(midi+7,440).Frequency;
+    using var pair=TuningFork.BuildWave(lower,upper);
+    var samples=new short[65536];Buffer.BlockCopy(pair.ToArray(),44,samples,0,samples.Length*2);
+    double Projection(double f) {
+        double re=0,im=0;
+        for(int i=0;i<samples.Length;i++){double angle=2*Math.PI*f*i/44100;re+=samples[i]*Math.Cos(angle);im+=samples[i]*Math.Sin(angle);}
+        return Math.Sqrt(re*re+im*im)/samples.Length;
+    }
+    double lowerAmplitude=Projection(lower),upperAmplitude=Projection(upper);
+    if(lowerAmplitude<100 || upperAmplitude<100 || Projection(lower/2)>Math.Min(lowerAmplitude,upperAmplitude)*.05 || Projection(upper/2)>Math.Min(lowerAmplitude,upperAmplitude)*.05)
+        throw new Exception("Fork fifth missing expected pitch or contains suboctave MIDI "+midi);
+}
+Console.WriteLine("Fifths C2/C3/C4/C5/C6: both expected components, no half-frequency component: OK");
 Exception? uiError = null;
 // UI regression checks exercise persistence; restore the user's exact file even on failure.
 string preferencesFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroik", "settings.json");

@@ -18,7 +18,7 @@ public final class Dsp {
   public static double pitch(short[] x, int rate) {
     int n = x.length;
     if (n < 4096) return 0;
-    int lo = Math.max(2, (int) (rate / 4200.0)),
+    int lo = Math.max(2, (int) (rate / 4600.0)),
         hi = Math.min((int) Math.ceil(rate / 27.5), n - 3),
         len = Math.min(2048, n - hi - 2);
     if (len < 512) return 0;
@@ -53,7 +53,7 @@ public final class Dsp {
     double adjust =
         divisor == 0 ? 0 : Math.max(-1, Math.min(1, (v[best + 1] - v[best - 1]) / divisor));
     double f = rate / (best + adjust);
-    return f >= 27.0 && f <= 4250 ? f : 0;
+    return f >= 27.0 && f <= 4600 ? f : 0;
   }
 
   public static double median(List<Double> v) {
@@ -117,6 +117,63 @@ public final class Dsp {
     }
   }
 
+  // Two distinct attacks must each be confirmed against the previously tuned target.
+  static final class ConfirmedStrikes {
+    private long armedAt, first = -1, candidate = -1, last = -1000;
+    private double expected, tolerance, envelope;
+    private boolean sound;
+
+    void reset() {
+      expected = 0;
+      first = candidate = -1;
+      envelope = 0;
+      sound = false;
+      last = -1000;
+    }
+
+    void arm(double hz, double limit, long now) {
+      reset();
+      expected = hz;
+      tolerance = limit;
+      armedAt = now;
+    }
+
+    boolean observe(double rms, double threshold, double frequency, long now, double gap) {
+      if (expected <= 0) return false;
+      if (now - armedAt > 20000) {
+        reset();
+        return false;
+      }
+      boolean active = rms >= threshold;
+      boolean attack =
+          active
+              && rms >= threshold * 1.1
+              && (!sound || envelope > 0 && rms > envelope * 1.35)
+              && now - last >= 180;
+      sound = active;
+      envelope = envelope == 0 ? rms : envelope * .8 + rms * .2;
+      if (attack) {
+        candidate = now;
+        last = now;
+      }
+      if (first >= 0 && now - first > gap * 1000) first = -1;
+      if (candidate < 0 || now - candidate < 180 || now - candidate > 420 || frequency <= 0)
+        return false;
+      if (Math.abs(1200 * Math.log(frequency / expected) / Math.log(2)) > tolerance) {
+        reset();
+        return false;
+      }
+      candidate = -1;
+      if (first < 0) {
+        first = now;
+        return false;
+      }
+      if (now - first < 130) return false;
+      reset();
+      return true;
+    }
+  }
+
   public static double[] compare(double lower, double upper, int interval) {
     return new double[] {
       lower,
@@ -131,16 +188,23 @@ public final class Dsp {
     for (int i = 0; i < samples.length; i++) {
       double t = i / (double) rate,
           phase = 2 * Math.PI * lower * t,
-          env = Math.min(1, t / .012) * Math.exp(-1.6 * t),
-          v = level(lower) * env * (Math.sin(phase) + .015 * Math.sin(2 * phase));
-      if (upper > 0) v = (v + level(upper) * env * Math.sin(2 * Math.PI * upper * t)) / 2;
+          env = Math.min(1, t / .012) * Math.min(1, (3 - t) / .08) * Math.exp(-1.2 * t),
+          v = level(lower) * env * oscillator(lower, t);
+      if (upper > 0) v = (v + level(upper) * env * oscillator(upper, t)) / 1.55;
       samples[i] = (short) Math.round(v * 32767);
     }
     return samples;
   }
 
   public static double level(double frequency) {
-    return Math.max(.045, Math.min(.34, .14 * Math.sqrt(440 / frequency)));
+    return Math.max(.045, Math.min(.6, .18 * Math.pow(440 / frequency, .65)));
+  }
+
+  private static double oscillator(double frequency, double t) {
+    double phase = 2 * Math.PI * frequency * t;
+    return Math.sin(phase)
+        + (frequency < 130 ? .12 : .015) * Math.sin(2 * phase)
+        + (frequency < 130 ? .06 : 0) * Math.sin(3 * phase);
   }
 
   // Targeted FFT for two expected spectral components. Not proof of two independent strings.

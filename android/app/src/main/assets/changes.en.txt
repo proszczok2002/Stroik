@@ -1,11 +1,11 @@
-Stroik Android 1.06
+Stroik Android 1.07
 
-Fork mode has no microphone button or separate microphone-state navigation stop. Optional acoustic double-tap listening uses its own checkbox. Reaching the end of the selected order stops all capture and playback, including hybrids and with automatic advance disabled.
+Classic hides guidance, including the 440 Hz standard hint and piano advice for ukulele. Choose the view only on Tuner; the duplicate Settings checkbox is removed.
 
-Every numeric setting uses a slider with its current value. Drag or use TalkBack adjustment gestures; double tap or Enter opens numeric keyboard entry. Out-of-range entries stay open for correction. Settings includes Stroik screen-off speech speed: 0.5–3, default 1. This does not change TalkBack speed. The alternating speaker fork waits for the synthesizer's actual utterance-completion callback instead of estimating speech duration.
+Hybrid microphone controls also start its reference. Manual strike, fork automation and interval controls appear only in Fork; hybrids keep their separate acoustic double-strike checkbox. In-tune confirmed advance belongs to Electronic. Both attacks require fresh pitch at the expected note within the chosen tolerance. Detuning cancels arming; a normal reading alone does not change target. A new reference starts a fresh capture epoch, rejecting stale pending results. The fork waits for its own TTS utterance to actually finish.
 
-Piano note options include positions relative to black-key groups. Next note also announces position in Beginner view; Classic stays concise. Accessibility traversal is ordered and the result field no longer takes editing focus. Natural flicks on Motorola and Xiaomi still need user confirmation.
+Shift+Alt+N and Shift+Ctrl+N select the previous planned note. Numeric entry opens the numeric keyboard and accepts either decimal separator; the slider and profile retain the entered value. Speech rate remains in Settings.
 
-TalkBack two-finger double tap uses standard media controls: microphone in Electronic, playback in Fork, both in Hybrid. Starting the microphone with the app closed requires opening it. Gesture routing depends on TalkBack settings and active media; system Play/Pause events were checked on Pixel, while the natural gesture needs a separate trial.
+Stronger bass levels and a smooth tone ending reduce weak lows and end clicks. A fifth from C4 contains C4 and G4, 261.63 and 392.00 Hz at A=440; spectrum tests cover five octaves and reject half-frequency components. Small speakers still limit bass audibility. The target key changes from blue to red when detuned or green inside the selected tolerance. Color supplements text.
 
-Enabled graphics sit above scrolling settings: a semicircular cents gauge and a keyboard marking the selected note. Graphics add no TalkBack stops. Guides and feedback are available in Polish and English.
+Pixel checks with TalkBack enabled are documented in DEVICE_TESTS.md. Structural, event and audio-state tests do not establish human pronunciation, natural gestures or real-instrument tuning on every phone.
