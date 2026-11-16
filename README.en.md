@@ -2,7 +2,7 @@
 
 Current Windows 1.20 changes are described below; older version sections are historical.
 
-[Native Android 1.07](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.07) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
+[Native Android 1.08](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.08) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and interfaces in PL, EN, DE, RU, FR and ES.
 

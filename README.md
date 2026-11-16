@@ -2,7 +2,7 @@
 
 Aktualne zmiany Windows 1.20 opisano poniżej; starsze sekcje wersji są historyczne.
 
-[Natywna wersja Android 1.07](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.07) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
+[Natywna wersja Android 1.08](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.08) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs w językach PL, EN, DE, RU, FR i ES.
 
