@@ -1,5 +1,23 @@
 # Android changelog / Historia zmian Android
 
+## 1.09 / 109 — 2026-11-17
+
+PL:
+
+- A kontra otrzymało takie samo wsparcie harmonicznych jak niższe nuty. Obie platformy używają tej samej barwy bez zmiany oktawy. Słyszalność basu nadal zależy od głośników.
+- Klasyczna hybryda uruchamia kamerton od razu, bez samouczka. W widoku dla początkujących najpierw czytane są wskazówki. Działanie Windows zachowano i dodano je w Androidzie.
+- Przerwa po wyniku wynosi 0–60 sekund, także 1 lub 2. Zero oznacza powrót wzorca od razu po zakończeniu mowy i jest nowym ustawieniem domyślnym. Zapisane przerwy Windows są zachowane. Android ma tę samą regulację z suwakiem i wpisem liczby.
+- Najpierw cały wynik, potem kamerton i możliwość przejścia. W hybrydzie przejście wymaga dobrego wyniku oraz dwóch uderzeń o potwierdzonej wysokości. W samym kamertonie nadal działa gest akustyczny.
+- Android: klasyczna lista bez opisów położenia klawiszy, opisy metod dla początkujących oraz czarne klawisze strzałkami lewo/prawo. Wyniki i samouczek czyta syntezator aplikacji także przy TalkBack, aby znać koniec mowy; TalkBack nadal obsługuje nawigację.
+
+EN:
+
+- Contra A now has the same harmonic support as lower notes. Both platforms use matching timbres without octave transposition. Bass audibility still depends on speakers.
+- Classic hybrid starts its reference immediately without a tutorial. Beginner view reads guidance first. The existing Windows behavior is retained and has been added to Android.
+- The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
+- The whole result finishes before the reference and navigation are released. Hybrid advance requires an in-tune result and two pitch-confirmed attacks. Fork-only mode keeps its acoustic gesture.
+- Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
+
 ## 1.08 / 108 — 2026-11-16
 
 PL:

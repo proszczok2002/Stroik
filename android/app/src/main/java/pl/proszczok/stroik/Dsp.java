@@ -191,7 +191,7 @@ public final class Dsp {
           env = Math.min(1, t / .012) * Math.min(1, (3 - t) / .08) * Math.exp(-1.2 * t),
           v = level(lower) * env * oscillator(lower, t);
       if (upper > 0) v = (v + level(upper) * env * oscillator(upper, t)) / 1.55;
-      samples[i] = (short) Math.round(v * 32767);
+      samples[i] = (short) Math.round(Math.max(-1, Math.min(1, v)) * 32767);
     }
     return samples;
   }
@@ -202,9 +202,12 @@ public final class Dsp {
 
   private static double oscillator(double frequency, double t) {
     double phase = 2 * Math.PI * frequency * t;
-    return Math.sin(phase)
-        + (frequency < 130 ? .12 : .015) * Math.sin(2 * phase)
-        + (frequency < 130 ? .06 : 0) * Math.sin(3 * phase);
+    double support = Math.max(0, Math.min(1, Math.log(110 / frequency) / Math.log(2)));
+    double second = (frequency < 130 ? .12 : .015) + .18 * support;
+    double third = (frequency < 130 ? .06 : 0) + .16 * support;
+    return (Math.sin(phase) + second * Math.sin(2 * phase) + third * Math.sin(3 * phase)
+        + support * (.26 * Math.sin(4 * phase) + .14 * Math.sin(5 * phase)
+            + .20 * Math.sin(6 * phase) + .12 * Math.sin(8 * phase))) / (1 + .62 * support);
   }
 
   // Targeted FFT for two expected spectral components. Not proof of two independent strings.

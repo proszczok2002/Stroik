@@ -41,8 +41,34 @@ public final class CoreChecks {
         "Position is missing from note or beginner announcement");
     navigation.beginner = false;
     require(
-        navigation.nextAnnouncement(67).equals("g razkreślne"),
+        navigation.nextAnnouncement(67).equals("g razkreślne")
+            && !navigation.targetLabel(67).contains(navigation.position(67)),
         "Classic announcement must stay concise");
+    for (int pause : new int[] {0, 1, 2, 60}) {
+      navigation.hybridPause = pause;
+      navigation.validate();
+    }
+    for (int pause : new int[] {-1, 61}) {
+      navigation.hybridPause = pause;
+      try { navigation.validate(); throw new AssertionError("Invalid hybrid pause accepted"); }
+      catch (IllegalArgumentException expected) {}
+    }
+    navigation.hybridPause = 0;
+    int black = 60;
+    for (int expected : new int[] {61,63,66,68,70,73}) {
+      black = Model.nextBlack(black,1);
+      require(black == expected, "Black-key navigation");
+    }
+    require(Model.nextBlack(21,-1)==21 && Model.nextBlack(108,1)==108, "Black-key bounds");
+    for (int midi : new int[] {21,22,32,33,34,35}) {
+      double hz=Model.hz(midi,440), fundamental=0, fourth=0;
+      short[] samples=Dsp.fork(hz,0,44100);
+      for(int i=0;i<44100;i++) {
+        fundamental+=samples[i]*Math.sin(2*Math.PI*hz*i/44100);
+        fourth+=samples[i]*Math.sin(2*Math.PI*4*hz*i/44100);
+      }
+      require(fourth/fundamental>.19,"Low bass including contra A lacks upper partials: "+midi);
+    }
     navigation.target = navigation.anchor = 67;
     for (int next = 68; next <= 108; next++) {
       require(navigation.next() == next, "Ascending fork navigation skipped a note");

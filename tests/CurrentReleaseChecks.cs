@@ -4,6 +4,51 @@ using System.Windows.Forms;
 
 internal static class CurrentReleaseChecks
 {
+    internal static void HybridProbe()
+    {
+        Exception? failure=null;
+        var thread=new Thread(()=> {
+            using var form=new TunerForm();
+            var saved=(Preferences)Call(form,"ReadSettings")!;
+            Call(form,"ApplySettings",new Preferences {Method=TuningMethod.HybridSpeakers,View=TunerView.Classic,AutomaticUpdates=false,VisualMode=true,VoiceInVisualMode=true,Language="pl"});
+            form.Shown+=async (_,_)=> {
+                bool ForkPlaying()=>typeof(TuningFork).GetField("_wave",Hidden)!.GetValue(Get<TuningFork>(form,"_fork")) is not null;
+                try {
+                    Call(form,"StartMicrophone");
+                    if(Get<Microphone?>(form,"_microphone") is null || Get<bool>(form,"_waitingForGuidance") || !ForkPlaying())throw new Exception("Classic microphone/reference did not start immediately without tutorial");
+                    Console.WriteLine("Visible Classic hybrid: actual microphone open, immediate reference, no tutorial: PASS");
+                    foreach(int pause in new[]{0,1,2}) {
+                        Get<EditableNumber>(form,"_hybridPause").Value=pause;
+                        Call(form,"ReadResult","Próba wyniku: a kontra, za nisko, minus dwa herce.",-1,55.0,5.0);
+                        bool speaking=false;var deadline=DateTime.UtcNow.AddSeconds(30);
+                        while(Get<bool>(form,"_waitingForResultSpeech") && DateTime.UtcNow<deadline) {
+                            speaking|=NvdaReader.IsSpeaking || Get<SpeechOutput>(form,"_speech").IsSpeaking;
+                            if(ForkPlaying())throw new Exception("Reference overlapped actual result speech");
+                            await Task.Delay(25);
+                        }
+                        if(!speaking || Get<bool>(form,"_waitingForResultSpeech"))throw new Exception("Actual result speech/completion not observed");
+                        var finished=DateTime.UtcNow;
+                        if(pause==0 && !ForkPlaying())throw new Exception("Zero pause did not immediately start the reference");
+                        if(pause>0 && ForkPlaying())throw new Exception("Configured result pause ignored");
+                        while(!ForkPlaying() && DateTime.UtcNow<finished.AddSeconds(pause+1))await Task.Delay(25);
+                        double elapsed=(DateTime.UtcNow-finished).TotalSeconds;
+                        if(!ForkPlaying() || elapsed<pause-.15 || elapsed>pause+.4)throw new Exception("Incorrect result pause: "+elapsed);
+                        Console.WriteLine($"Actual result speech then reference, pause {pause}s: PASS ({elapsed:F3}s after completion)");
+                    }
+                    Call(form,"ReadResult","Próba zatrzymania w trakcie odczytu wyniku.",-1,55.0,5.0);
+                    await Task.Delay(100);Call(form,"StopMicrophone",false);
+                    await Task.Delay(1200);
+                    if(ForkPlaying() || Get<bool>(form,"_waitingForResultSpeech"))throw new Exception("Stopped result restarted the reference");
+                    Console.WriteLine("Stop during result prevents reference restart: PASS. No instrument measurement or human listening claimed.");
+                } catch(Exception error) {failure=error;}
+                finally {Call(form,"StopMicrophone",false);Call(form,"ApplySettings",saved);form.Close();}
+            };
+            Application.Run(form);
+        });
+        thread.SetApartmentState(ApartmentState.STA);thread.Start();thread.Join();
+        if(failure is not null)throw failure;
+    }
+
     internal static void GuidanceProbe()
     {
         Exception? failure=null;
@@ -51,6 +96,14 @@ internal static class CurrentReleaseChecks
                     Call(form,"ApplySettings",new Preferences {Language=code,View=view,Method=TuningMethod.HybridSpeakers,AutomaticUpdates=false,VisualMode=true,VoiceInVisualMode=false,HybridPauseSeconds=13});
                     var roundtrip=(Preferences)Call(form,"ReadSettings")!;
                     if(roundtrip.Language!=code || roundtrip.HybridPauseSeconds!=13)throw new Exception("Language/pause profile round trip: "+code);
+                    var pause=Get<EditableNumber>(form,"_hybridPause");
+                    pause.Value=3;
+                    foreach(int expected in new[]{2,1,0}) {
+                        typeof(EditableNumber).GetMethod("OnKeyDown",Hidden)!.Invoke(pause,new object[]{new KeyEventArgs(Keys.Down)});
+                        if(pause.Value!=expected || ((Preferences)Call(form,"ReadSettings")!).HybridPauseSeconds!=expected)throw new Exception("Hybrid pause arrow cannot reach "+expected);
+                    }
+                    pause.Text="2";typeof(EditableNumber).GetMethod("OnKeyDown",Hidden)!.Invoke(pause,new object[]{new KeyEventArgs(Keys.Enter)});
+                    if(pause.Value!=2)throw new Exception("Hybrid pause numeric entry");
                     if(Get<ComboBox>(form,"_language").Items.Count!=6)throw new Exception("Six languages missing");
                     if(Get<ComboBox>(form,"_target").SelectedItem!.ToString()!.Contains(KeyboardGuide.Position(67,code))!=(view==TunerView.Beginner))throw new Exception("Classic description leak: "+code);
                     var input=Get<EditableNumber>(form,"_concertA");
@@ -97,7 +150,7 @@ internal static class CurrentReleaseChecks
                 for(int i=44;i<data.Length;i+=2)peak=Math.Max(peak,Math.Abs((int)BitConverter.ToInt16(data,i)));
                 if(peak>=32760 || peak<500)throw new Exception("Fork clipping/silence: "+midi+"/"+span+" peak="+peak);
             }
-            foreach(int midi in new[]{21,22}) {
+            foreach(int midi in new[]{21,22,32,33,34,35}) {
                 double frequency=PitchDetector.NoteFromMidi(midi,440).Frequency;
                 double partial=0,fundamental=0;
                 const int count=44100;

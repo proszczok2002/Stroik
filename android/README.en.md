@@ -1,15 +1,21 @@
-# Stroik Android 1.08
+# Stroik Android 1.09
 
-Stroik Android 1.08
+- Contra A now has the same harmonic support as lower notes. Both platforms use matching timbres without octave transposition. Bass audibility still depends on speakers.
+- Classic hybrid starts its reference immediately without a tutorial. Beginner view reads guidance first. The existing Windows behavior is retained and has been added to Android.
+- The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
+- The whole result finishes before the reference and navigation are released. Hybrid advance requires an in-tune result and two pitch-confirmed attacks. Fork-only mode keeps its acoustic gesture.
+- Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
+
+Stroik Android 1.09
 
 Added German, Russian, French and Spanish alongside Polish and English. Interface, spoken messages, notes, octaves, key positions, guide and latest changes are translated. Language persists in settings and JSON profiles; older PL/EN profiles remain compatible. App speech selects the chosen language; its Android voice must be installed. New releases can include notes in all six languages, with fallback for older manifests. Updates still require Android system confirmation.
 
 
-[APK 1.08](https://github.com/proszczok2002/Stroik/releases/download/android-v1.08/Stroik-Android-1.08.apk) · [Release](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.08) · [PL](README.md) / [EN](README.en.md)
+[APK 1.09](https://github.com/proszczok2002/Stroik/releases/download/android-v1.09/Stroik-Android-1.09.apk) · [Release](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.09) · [PL](README.md) / [EN](README.en.md)
 
 Classic hides guidance, including the 440 Hz standard hint and piano advice for ukulele. Choose the view only on Tuner; the duplicate Settings checkbox is removed.
 
-Hybrid microphone controls also start its reference. Manual strike, fork automation and interval controls appear only in Fork; hybrids keep their separate acoustic double-strike checkbox. In-tune confirmed advance belongs to Electronic. Both attacks require fresh pitch at the expected note within the chosen tolerance. Detuning cancels arming; a normal reading alone does not change target. A new reference starts a fresh capture epoch, rejecting stale pending results. The fork waits for its own TTS utterance to actually finish.
+Hybrid microphone controls also start its reference. Manual strike, fork automation and interval controls appear only in Fork; hybrids keep their separate acoustic double-strike checkbox. Electronic and Hybrid advance require a completed in-tune announcement. Both attacks require fresh pitch at the expected note within the chosen tolerance. Detuning cancels arming; a normal reading alone does not change target. Reference playback no longer invalidates an already completed reading. The fork waits for its own TTS utterance to actually finish.
 
 Shift+Alt+N and Shift+Ctrl+N select the previous planned note. Numeric entry opens the numeric keyboard and accepts either decimal separator; the slider and profile retain the entered value. Speech rate remains in Settings.
 

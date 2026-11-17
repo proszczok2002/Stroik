@@ -1,8 +1,14 @@
-# Stroik 1.20
+# Stroik 1.21
 
-Current Windows 1.20 changes are described below; older version sections are historical.
+- Contra A now has the same harmonic support as lower notes. Both platforms use matching timbres without octave transposition. Bass audibility still depends on speakers.
+- Classic hybrid starts its reference immediately without a tutorial. Beginner view reads guidance first. The existing Windows behavior is retained and has been added to Android.
+- The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
+- The whole result finishes before the reference and navigation are released. Hybrid advance requires an in-tune result and two pitch-confirmed attacks. Fork-only mode keeps its acoustic gesture.
+- Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
 
-[Native Android 1.08](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.08) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
+Current Windows 1.21 changes are described below; older version sections are historical.
+
+[Native Android 1.09](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.09) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and interfaces in PL, EN, DE, RU, FR and ES.
 
@@ -18,15 +24,15 @@ Download `Stroik.exe` from GitHub Releases. It is self-contained and needs no .N
 
 **Tuning fork** is selected on the first launch. **Strike tuning fork** plays a decaying tone for the selected note. Automatic strikes can be enabled with an interval of 1–10 seconds. This is a synthesized approximation of a struck fork, not a recording. Volume depends on Windows and your speakers. If unsure about tuning by ear, practise first on a modest, easy-to-handle instrument such as a ukulele or guitar; a broken string can still injure.
 
-**Electronic tuner** uses the default Windows microphone. Start the microphone, play one note, then let it stop. After about 0.45 seconds of silence, the result appears in a text field and is announced through UI Automation. Buttons repeat the last result and test a screen reader announcement without the microphone. The last selected method is remembered across launches.
+**Electronic tuner** uses the default Windows microphone. Start the microphone, play one note, then let it stop. After about 0.45 seconds of silence, the result appears in a text field and is spoken by NVDA or app synthesis. Buttons repeat the last result and test a screen reader announcement without the microphone. The last selected method is remembered across launches.
 
 ### Hybrid practice and fork navigation in 1.13
 
-Choose **Hybrid — speakers (alternating)** or **Hybrid — headphones**, then **Start microphone**. The speaker variant plays the reference for 3 seconds, ignores microphone samples for 3.4 seconds, then listens to your instrument. After the note stops, it announces the reading, waits for SAPI or NVDA 2026.3+ speech to end plus the selected pause (3–60 seconds, default 8), then repeats the reference. Beginner view reads guidance first using NVDA 2024.1+ synchronous speech; other readers receive an accessible Start-after-guidance dialog. Reverberation can still affect readings. Changing the target plays the new reference. **Stop microphone** ends the cycle.
+Choose **Hybrid — speakers (alternating)** or **Hybrid — headphones**, then **Start microphone**. The speaker variant plays the reference for 3 seconds, ignores microphone samples for 3.4 seconds, then listens to your instrument. After the note stops, it announces the reading, waits for SAPI or NVDA 2026.3+ speech to end plus the selected pause (0–60 seconds, default 0; saved delays are retained), then repeats the reference. Beginner view reads guidance first using NVDA 2024.1+ synchronous speech; other readers receive an accessible Start-after-guidance dialog. Reverberation can still affect readings. Changing the target plays the new reference. **Stop microphone** ends the cycle.
 
 The headphone variant listens while the tuning fork plays. Optional **Monitor microphone in headphones** is off by default. Put headphones on first: routing the microphone through speakers can cause feedback. Monitoring uses the default Windows devices, changes no system settings and has hardware and driver dependent latency.
 
-**Two strikes advance to the next note in the selected order** works with the fork and hybrid methods. In Fork, this checkbox alone starts/stops the microphone, including on reopening with the option saved. Separate microphone buttons are hidden. Start hybrids with the microphone button. Two distinct attacks within the selected time advance according to the tuning plan and play the new reference. This is an acoustic gesture without pitch validation: two incidental noises may also trigger it. Listening waits for the app's own fork tone to decay. Automatic fork strikes are at least 6.5 seconds apart with tap navigation enabled. **Ctrl+N** still advances manually.
+**Two strikes advance to the next note in the selected order** works with the fork and hybrid methods. In Fork, this checkbox alone starts/stops the microphone, including on reopening with the option saved. Separate microphone buttons are hidden. Start hybrids with the microphone button. Two distinct attacks within the selected time advance according to the tuning plan and play the new reference. Fork-only mode uses an acoustic gesture that incidental noises may trigger. Hybrid mode first completes an in-tune announcement and requires both attacks at the target pitch. Listening waits for the app's own fork tone to decay. Automatic fork strikes are at least 6.5 seconds apart with tap navigation enabled. **Ctrl+N** still advances manually.
 
 ### Fifths and octaves
 

@@ -65,7 +65,7 @@
   "High, for quiet instruments": "Wysoka, dla cichych instrumentów",
   "Hybrid — headphones": "Hybrydowy — słuchawki",
   "Hybrid — speakers (alternating)": "Hybrydowy — głośniki (naprzemiennie)",
-  "Hybrid pause after spoken result, seconds (3–60):": "Przerwa po komunikacie w hybrydzie, sekundy (3–60):",
+  "Hybrid pause after spoken result, seconds (0–60):": "Przerwa po komunikacie w hybrydzie, sekundy (0–60):",
   "Hybrid: wait for the reference to decay, then play and mute your instrument.": "Hybryda: poczekaj na wybrzmienie wzorca, potem graj i wycisz instrument.",
   "In speaker hybrid mode, wait for the reference to decay. Enable microphone monitoring only with headphones. When listening for two taps, automatic fork strikes are at least 6.5 seconds apart. Two accidental noises can also trigger navigation.": "W trybie hybrydowym głośnikowym po wzorcu czekaj na jego wybrzmienie. Odsłuch mikrofonu włączaj tylko w słuchawkach. Przy nasłuchiwaniu dwóch stuków automatyczny kamerton ma co najmniej 6,5 sekundy odstępu. Stuki mogą też wykryć dwa przypadkowe hałasy.",
   "in tune": "dobrze",

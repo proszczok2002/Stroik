@@ -1,17 +1,25 @@
+Stroik Android 1.09
+
+- Contra A now has the same harmonic support as lower notes. Both platforms use matching timbres without octave transposition. Bass audibility still depends on speakers.
+- Classic hybrid starts its reference immediately without a tutorial. Beginner view reads guidance first. The existing Windows behavior is retained and has been added to Android.
+- The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
+- The whole result finishes before the reference and navigation are released. Hybrid advance requires an in-tune result and two pitch-confirmed attacks. Fork-only mode keeps its acoustic gesture.
+- Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
+
 Stroik Android — guide
 
 Accessibility
-Bottom buttons open Tuner, Settings and Help in one row. Use TalkBack gestures to navigate standard buttons, checkboxes, dropdowns and labelled fields. Controls have large touch targets. Android announces checkbox state. Only final readings are announced, not every audio sample. Without TalkBack, system speech may read results. Graphics are optional and off by default. Polish, English, German, Russian, French, Spanish and dark theme are in Settings.
+Bottom buttons open Tuner, Settings and Help in one row. Use TalkBack gestures to navigate standard buttons, checkboxes, dropdowns and labelled fields. Controls have large touch targets. Android announces checkbox state. Only final readings are announced, not every audio sample. App speech reads results even with TalkBack enabled. Graphics are optional and off by default. Polish, English, German, Russian, French, Spanish and dark theme are in Settings.
 
 Methods
 Tuning fork plays a decaying reference. Enable automatic strikes and set an interval or use Strike tuning fork. Pause/resume controls automatic playback.
 Electronic tuner requires microphone permission. Start microphone, play one note and mute it. The result gives note, direction and deviation. Stop microphone ends listening. Active capture uses a foreground service when the screen turns off or another app opens. Stop it with the same toggle or notification action; removing the app from Recents stops the service. Audio is not saved or uploaded.
-Speaker hybrid plays a 3-second reference, ignores capture for 3.4 seconds, listens to your instrument, announces the reading, waits for its own synthesizer utterance to finish and repeats. On-screen TalkBack speech is controlled by the system; room reverberation can still affect readings.
+Speaker hybrid plays a 3-second reference, ignores capture for 3.4 seconds, listens to your instrument, announces the reading, waits for its own synthesizer utterance to finish and repeats. App speech reads results; room reverberation can still affect readings.
 Headphone hybrid listens while the reference plays. Optional microphone monitoring requires connected headphones. Do not monitor through speakers: feedback can occur. Latency depends on hardware. Default Android devices are used without changing system settings.
 
 Instruments and notes
 Piano and chromatic modes cover 88 notes, A0 to C8, and always show the octave dropdown. Default target: one-line G (G4). Guitar, ukulele, violin and bass presets list open strings. Ukulele standard, floor upward: A E C G; alternative G E C A. Guitar, thickest first: E A D G B E. Use chromatic mode for other tunings. Piano order can ascend, alternate blocks of five semitones to either side, or alternate whole-tone blocks. Next note advances manually.
-In electronic mode, two strikes after an in-tune result can advance. Fork and hybrid modes have a separate two-attack gesture; incidental noises can also trigger it. Set the gap from 0.5 to 2.5 seconds. The app's speaker reference is ignored, and automatic fork strikes with the gesture enabled are at least 6.5 seconds apart.
+In electronic mode, two strikes after an in-tune result can advance. Fork-only mode has an acoustic two-attack gesture which incidental noises can trigger. Hybrid mode requires an in-tune result and two pitch-confirmed attacks. Set the gap from 0.5 to 2.5 seconds. The app's speaker reference is ignored, and automatic fork strikes with the gesture enabled are at least 6.5 seconds apart.
 
 Consonance
 Select the lower target, then Fifths or Octaves. C4 pairs with G4 or C5. Fork mode plays the pair together. Separate measurement: lower, mute, confirmation, upper, mute. Results give deviation from 700/1200 cents and estimated ideal-harmonic beats: |2×upper−3×lower| or |upper−2×lower| Hz.
@@ -31,7 +39,7 @@ Stroik Android 1.07
 
 Classic hides guidance, including the 440 Hz standard hint and piano advice for ukulele. Choose the view only on Tuner; the duplicate Settings checkbox is removed.
 
-Hybrid microphone controls also start its reference. Manual strike, fork automation and interval controls appear only in Fork; hybrids keep their separate acoustic double-strike checkbox. In-tune confirmed advance belongs to Electronic. Both attacks require fresh pitch at the expected note within the chosen tolerance. Detuning cancels arming; a normal reading alone does not change target. A new reference starts a fresh capture epoch, rejecting stale pending results. The fork waits for its own TTS utterance to actually finish.
+Hybrid microphone controls also start its reference. Manual strike, fork automation and interval controls appear only in Fork; hybrids keep their separate pitch-confirmed double-strike checkbox. Electronic and Hybrid advance require a completed in-tune announcement. Both attacks require fresh pitch at the expected note within the chosen tolerance. Detuning cancels arming; a normal reading alone does not change target. Reference playback no longer invalidates an already completed reading. The fork waits for its own TTS utterance to actually finish.
 
 Shift+Alt+N and Shift+Ctrl+N select the previous planned note. Numeric entry opens the numeric keyboard and accepts either decimal separator; the slider and profile retain the entered value. Speech rate remains in Settings.
 

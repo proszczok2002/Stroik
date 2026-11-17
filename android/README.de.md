@@ -1,4 +1,10 @@
-# Stroik Android 1.08 — Anleitung
+# Stroik Android 1.09 — Anleitung
+
+- Kontra-A erhält dieselbe Obertonstütze wie tiefere Töne. Beide Plattformen verwenden dieselbe Klangfarbe ohne Oktavverschiebung. Die Basswiedergabe hängt vom Lautsprecher ab.
+- Der klassische Hybrid startet sofort ohne Anleitung. Für Anfänger werden zuerst Hinweise gelesen. Das Windows-Verhalten bleibt erhalten und wurde für Android ergänzt.
+- Die Ergebnispause erlaubt 0–60 Sekunden, auch 1 und 2. Bei 0 beginnt die Referenz sofort nach dem tatsächlichen Sprachende. Neuer Standard ist 0; gespeicherte Windows-Pausen bleiben erhalten. Android bietet Schieberegler und Zahleneingabe.
+- Erst wird das gesamte Ergebnis gesprochen, dann werden Referenz und Weiterschaltung freigegeben. Der Hybrid verlangt einen korrekt gestimmten Ton und zwei höhenbestätigte Anschläge. Die reine Stimmgabel behält ihre akustische Geste.
+- Android zeigt klassisch keine Tastenpositionen mehr. Methodenhinweise für Anfänger und schwarze Tasten mit Links/Rechts wurden ergänzt. Ergebnisse und Anleitung spricht die App auch mit TalkBack selbst; TalkBack steuert weiter die Navigation.
 
 Zugängliches Android-Stimmgerät für blinde, sehbehinderte und sehende Musiker.
 Sprache und dunkles Design stehen in Einstellungen. Sprachen: Polski, English,

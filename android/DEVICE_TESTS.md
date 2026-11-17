@@ -1,4 +1,21 @@
-# Android device verification — 1.0 through 1.03
+# Android device verification
+
+## 1.09 / 109 — Pixel 11, 2026-11-17
+
+- Pixel 11, Android 17; connected by discovered Wi-Fi ADB endpoint. Google TalkBack, AutoSpeaker and PixelSpeechEQ remained enabled. The screen was awake during UI tests.
+- The initial 108 → 109 installation used the visible Android update confirmation and Play Protect scan. Further prepublication 109 candidates used the same system installer. Each installation verified the existing signer, all model settings and an app-data marker. Production APKs were not installed with `adb install -r`; that command was used only for the test harness.
+- Final signed APK: 136364 bytes, SHA-256 `7d2606b4aecb026b6adc6382c87c7e700f6e345d8d03b059739c45ae856cecdf`. The installed final APK was pulled back and matched this hash. This is local system installation evidence; a higher-version installation through the public updater is not claimed for this release.
+- `hybrid109-final-artifact.txt`: actual AudioRecord microphone capture and immediate Classic reference without an app tutorial; Beginner app TTS guidance completed before reference playback. Results paused the reference until the application's own utterance completion. Measured additional time to playback for 0/1/2 seconds: **98/1108/2114 ms**. Stopping during speech did not restart capture or playback.
+- The same scenario injected five detuned PCM notes with hybrid tap navigation enabled: all five results arrived and no navigation occurred. Speech completion was mocked only in this synthetic PCM subtest; the preceding timing checks used actual Android TTS and playback.
+- `languages-final.txt`: **2208 assertions PASS** across PL/EN/DE/RU/FR/ES, all four methods, profile/language round trips, installed guide/change assets, classic labels without key positions, and hybrid pause range 0–60. Accessibility adjustments reached 2 → 1 → 0 and retained the existing slider view. This caught and corrected an initial fractional-step error before publication.
+- `focus.txt`: **177 assertions PASS** for actual accessibility focus and view retention. `state-events.txt`: **14 assertions PASS** for microphone state, concise next-note events and muted visual readings. These two runs preceded the final documentation-only APK rebuild; executable Java code was identical.
+- The first tutorial timing test incorrectly observed the shared TTS engine's `isSpeaking` state before the app's delayed tutorial had started. Diagnostic output showed the app tutorial still speaking. The corrected test tracks the app's own utterance ID through its completion callback; retain the initial failed logs as test-harness evidence, not as an app regression.
+- JVM core tests passed, including bass upper-partial checks around G-sharp/A/A-sharp in the contra octave, black-key navigation and pause validation. Windows regression tests separately cover matching PCM synthesis, 245 unclipped note/interval combinations, and keyboard editing down to zero. A visible Windows probe opened the actual microphone; NVDA/SAPI result completion preceded the reference, with 0/1/2 second pauses. The existing NVDA beginner-guidance probe also passed.
+- No instrument was played. These checks do not establish human pronunciation/listening, subjective bass loudness on the owner's speakers, all natural TalkBack/NVDA gestures, physical headphone monitoring, or Moto/Xiaomi behavior. Older evidence below remains bounded to its original versions.
+
+Local evidence: `android/device-results/pixel11-1.09-20261117` and `android/device-results/install-20261117-*`. Superseded APKs and verification copies are preserved under the project-root `niepotrzebne` archive.
+
+## Original 1.0 through 1.03 checks
 
 Device: POCO F8 Ultra, model 25102PCBEG, Android 16 / API 36. During the original 1.0 checks, the TalkBack-derived service from com.nirenr.talkman remained enabled. The initial USB installation restriction was resolved by the owner; ADB installation and launch then succeeded. The final 1.02 service and results are recorded separately below.
 

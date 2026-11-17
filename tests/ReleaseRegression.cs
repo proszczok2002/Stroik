@@ -194,8 +194,9 @@ internal static class ReleaseRegression
         if(keyboard.Highlight!=System.Drawing.Color.Firebrick) throw new Exception("Detuned key is not red.");
         keyboard.SetReading(0,5);
         if(keyboard.Highlight!=System.Drawing.Color.ForestGreen) throw new Exception("Tuned key is not green.");
-        foreach(bool english in new[]{false,true}) {
-        Call(form,"ApplySettings",new Preferences {English=english,Method=TuningMethod.HybridSpeakers,TargetMidi=69,AutomaticUpdates=false,DoubleStrikeAdvance=true,ForkTapAdvance=false,VisualMode=true,VoiceInVisualMode=false});
+        foreach(bool english in new[]{false,true})
+        foreach(bool forkTap in new[]{false,true}) {
+        Call(form,"ApplySettings",new Preferences {English=english,Method=TuningMethod.HybridSpeakers,TargetMidi=69,AutomaticUpdates=false,DoubleStrikeAdvance=true,ForkTapAdvance=forkTap,VisualMode=true,VoiceInVisualMode=false});
         DateTime origin=DateTime.UtcNow;
         for(int cycle=0;cycle<5;cycle++) {
             DateTime at=origin.AddSeconds(cycle*12+4);

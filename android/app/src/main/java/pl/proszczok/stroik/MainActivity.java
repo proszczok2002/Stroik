@@ -21,7 +21,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   Model model;
   boolean active;
   private LinearLayout root, body, nav;
-  private TextView heading, result, guide, status, referenceHelp, beginnerHelp;
+  private TextView heading, result, guide, status, referenceHelp, beginnerHelp, methodHelp;
   private ScrollView scroll;
   private Spinner targetList, octaveList;
   private final Button[] tabs = new Button[3];
@@ -38,7 +38,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       forkControls,
       monitorControls,
       advanceControls,
-      forkTapControls;
+      forkTapControls,
+      hybridPauseControls;
   private View ukuleleControls, orderControls;
   private CheckBox monitorCheck;
   private int renderedPage = -1, renderGeneration, restoredFocus = View.NO_ID;
@@ -340,6 +341,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     visible(forkTapControls, model.method != 1);
     visible(monitorControls, model.method == 3);
     visible(advanceControls, model.method == 1);
+    visible(hybridPauseControls, model.method == 2);
     if (focused != null)
       focused.post(() -> {
         View current = accessibilityFocus(root);
@@ -645,8 +647,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       model.target =
           key == KeyEvent.KEYCODE_DPAD_UP || key == KeyEvent.KEYCODE_DPAD_DOWN
               ? Model.nextNatural(model.base(), key == KeyEvent.KEYCODE_DPAD_UP ? -1 : 1)
-              : Math.max(
-                  21, Math.min(108, model.base() + (key == KeyEvent.KEYCODE_DPAD_LEFT ? -1 : 1)));
+              : Model.nextBlack(model.base(), key == KeyEvent.KEYCODE_DPAD_LEFT ? -1 : 1);
       model.anchor = model.target;
       changed();
       syncTarget();
@@ -734,6 +735,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     targetsBox = (LinearLayout) section(this::targets);
     guide = text("", false);
     updateGuide();
+    methodHelp = text(model.methodGuidance(), false);
     beginnerHelp =
         text(
             t(
@@ -841,6 +843,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                     "After an in-tune result two strikes advance"),
                 model.advance,
                 v -> model.advance = v));
+    hybridPauseControls =
+        section(() -> number(
+            t("Przerwa po komunikacie w hybrydzie, sekundy (0–60):",
+              "Hybrid pause after spoken result, seconds (0–60):"),
+            model.hybridPause, 0, 60, 1, v -> model.hybridPause = (int) v));
     number(
         t(
             "Maksymalny odstęp dwóch uderzeń, sekundy (0,5–2,5)",
@@ -941,6 +948,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private void updateGuide() {
     visible(referenceHelp, model.beginner && model.instrument == 0);
     visible(beginnerHelp, model.beginner);
+    visible(methodHelp, model.beginner);
+    if (methodHelp != null) methodHelp.setText(model.methodGuidance());
     if (beginnerHelp != null) beginnerHelp.setText(beginnerGuidance());
     if (guide == null) return;
     String value = "";
@@ -989,26 +998,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   private String beginnerGuidance() {
-    String common =
-        t(
-            "Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty. Graj"
-                + " równomiernie, bez przesterowania. ",
-            "Strikes that are too weak or too strong can cause inaccurate readings. Play evenly"
-                + " without clipping. ");
-    if (model.instrument == 0)
-      return common
-          + t(
-              "Stare pianino powinien ocenić technik przed podnoszeniem naciągu. Zacznij od środka,"
-                  + " zmieniaj strony równomiernie i wytłumiaj pozostałe struny.",
-              "Have an old piano assessed before raising tension. Start near the middle, work"
-                  + " evenly on both sides and mute unused strings.");
-    return common
-        + (model.strings()
-            ? t(
-                "Graj jedną pustą strunę naraz. Kolejność strun i ich nazwy są na liście dźwięków.",
-                "Play one open string at a time. String order and names are in the note list.")
-            : t("Graj jeden dźwięk naraz.", "Play one note at a time."));
+    return model.beginnerGuidance();
   }
+
 
   private void instrument() {
     choice(
@@ -1353,12 +1345,15 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   public void result(String text) {
+    session.result(text);
+  }
+
+  void displayResult(String text) {
     lastResult = text;
     if (result != null) {
       result.setText(text);
       result.setContentDescription(t("Ostatni wynik: ", "Last result: ") + text);
     }
-    say(text);
   }
 
   public void reading(double cents) {
@@ -1441,7 +1436,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       microphoneButton.setStateDescription(value);
     }
     if (status != null) status.setText(value);
-    if (announcedMicState != null && announcedMicState != audio.running())
+    if (announcedMicState != null && announcedMicState != audio.running()
+        && !(audio.running() && model.method >= 2))
       sayAction(value, microphoneButton);
     announcedMicState = audio.running();
   }

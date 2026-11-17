@@ -34,7 +34,7 @@ internal sealed partial class TunerForm
         double expected = PitchDetector.NoteFromMidi(wanted, _reference).Frequency;
         if (Math.Abs(1200 * Math.Log2(frequency / expected)) > 90)
         {
-            Announce(Tf($"Nie ten dźwięk. Zagraj {NoteCatalog.Label(wanted, Locale)}.", $"Wrong note. Play {NoteCatalog.Label(wanted, Locale)}."));
+            ReadResult(Tf($"Nie ten dźwięk. Zagraj {NoteCatalog.Label(wanted, Locale)}.", $"Wrong note. Play {NoteCatalog.Label(wanted, Locale)}."));
             _ignoreUntil = DateTime.UtcNow.AddMilliseconds(1500); return;
         }
         if (_lowerIntervalFrequency is null)
@@ -42,7 +42,7 @@ internal sealed partial class TunerForm
             _lowerIntervalFrequency = frequency;
             _ignoreUntil = DateTime.UtcNow.AddMilliseconds(1500);
             _result.Text = T("Dolny zapisany. Zagraj górny dźwięk i wycisz.", "Lower note stored. Play the upper note and mute.");
-            Announce(_result.Text);
+            ReadResult(_result.Text);
         }
         else
         {
@@ -68,7 +68,7 @@ internal sealed partial class TunerForm
             {
                 if (generation != Volatile.Read(ref _measurementGeneration) || _closing) return;
                 if (reading is IntervalReading pair) ShowInterval(IntervalAnalysis.Compare(pair.Lower * _correctionFactor, pair.Upper * _correctionFactor, _consonanceKind), true);
-                else { _result.Text = T("Brak dwóch wyraźnych składowych. Spróbuj pomiaru osobno.", "Two clear components not found. Try separate measurement."); Announce(_result.Text); }
+                else { _result.Text = T("Brak dwóch wyraźnych składowych. Spróbuj pomiaru osobno.", "Two clear components not found. Try separate measurement."); ReadResult(_result.Text); }
             }));
         }
         catch (InvalidOperationException) { }
@@ -80,8 +80,7 @@ internal sealed partial class TunerForm
         string cents = reading.Cents.ToString("+0.0;-0.0;0.0", culture), beats = reading.Beats.ToString("0.00", culture);
         _result.Text = prefix + Tf($"Odchyłka od stroju równomiernego: {cents} centów. Szacowane dudnienia: {beats} na sekundę.", $"Deviation from equal temperament: {cents} cents. Estimated beats: {beats} per second.");
         _details.Text = $"{reading.Lower.ToString("0.00", culture)} Hz / {reading.Upper.ToString("0.00", culture)} Hz";
-        _lastAnnouncement = _result.Text; _repeat.Enabled = true; Announce(_result.Text);
+        _lastAnnouncement = _result.Text; _repeat.Enabled = true; ReadResult(_result.Text);
         _ignoreUntil = DateTime.UtcNow.AddSeconds(4);
-        if (_activeMethod == TuningMethod.HybridSpeakers && _microphone is not null) { _acceptAudio = false; _practice.Result(DateTime.UtcNow, (int)_hybridPause.Value); }
     }
 }

@@ -36,6 +36,7 @@ if(args.Contains("--nvda-probe")) {
     return;
 }
 if(args.Contains("--guidance-probe")) {CurrentReleaseChecks.GuidanceProbe();return;}
+if(args.Contains("--hybrid-probe")) {CurrentReleaseChecks.HybridProbe();return;}
 
 int natural = 60;
 foreach (int expectedNatural in new[] {62, 64, 65, 67, 69, 71, 72})

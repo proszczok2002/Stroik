@@ -115,6 +115,7 @@ final class Translations {
     TEXT.put("Help", new String[]{"Hilfe","Справка","Aide","Ayuda"});
     TEXT.put("High — quiet instruments", new String[]{"Hoch — leise Instrumente","Высокая — тихие инструменты","Élevée — instruments peu sonores","Alta — instrumentos suaves"});
     TEXT.put("High, for quiet instruments", new String[]{"Hoch, für leise Instrumente","Высокая, для тихих инструментов","Élevée, pour instruments peu sonores","Alta, para instrumentos suaves"});
+    TEXT.put("Hybrid pause after spoken result, seconds (0–60):", new String[]{"Pause nach gesprochenem Ergebnis im Hybridmodus, Sekunden (0–60):","Пауза после озвученного результата в гибриде, секунды (0–60):","Pause hybride après le résultat vocal, secondes (0–60) :","Pausa híbrida tras el resultado hablado, segundos (0–60):"});
     TEXT.put("Hybrid pause after spoken result, seconds (3–60):", new String[]{"Pause nach der Hybrid-Ansage, Sekunden (3–60):","Пауза после сообщения в гибриде, секунд (3–60):","Pause après l’annonce hybride, secondes (3–60) :","Pausa tras el anuncio híbrido, segundos (3–60):"});
     TEXT.put("Hybrid — alternating speakers", new String[]{"Hybrid — abwechselnd über Lautsprecher","Гибридный — поочерёдно через динамики","Hybride — haut-parleurs en alternance","Híbrido — altavoces por turnos"});
     TEXT.put("Hybrid — headphones", new String[]{"Hybrid — Kopfhörer","Гибрид — наушники","Hybride — casque","Híbrido — auriculares"});

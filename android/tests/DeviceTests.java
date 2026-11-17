@@ -17,8 +17,8 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
-  private int expectedCode = 108;
-  private String expectedName = "1.08";
+  private int expectedCode = 109;
+  private String expectedName = "1.09";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
@@ -26,8 +26,8 @@ public final class DeviceTests extends Instrumentation {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
     if (args != null) {
-      expectedCode = args.getInt("expectedCode", 108);
-      expectedName = args.getString("expectedName", "1.08");
+      expectedCode = args.getInt("expectedCode", 109);
+      expectedName = args.getString("expectedName", "1.09");
     }
     start();
   }
@@ -187,6 +187,10 @@ public final class DeviceTests extends Instrumentation {
 
   @Override
   public void onStart() {
+    if (scenario.equals("hybrid109")) {
+      hybrid109Scenario();
+      return;
+    }
     if (scenario.equals("languages")) {
       languagesScenario();
       return;
@@ -1444,6 +1448,7 @@ public final class DeviceTests extends Instrumentation {
         }
       java.util.List<String> results = new java.util.concurrent.CopyOnWriteArrayList<>();
       AtomicInteger advances = new AtomicInteger();
+      java.util.concurrent.atomic.AtomicReference<AudioEngine> simulated = new java.util.concurrent.atomic.AtomicReference<>();
       Model model = new Model();
       model.method = 2;
       model.target = 108;
@@ -1456,6 +1461,7 @@ public final class DeviceTests extends Instrumentation {
               new AudioEngine.Listener() {
                 public void result(String text) {
                   results.add(text);
+                  simulated.get().speechFinished();
                 }
 
                 public void reading(double v) {}
@@ -1469,6 +1475,7 @@ public final class DeviceTests extends Instrumentation {
                 }
               },
               (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE));
+      simulated.set(engine);
       AudioEngine.Capture state = new AudioEngine.Capture();
       long time = SystemClock.elapsedRealtime() + 4000;
       for (int cycle = 0; cycle < 5; cycle++) {
@@ -1851,6 +1858,130 @@ public final class DeviceTests extends Instrumentation {
     finish(Activity.RESULT_OK, output);
   }
 
+  private void hybrid109Scenario() {
+    Bundle output = new Bundle();
+    String saved = null;
+    AudioEngine synthetic = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity = (MainActivity) startActivitySync(new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      TuningSession session = TuningSession.get(activity);
+      main(() -> {
+        session.stop();
+        activity.model = new Model();
+        activity.model.language = "en";
+        activity.model.method = 2;
+        activity.model.beginner = false;
+        activity.model.speechRate = 2;
+        activity.model.updates = false;
+        session.audio.setPaused(false);
+        session.configure(activity.model);
+        invokeRender();
+      });
+      SystemClock.sleep(1200);
+      main(() -> findButton("Start microphone").performClick());
+      long until = SystemClock.elapsedRealtime() + 5000;
+      while (!session.audio.forkPlaying() && SystemClock.elapsedRealtime() < until) SystemClock.sleep(25);
+      require(session.audio.running() && session.audio.forkPlaying(), "Classic hybrid must open microphone and play immediately");
+      java.lang.reflect.Field recorder = AudioEngine.class.getDeclaredField("recorder"); recorder.setAccessible(true);
+      android.media.AudioRecord record = (android.media.AudioRecord)recorder.get(session.audio);
+      require(record.getRecordingState()==android.media.AudioRecord.RECORDSTATE_RECORDING, "Microphone not actually recording");
+      java.lang.reflect.Field speech = TuningSession.class.getDeclaredField("speech"); speech.setAccessible(true);
+      android.speech.tts.TextToSpeech tts=(android.speech.tts.TextToSpeech)speech.get(session);
+      require(!tts.isSpeaking(), "Classic startup read an unwanted tutorial");
+      log("Classic: real microphone and immediate reference, no app tutorial PASS");
+      main(() -> {
+        session.stop();
+        activity.model.beginner=true;
+        session.configure(activity.model);
+        invokeRender();
+      });
+      SystemClock.sleep(700);
+      main(() -> findButton("Start microphone").performClick());
+      java.lang.reflect.Field ownUtterance=TuningSession.class.getDeclaredField("utterance");ownUtterance.setAccessible(true);
+      until=SystemClock.elapsedRealtime()+7000;
+      while(((String)ownUtterance.get(session)).isEmpty() && SystemClock.elapsedRealtime()<until) {
+        require(!session.audio.forkPlaying(), "Beginner fork started before tutorial");
+        SystemClock.sleep(25);
+      }
+      String tutorialId=(String)ownUtterance.get(session);
+      require(!tutorialId.isEmpty(), "Beginner tutorial did not start");
+      boolean tutorialSpeaking=false;
+      until=SystemClock.elapsedRealtime()+60000;
+      while(tutorialId.equals(ownUtterance.get(session)) && SystemClock.elapsedRealtime()<until) {
+        tutorialSpeaking|=tts.isSpeaking();
+        require(!session.audio.forkPlaying(), "Beginner fork overlapped tutorial");
+        SystemClock.sleep(40);
+      }
+      require(tutorialSpeaking && ((String)ownUtterance.get(session)).isEmpty(), "Tutorial did not finish");
+      until=SystemClock.elapsedRealtime()+700;
+      while(!session.audio.forkPlaying() && SystemClock.elapsedRealtime()<until)SystemClock.sleep(10);
+      if(!session.audio.forkPlaying()) {
+        java.lang.reflect.Field utterance=TuningSession.class.getDeclaredField("utterance");utterance.setAccessible(true);
+        java.lang.reflect.Field held=AudioEngine.class.getDeclaredField("speechPending");held.setAccessible(true);
+        java.lang.reflect.Field after=AudioEngine.class.getDeclaredField("strikeAfterSpeech");after.setAccessible(true);
+        log("Tutorial diagnostic: ready="+session.ready+", utterance="+utterance.get(session)+", pending="+held.get(session.audio)+", after="+after.get(session.audio)+", tts="+tts.isSpeaking()+", running="+session.audio.running());
+      }
+      require(session.audio.forkPlaying(), "Reference did not start after tutorial");
+      log("Beginner: actual TTS tutorial completed before reference PASS");
+      java.lang.reflect.Field pending=AudioEngine.class.getDeclaredField("speechPending");pending.setAccessible(true);
+      for(int pause:new int[]{0,1,2}) {
+        main(() -> { activity.model.hybridPause=pause;session.configure(activity.model);session.result("Contra A, too low, minus two hertz."); });
+        until=SystemClock.elapsedRealtime()+7000;
+        while(!tts.isSpeaking() && SystemClock.elapsedRealtime()<until)SystemClock.sleep(20);
+        require(tts.isSpeaking(), "Result speech did not start");
+        until=SystemClock.elapsedRealtime()+20000;
+        while(pending.getBoolean(session.audio) && SystemClock.elapsedRealtime()<until) {
+          require(!session.audio.forkPlaying(), "Reference overlapped spoken result");
+          SystemClock.sleep(10);
+        }
+        require(!pending.getBoolean(session.audio), "Result speech did not release capture");
+        long finished=SystemClock.elapsedRealtime();
+        if(pause>0)require(!session.audio.forkPlaying(),"Nonzero pause ignored");
+        until=finished+pause*1000+700;
+        while(!session.audio.forkPlaying() && SystemClock.elapsedRealtime()<until)SystemClock.sleep(10);
+        long elapsed=SystemClock.elapsedRealtime()-finished;
+        require(session.audio.forkPlaying() && elapsed>=pause*1000-120 && elapsed<=pause*1000+500,"Result pause mismatch: "+pause+" / "+elapsed+"ms");
+        log("Result then reference, pause "+pause+"s: "+elapsed+"ms PASS");
+      }
+      main(() -> {session.result("Stop during a spoken result.");session.stop();});
+      SystemClock.sleep(1200);
+      require(!session.audio.running()&&!session.audio.forkPlaying(),"Stop restarted playback/capture");
+      java.util.concurrent.atomic.AtomicReference<AudioEngine> holder=new java.util.concurrent.atomic.AtomicReference<>();
+      java.util.concurrent.CopyOnWriteArrayList<String> results=new java.util.concurrent.CopyOnWriteArrayList<>();
+      AtomicInteger advances=new AtomicInteger();
+      Model m=new Model();m.method=2;m.beginner=false;m.forkTap=true;m.advance=true;
+      synthetic=new AudioEngine(m,new AudioEngine.Listener(){
+        public void result(String text){results.add(text);holder.get().speechFinished();}
+        public void reading(double cents){}
+        public void advance(){advances.incrementAndGet();}
+        public void failed(String error){throw new AssertionError(error);}
+      },(android.media.AudioManager)context.getSystemService(Context.AUDIO_SERVICE));
+      holder.set(synthetic);
+      AudioEngine.Capture state=new AudioEngine.Capture();
+      long time=SystemClock.elapsedRealtime()+4000;
+      for(int cycle=0;cycle<5;cycle++) {
+        double hz=Model.hz(m.base(),440)*Math.pow(2,(cycle%2==0?22:-18)/1200.0);
+        for(int frame=0;frame<8;frame++) {
+          short[] samples=new short[4096];
+          for(int i=0;i<samples.length;i++)samples[i]=(short)(6000*Math.sin(2*Math.PI*hz*(i+frame*4096)/48000));
+          synthetic.process(samples,samples.length,time,state);time+=86;waitForIdleSync();
+        }
+        for(int frame=0;frame<8;frame++){synthetic.process(new short[4096],4096,time,state);time+=86;waitForIdleSync();}
+        require(results.size()==cycle+1,"Lost detuned result with tap navigation enabled: "+cycle);
+        require(advances.get()==0,"Hybrid advanced without an in-tune result");
+        time+=4000;
+      }
+      log("Five detuned PCM cycles with hybrid tap navigation enabled: all results delivered, no navigation PASS (mock speech completion)");
+      log("No human listening, natural gesture or instrument claim.");
+      output.putString("result","PASS");
+    }catch(Throwable error){log("FAIL: "+error);output.putString("result","FAIL");}
+    finally{if(synthetic!=null)synthetic.close();restoreSettings(saved);}
+    output.putString("stream",report.toString());finish(Activity.RESULT_OK,output);
+  }
+
   private void speechTimingScenario() {
     Bundle output = new Bundle();
     String saved = null;
@@ -2213,7 +2344,25 @@ public final class DeviceTests extends Instrumentation {
           final int index = method;
           main(() -> findSpinner(model.t("Metoda strojenia", "Tuning method")).setSelection(index));
           inspect(code + " method " + method);
+          NumberSlider pause=null;
+          String pauseLabel=model.t("Przerwa po komunikacie w hybrydzie, sekundy (0–60):", "Hybrid pause after spoken result, seconds (0–60):");
+          for(View view:views())if(view instanceof NumberSlider && pauseLabel.contentEquals(view.getContentDescription()))pause=(NumberSlider)view;
+          require(pause!=null && pause.isShown()==(method==2),"Hybrid pause visibility: "+code);
+          if(method==2) {
+            final NumberSlider input=pause;
+            AccessibilityNodeInfo.RangeInfo range=accessible(input).getRangeInfo();
+            require(range!=null&&range.getMin()==0&&range.getMax()==60,"Hybrid pause range");
+            main(() -> {Bundle value=new Bundle();value.putFloat(AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE,2);input.performAccessibilityAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.getId(),value);});
+            require(Model.from(model.json()).hybridPause==2,"Hybrid pause profile round trip");
+            for(int expected:new int[]{1,0}) {
+              main(() -> input.performAccessibilityAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD,null));
+              require(model.hybridPause==expected&&input.isAttachedToWindow(),"Hybrid pause adjustment recreated control or missed value");
+            }
+          }
         }
+        main(() -> findSpinner(model.t("Widok","View")).setSelection(0));
+        String classic=findSpinner(model.t("Dźwięk docelowy","Target note")).getSelectedItem().toString();
+        require(!classic.contains(model.position(model.base())),"Classic key-position leak: "+code);
         page(model.t("Ustawienia", "Settings"));
         inspect(code + " settings");
         Spinner language = findSpinner(model.t("Język", "Language"));

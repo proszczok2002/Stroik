@@ -2,6 +2,50 @@ namespace Stroik;
 
 internal sealed partial class TunerForm
 {
+    private volatile bool _waitingForResultSpeech;
+    private int _resultSpeechEpoch;
+    private bool ConfirmedNavigationEnabled => _consonanceKind == Consonance.Off &&
+        (_activeMethod == TuningMethod.Electronic ? _doubleStrikeEnabled :
+         _activeMethod is TuningMethod.HybridSpeakers or TuningMethod.HybridHeadphones && _forkTapEnabled);
+
+    // Arm navigation only once the user has heard the result. The microphone
+    // must not interpret the synthesizer or the reference as navigation strikes.
+    private async void ReadResult(string text, int inTuneMidi = -1, double frequency = 0, double tolerance = 5)
+    {
+        int epoch = ++_resultSpeechEpoch;
+        int generation = Volatile.Read(ref _measurementGeneration);
+        _waitingForResultSpeech = true;
+        bool speakers = _activeMethod == TuningMethod.HybridSpeakers;
+        bool hybrid = speakers || _activeMethod == TuningMethod.HybridHeadphones;
+        if (hybrid) _fork.Stop();
+        if (speakers) { _acceptAudio = false; _practice.Stop(); }
+        if (!_visualMode.Checked || _voiceInVisual.Checked)
+        {
+            if (NvdaReader.Available) await NvdaReader.ReadAsync(text, Locale);
+            else if (_speech.Speak(text, Locale))
+            {
+                var deadline = DateTime.UtcNow.AddSeconds(120);
+                while (_speech.IsSpeaking && DateTime.UtcNow < deadline && epoch == _resultSpeechEpoch && !_closing)
+                    await Task.Delay(30);
+            }
+        }
+        if (epoch != _resultSpeechEpoch || generation != Volatile.Read(ref _measurementGeneration) || _closing || IsDisposed) return;
+        lock (_navigationLock)
+        {
+            if (inTuneMidi >= 0 && ConfirmedNavigationEnabled)
+                _strikeNavigator.Arm(inTuneMidi, frequency, DateTime.UtcNow, tolerance);
+            else _strikeNavigator.Reset();
+        }
+        _ignoreUntil = DateTime.UtcNow;
+        _waitingForResultSpeech = false;
+        if (speakers && _microphone is not null)
+        {
+            _practice.Result(DateTime.UtcNow, (int)_hybridPause.Value);
+            if (_hybridPause.Value == 0) Strike();
+        }
+        else if (hybrid && _microphone is not null) Strike();
+    }
+
     private void ShowLicenses()
     {
         string body = "";

@@ -304,5 +304,6 @@
   "Play one note": "Einen Ton spielen",
   "No release notes are available for this version.": "Für diese Version sind keine Hinweise verfügbar.",
   "Third-party licenses": "Lizenzen von Drittanbietern",
-  "Ukulele": "Ukulele"
+  "Ukulele": "Ukulele",
+  "Hybrid pause after spoken result, seconds (0–60):": "Pause nach gesprochenem Ergebnis im Hybridmodus, Sekunden (0–60):"
 }

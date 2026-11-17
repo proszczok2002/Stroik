@@ -1,8 +1,14 @@
-# Stroik 1.20
+# Stroik 1.21
 
-Aktualne zmiany Windows 1.20 opisano poniżej; starsze sekcje wersji są historyczne.
+- A kontra otrzymało takie samo wsparcie harmonicznych jak niższe nuty. Obie platformy używają tej samej barwy bez zmiany oktawy. Słyszalność basu nadal zależy od głośników.
+- Klasyczna hybryda uruchamia kamerton od razu, bez samouczka. W widoku dla początkujących najpierw czytane są wskazówki. Działanie Windows zachowano i dodano je w Androidzie.
+- Przerwa po wyniku wynosi 0–60 sekund, także 1 lub 2. Zero oznacza powrót wzorca od razu po zakończeniu mowy i jest nowym ustawieniem domyślnym. Zapisane przerwy Windows są zachowane. Android ma tę samą regulację z suwakiem i wpisem liczby.
+- Najpierw cały wynik, potem kamerton i możliwość przejścia. W hybrydzie przejście wymaga dobrego wyniku oraz dwóch uderzeń o potwierdzonej wysokości. W samym kamertonie nadal działa gest akustyczny.
+- Android: klasyczna lista bez opisów położenia klawiszy, opisy metod dla początkujących oraz czarne klawisze strzałkami lewo/prawo. Wyniki i samouczek czyta syntezator aplikacji także przy TalkBack, aby znać koniec mowy; TalkBack nadal obsługuje nawigację.
 
-[Natywna wersja Android 1.08](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.08) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
+Aktualne zmiany Windows 1.21 opisano poniżej; starsze sekcje wersji są historyczne.
+
+[Natywna wersja Android 1.09](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.09) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs w językach PL, EN, DE, RU, FR i ES.
 
@@ -18,15 +24,15 @@ Pobierz `Stroik.exe` z GitHub Releases. Jest to samodzielny plik, który nie wym
 
 Przy pierwszym uruchomieniu wybrany jest **Kamerton**. Przycisk **Uderz kamerton** odtwarza gasnący ton o częstotliwości wybranego dźwięku. Można też włączyć automatyczne uderzenia i ustawić odstęp od 1 do 10 sekund. To synteza dźwięku zbliżonego do kamertonu widełkowego, a nie próbka prawdziwego kamertonu. Głośność zależy od Windows i głośników. Podczas strojenia ze słuchu na początek warto ćwiczyć na niedrogim, łatwym do obsługi instrumencie, np. ukulele lub gitarze; zerwana struna nadal może zranić.
 
-**Stroik elektroniczny** korzysta z domyślnego mikrofonu Windows. Włącz mikrofon, zagraj jedną nutę i pozwól jej ucichnąć. Po około 0,45 sekundy ciszy wynik pojawi się w polu tekstowym i zostanie zgłoszony przez UI Automation. Dostępne są przyciski powtórzenia wyniku i sprawdzenia komunikatu NVDA bez użycia mikrofonu. Ostatnia metoda jest zapamiętywana przy ponownym uruchomieniu.
+**Stroik elektroniczny** korzysta z domyślnego mikrofonu Windows. Włącz mikrofon, zagraj jedną nutę i pozwól jej ucichnąć. Po około 0,45 sekundy ciszy wynik pojawi się w polu tekstowym i zostanie odczytany przez NVDA lub syntezator aplikacji. Dostępne są przyciski powtórzenia wyniku i sprawdzenia komunikatu NVDA bez użycia mikrofonu. Ostatnia metoda jest zapamiętywana przy ponownym uruchomieniu.
 
 ### Hybryda i sterowanie kamertonem w 1.13
 
-Lista metod zawiera również **Hybrydowy — głośniki (naprzemiennie)** oraz **Hybrydowy — słuchawki**. Naciśnij **Włącz mikrofon**, aby rozpocząć ćwiczenie. W pierwszym wariancie wzorzec gra przez 3 sekundy; mikrofon jest pomijany przez 3,4 sekundy, potem słucha instrumentu. Po wyciszeniu nuty program ogłasza wynik, czeka na zakończenie mowy SAPI lub NVDA 2026.3+ i wybraną przerwę (3–60 s, domyślnie 8). W widoku początkującym najpierw odczytuje wskazówki; synchroniczne API wymaga NVDA 2024.1+. Inny czytnik otrzymuje dostępny dialog z przyciskiem rozpoczęcia po wskazówkach. Pogłos nadal może wpływać na pomiar. Zmiana celu uruchamia nowy wzorzec. **Wyłącz mikrofon** kończy cykl.
+Lista metod zawiera również **Hybrydowy — głośniki (naprzemiennie)** oraz **Hybrydowy — słuchawki**. Naciśnij **Włącz mikrofon**, aby rozpocząć ćwiczenie. W pierwszym wariancie wzorzec gra przez 3 sekundy; mikrofon jest pomijany przez 3,4 sekundy, potem słucha instrumentu. Po wyciszeniu nuty program ogłasza wynik, czeka na zakończenie mowy SAPI lub NVDA 2026.3+ i wybraną przerwę (0–60 s, domyślnie 0; zapisane przerwy są zachowane). W widoku początkującym najpierw odczytuje wskazówki; synchroniczne API wymaga NVDA 2024.1+. Inny czytnik otrzymuje dostępny dialog z przyciskiem rozpoczęcia po wskazówkach. Pogłos nadal może wpływać na pomiar. Zmiana celu uruchamia nowy wzorzec. **Wyłącz mikrofon** kończy cykl.
 
 W wariancie słuchawkowym mikrofon działa równocześnie z kamertonem. **Odsłuch mikrofonu w słuchawkach** jest opcjonalny, domyślnie wyłączony. Najpierw załóż słuchawki: odtwarzanie mikrofonu przez głośniki może spowodować sprzężenie. Odsłuch korzysta z domyślnych urządzeń Windows, nie zmienia ustawień systemowych; opóźnienie zależy od sprzętu i sterowników.
 
-Pole **Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną kolejnością** działa przy kamertonie i hybrydzie. W metodzie Kamerton pole samodzielnie włącza i wyłącza mikrofon; osobne przyciski mikrofonu są ukryte. Zapisany nasłuch rozpoczyna się także po ponownym otwarciu okna. Przy hybrydzie rozpocznij przyciskiem mikrofonu. Dwa oddzielne ataki w ustawionym czasie wybierają następny cel według planu i odtwarzają jego wzorzec. To gest akustyczny bez sprawdzania wysokości: dwa przypadkowe hałasy też mogą go wywołać. Po własnym tonie kamertonu nasłuch czeka na wybrzmienie. Przy automatycznych uderzeniach i tym polu odstęp wynosi co najmniej 6,5 sekundy, żeby pozostawić czas na gest. **Ctrl+N** pozostaje dostępną metodą ręczną.
+Pole **Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną kolejnością** działa przy kamertonie i hybrydzie. W metodzie Kamerton pole samodzielnie włącza i wyłącza mikrofon; osobne przyciski mikrofonu są ukryte. Zapisany nasłuch rozpoczyna się także po ponownym otwarciu okna. Przy hybrydzie rozpocznij przyciskiem mikrofonu. Dwa oddzielne ataki w ustawionym czasie wybierają następny cel według planu i odtwarzają jego wzorzec. W samym kamertonie to gest akustyczny: dwa przypadkowe hałasy też mogą go wywołać. W hybrydzie najpierw musi zostać odczytany dobry wynik, a oba uderzenia wymagają właściwej wysokości. Po własnym tonie kamertonu nasłuch czeka na wybrzmienie. Przy automatycznych uderzeniach i tym polu odstęp wynosi co najmniej 6,5 sekundy, żeby pozostawić czas na gest. **Ctrl+N** pozostaje dostępną metodą ręczną.
 
 ### Kwinty i oktawy
 

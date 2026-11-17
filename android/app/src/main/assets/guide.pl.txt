@@ -1,17 +1,25 @@
+Stroik Android 1.09
+
+- A kontra otrzymało takie samo wsparcie harmonicznych jak niższe nuty. Obie platformy używają tej samej barwy bez zmiany oktawy. Słyszalność basu nadal zależy od głośników.
+- Klasyczna hybryda uruchamia kamerton od razu, bez samouczka. W widoku dla początkujących najpierw czytane są wskazówki. Działanie Windows zachowano i dodano je w Androidzie.
+- Przerwa po wyniku wynosi 0–60 sekund, także 1 lub 2. Zero oznacza powrót wzorca od razu po zakończeniu mowy i jest nowym ustawieniem domyślnym. Zapisane przerwy Windows są zachowane. Android ma tę samą regulację z suwakiem i wpisem liczby.
+- Najpierw cały wynik, potem kamerton i możliwość przejścia. W hybrydzie przejście wymaga dobrego wyniku oraz dwóch uderzeń o potwierdzonej wysokości. W samym kamertonie nadal działa gest akustyczny.
+- Android: klasyczna lista bez opisów położenia klawiszy, opisy metod dla początkujących oraz czarne klawisze strzałkami lewo/prawo. Wyniki i samouczek czyta syntezator aplikacji także przy TalkBack, aby znać koniec mowy; TalkBack nadal obsługuje nawigację.
+
 Stroik Android — instrukcja
 
 Dostępność
-Dolne przyciski otwierają Stroik, Ustawienia i Pomoc w jednej linii. Każdy przycisk ma duże pole dotykowe. Przechodź między kontrolkami gestami TalkBack. Listy rozwijają się po dwukrotnym stuknięciu; stan pól wyboru zgłasza Android. Wyniki są wypowiadane po pomiarze, nie przy każdej próbce. Przy wyłączonym TalkBack wyniki może czytać syntezator systemowy. Grafika jest opcjonalna i domyślnie wyłączona. Język polski, angielski, niemiecki, rosyjski, francuski lub hiszpański i ciemny motyw są w Ustawieniach.
+Dolne przyciski otwierają Stroik, Ustawienia i Pomoc w jednej linii. Każdy przycisk ma duże pole dotykowe. Przechodź między kontrolkami gestami TalkBack. Listy rozwijają się po dwukrotnym stuknięciu; stan pól wyboru zgłasza Android. Wyniki są wypowiadane po pomiarze, nie przy każdej próbce. Wyniki czyta syntezator aplikacji również przy włączonym TalkBack. Grafika jest opcjonalna i domyślnie wyłączona. Język polski, angielski, niemiecki, rosyjski, francuski lub hiszpański i ciemny motyw są w Ustawieniach.
 
 Metody
 Kamerton odtwarza gasnący wzorzec wybranej nuty. Wybierz automatyczne uderzenia i odstęp lub naciskaj Uderz kamerton. Przycisk pauzy zatrzymuje lub wznawia automat.
 Stroik elektroniczny wymaga zgody na mikrofon. Naciśnij Włącz mikrofon, zagraj jedną nutę i wycisz instrument. Wynik podaje nazwę nuty, kierunek i odchyłkę. Wyłącz mikrofon kończy nasłuch. Włączony nasłuch działa w usłudze także po wygaszeniu ekranu i przełączeniu aplikacji. Wyłącz go tym samym przyciskiem lub akcją w powiadomieniu; usunięcie aplikacji z ostatnich zadań zatrzymuje usługę. Nagrania nie są zapisywane ani wysyłane.
-Hybryda głośnikowa gra wzorzec 3 sekundy, pomija mikrofon przez 3,4 sekundy, słucha instrumentu, podaje wynik, czeka na koniec własnej wypowiedzi syntezatora i powtarza wzorzec. Mowa TalkBack przy włączonym ekranie jest sterowana przez system; pogłos nadal może zakłócić pomiar.
+Hybryda głośnikowa gra wzorzec 3 sekundy, pomija mikrofon przez 3,4 sekundy, słucha instrumentu, podaje wynik, czeka na koniec własnej wypowiedzi syntezatora i powtarza wzorzec. Wyniki odczytuje aplikacja; pogłos nadal może zakłócić pomiar.
 Hybryda słuchawkowa słucha równocześnie z wzorcem. Odsłuch mikrofonu jest opcjonalny i wymaga podłączonych słuchawek. Nie włączaj odsłuchu przez głośniki: grozi sprzężeniem. Opóźnienie zależy od urządzenia. Program używa domyślnych urządzeń Androida i nie zmienia ustawień systemowych.
 
 Instrument i dźwięk
 Pianino i tryb chromatyczny mają 88 nut od A subkontra do c pięciokreślnego oraz zawsze widoczną listę oktaw. Domyślny cel: g razkreślne. Przy gitarze, ukulele, skrzypcach i basie lista obejmuje puste struny. Ukulele: standard od podłogi A E C G lub alternatywa G E C A. Gitara od grubej struny E A d g h e. Do innych strojów użyj trybu chromatycznego. Kolejność pianina: rosnąco, po 5 półtonów na przemian w prawo i lewo lub po 5 całych tonów. Następny dźwięk przechodzi ręcznie.
-W mikrofonie dwa uderzenia po poprawnym wyniku mogą przesunąć cel. W kamertonie i hybrydzie można włączyć gest dwóch oddzielnych ataków; przypadkowe hałasy też mogą go wywołać. Czas wynosi 0,5–2,5 sekundy. Własny wzorzec głośnikowy jest pomijany, a automatyczny kamerton z gestem pozostawia co najmniej 6,5 sekundy odstępu.
+W mikrofonie dwa uderzenia po poprawnym wyniku mogą przesunąć cel. W samym kamertonie można włączyć gest dwóch oddzielnych ataków; przypadkowe hałasy też mogą go wywołać. Hybryda wymaga dobrego wyniku i potwierdzonej wysokości obu ataków. Czas wynosi 0,5–2,5 sekundy. Własny wzorzec głośnikowy jest pomijany, a automatyczny kamerton z gestem pozostawia co najmniej 6,5 sekundy odstępu.
 
 Współbrzmienia
 Wybierz dolną nutę, potem Kwinty lub Oktawy. c razkreślne łączy się z g razkreślnym lub c dwukreślnym. Kamerton gra oba dźwięki razem. Pomiar osobny: dolny, wyciszenie, potwierdzenie, górny, wyciszenie. Wynik pokazuje odchyłkę od 700/1200 centów i szacowane dudnienia idealnych harmonicznych: |2×górny−3×dolny| lub |górny−2×dolny| Hz.
@@ -31,7 +39,7 @@ Stroik Android 1.07
 
 Widok klasyczny ukrywa porady, także standard 440 Hz i wskazówki pianinowe przy ukulele. Widok wybierasz tylko na stronie Stroik; usunięto powtórzone pole w Ustawieniach.
 
-W hybrydzie sterujesz mikrofonem, który uruchamia także kamerton. Ręczne uderzenie, automat i jego odstęp są tylko w metodzie Kamerton; hybryda zachowuje osobne pole dwóch akustycznych stuknięć. Przechodzenie po poprawnym wyniku dotyczy metody Elektroniczny. Oba potwierdzone ataki wymagają wybranej tolerancji, świeżej próbki i właściwej nuty. Rozstrojenie kasuje uzbrojenie; zwykły wynik sam nie zmienia celu. Kolejny wzorzec rozpoczyna świeży pomiar, odrzucając stare oczekujące wyniki. Kamerton po własnym TTS czeka na faktyczne zakończenie wypowiedzi.
+W hybrydzie sterujesz mikrofonem, który uruchamia także kamerton. Ręczne uderzenie, automat i jego odstęp są tylko w metodzie Kamerton; hybryda zachowuje osobne pole dwóch uderzeń potwierdzonych wysokością. Przechodzenie po poprawnym wyniku dotyczy metody Elektroniczny i Hybryda. Oba potwierdzone ataki wymagają wybranej tolerancji, świeżej próbki i właściwej nuty. Rozstrojenie kasuje uzbrojenie; zwykły wynik sam nie zmienia celu. Kolejny wzorzec nie odrzuca już gotowego wyniku. Kamerton po własnym TTS czeka na faktyczne zakończenie wypowiedzi.
 
 Shift+Alt+N i Shift+Ctrl+N wracają do poprzedniego dźwięku według planu. Wpis wartości otwiera klawiaturę numeryczną i przyjmuje kropkę lub przecinek; suwak i profil zapisują podaną liczbę. Ustawienie prędkości mowy pozostaje w Ustawieniach.
 

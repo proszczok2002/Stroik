@@ -1,4 +1,10 @@
-# Stroik Android 1.08 — Guía
+# Stroik Android 1.09 — Guía
+
+- El la de la contraoctava recibe el mismo apoyo armónico que las notas inferiores. Ambas plataformas usan el mismo timbre sin transposición. La audibilidad del grave depende de los altavoces.
+- El híbrido clásico empieza inmediatamente sin tutorial. La vista para principiantes lee primero las indicaciones. Se conserva el comportamiento de Windows y se añade a Android.
+- La pausa tras el resultado admite 0–60 segundos, incluidos 1 y 2. Con 0, la referencia se reanuda al terminar realmente la voz. El nuevo valor predeterminado es 0; se conservan las pausas guardadas de Windows. Android ofrece deslizador y entrada numérica.
+- El resultado se lee completo antes de la referencia y de permitir avanzar. El híbrido exige un resultado afinado y dos ataques con altura confirmada. El diapasón solo conserva su gesto acústico.
+- Android oculta posiciones en la lista clásica. Se añaden descripciones de métodos para principiantes y selección de teclas negras con izquierda/derecha. La síntesis de la aplicación lee resultados y tutoriales incluso con TalkBack para conocer el final de la voz; TalkBack gestiona la navegación.
 
 Afinador de Android accesible para músicos ciegos, con baja visión y videntes.
 Idioma y tema oscuro se eligen en Ajustes. Idiomas: Polski, English, Deutsch,

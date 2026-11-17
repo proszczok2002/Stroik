@@ -25,6 +25,7 @@ public final class Model {
       interval = 0,
       pairMode = 0,
       sensitivity = 1,
+      hybridPause = 0,
       minutes = 5;
   public double reference = 440,
       tolerance = 5,
@@ -348,12 +349,51 @@ public final class Model {
     }
   }
 
+  public static int nextBlack(int current, int direction) {
+    for (int next = current + direction; next >= 21 && next <= 108; next += direction) {
+      int pitch = next % 12;
+      if (pitch == 1 || pitch == 3 || pitch == 6 || pitch == 8 || pitch == 10) return next;
+    }
+    return current;
+  }
+
   public String guide() {
     return note(base()) + ": " + position(base());
   }
 
+  public String beginnerGuidance() {
+    String common =
+        t(
+            "Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty. Graj"
+                + " równomiernie, bez przesterowania. ",
+            "Strikes that are too weak or too strong can cause inaccurate readings. Play evenly"
+                + " without clipping. ");
+    if (instrument == 0)
+      return common
+          + t(
+              "Stare pianino powinien ocenić technik przed podnoszeniem naciągu. Zacznij od środka,"
+                  + " zmieniaj strony równomiernie i wytłumiaj pozostałe struny.",
+              "Have an old piano assessed before raising tension. Start near the middle, work"
+                  + " evenly on both sides and mute unused strings.");
+    return common
+        + (strings()
+            ? t(
+                "Graj jedną pustą strunę naraz. Kolejność strun i ich nazwy są na liście dźwięków.",
+                "Play one open string at a time. String order and names are in the note list.")
+            : t("Graj jeden dźwięk naraz.", "Play one note at a time."));
+  }
+
+  public String methodGuidance() {
+    switch (method) {
+      case 0: return t("Kamerton: wzorzec do strojenia na słuch. W trybie ręcznym Alt+U powtarza dźwięk, a automat odtwarza go cyklicznie. Pole dwóch stuknięć samodzielnie włącza i wyłącza nasłuch mikrofonu.", "Tuning fork: a reference for tuning by ear. In manual mode Alt+U repeats the note; automatic mode repeats it at intervals. The double-strike checkbox starts and stops microphone listening.");
+      case 1: return t("Stroik elektroniczny: pomiar mikrofonem bez wzorca. Graj jedną nutę i pozwól jej ucichnąć; wynik podaje kierunek i odchyłkę. Przydatny do samodzielnego strojenia i kontroli wysokości.", "Electronic tuner: microphone measurement without a reference tone. Play one note and let it stop; the result gives direction and deviation. Useful for independent tuning and pitch checks.");
+      case 2: return t("Hybryda z głośnikami: nauka strojenia na słuch bez słuchawek. Kamerton i mikrofon działają na przemian. Po wyniku program czeka na zakończenie mowy i wybraną przerwę. Najpierw wysłuchaj wskazówek.", "Speaker hybrid: learn tuning by ear without headphones. The reference and microphone alternate. After a result, the app waits for speech and the chosen pause. Listen to guidance first.");
+      default: return t("Hybryda ze słuchawkami: słyszysz wzorzec, a mikrofon jednocześnie mierzy instrument. Opcjonalny odsłuch pomaga słyszeć instrument w słuchawkach. Załóż słuchawki przed jego włączeniem, aby uniknąć sprzężenia.", "Headphone hybrid: hear the reference while the microphone measures the instrument. Optional monitoring helps you hear the instrument in headphones. Put headphones on before enabling it to prevent feedback.");
+    }
+  }
+
   public String targetLabel(int midi) {
-    return note(midi) + (instrument == 0 ? ": " + position(midi) : "");
+    return note(midi) + (beginner && instrument == 0 ? ": " + position(midi) : "");
   }
 
   public String nextAnnouncement(int midi) {
@@ -406,6 +446,8 @@ public final class Model {
         || pairMode > 1
         || sensitivity < 0
         || sensitivity > 2
+        || hybridPause < 0
+        || hybridPause > 60
         || minutes < 1
         || minutes > 1440
         || !Double.isFinite(reference)

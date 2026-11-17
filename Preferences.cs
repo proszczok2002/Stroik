@@ -37,7 +37,7 @@ internal sealed class Preferences
     public bool ForkTapAdvance { get; set; }
     public bool MicrophoneMonitor { get; set; }
     public int StrikeIntervalSeconds { get; set; } = 3;
-    public int HybridPauseSeconds { get; set; } = 8;
+    public int HybridPauseSeconds { get; set; }
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private static string FilePath => Path.Combine(
@@ -68,7 +68,7 @@ internal sealed class Preferences
             SensitivityIndex is < 0 or > 2 || ToleranceCents is < 1 or > 20 ||
             TargetMidi is < -1 or > NoteCatalog.HighestMidi ||
             (TargetMidi >= 0 && TargetMidi < NoteCatalog.LowestMidi) ||
-            StartOctave is < 0 or > 8 || StrikeIntervalSeconds is < 1 or > 10 || HybridPauseSeconds is < 3 or > 60)
+            StartOctave is < 0 or > 8 || StrikeIntervalSeconds is < 1 or > 10 || HybridPauseSeconds is < 0 or > 60)
             throw new InvalidDataException("Invalid Stroik settings file.");
     }
 

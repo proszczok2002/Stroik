@@ -1,4 +1,10 @@
-# Stroik 1.20 — Guide
+# Stroik 1.21 — Guide
+
+- Le la de contre-octave reçoit le même soutien harmonique que les notes inférieures. Les deux plateformes utilisent le même timbre sans transposition. L’audibilité du grave dépend des haut-parleurs.
+- L’hybride classique démarre immédiatement sans tutoriel. En vue débutant, les conseils sont lus avant la référence. Le comportement Windows est conservé et ajouté à Android.
+- La pause après résultat accepte 0–60 secondes, dont 1 et 2. À 0, la référence reprend dès la fin réelle de la parole. Nouvelle valeur par défaut : 0 ; les pauses Windows enregistrées sont conservées. Android propose un curseur et la saisie numérique.
+- Le résultat est lu intégralement avant la référence et l’autorisation du passage. En hybride, une note juste puis deux attaques de hauteur confirmée sont nécessaires. Le diapason seul conserve son geste acoustique.
+- Android masque les positions dans la liste classique. Ajout des descriptions des méthodes pour débutants et du choix des touches noires avec gauche/droite. La synthèse de l’application lit résultats et tutoriels même avec TalkBack pour connaître la fin de parole ; TalkBack gère la navigation.
 
 Accordeur Windows accessible aux musiciens aveugles, malvoyants et voyants.
 Langue et thème sombre se choisissent dans les paramètres. Langues : Polski,
@@ -10,8 +16,8 @@ English, Deutsch, Русский, Français, Español. Le choix est conservé da
 - Électronique : activez le microphone, jouez une note et étouffez-la.
   Le résultat indique le sens et l’écart.
 - Hybride sur haut-parleurs : référence et microphone alternent. Après le résultat,
-  le diapason attend la fin de la parole et une pause réglable de 3–60 secondes
-  (8 par défaut). En vue débutant, les conseils sont lus avant la référence.
+  le diapason attend la fin de la parole et une pause réglable de 0–60 secondes
+  (0 par défaut). En vue débutant, les conseils sont lus avant la référence.
 - Hybride au casque : référence et microphone simultanés. Activez le retour
   uniquement au casque pour éviter la rétroaction acoustique.
 

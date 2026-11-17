@@ -63,6 +63,7 @@ public final class TuningService extends Service {
         wake.acquire();
         session.audio.start();
         started = true;
+        session.captureStarted();
       }
       session.serviceActive = true;
       session.state();

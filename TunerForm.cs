@@ -23,7 +23,7 @@ internal sealed partial class TunerForm : Form
     private readonly TextBox _beginnerHint = new() { ReadOnly = true, Multiline = true, ScrollBars = ScrollBars.Vertical, Height = 150, TabStop = true };
     private readonly TextBox _methodHelp = new() { ReadOnly = true, Multiline = true, ScrollBars = ScrollBars.Vertical, Height = 100, TabStop = true };
     private readonly Label _hybridPauseTitle = MakeLabel();
-    private readonly EditableNumber _hybridPause = new() { Minimum = 3, Maximum = 60, Value = 8 };
+    private readonly EditableNumber _hybridPause = new() { Minimum = 0, Maximum = 60, Value = 0 };
     private bool _waitingForGuidance;
     private int _guidanceEpoch;
     private readonly Label _resultTitle = MakeLabel(), _details = MakeLabel(), _settingsTitle = MakeLabel(14);
@@ -267,7 +267,7 @@ internal sealed partial class TunerForm : Form
         _updateMinutes.ValueChanged += (_, _) => { ConfigureUpdateTimer(); Persist(); };
         _practiceTimer.Tick += (_, _) =>
         {
-            if (_microphone is null || _activeMethod != TuningMethod.HybridSpeakers || _waitingForGuidance) return;
+            if (_microphone is null || _activeMethod != TuningMethod.HybridSpeakers || _waitingForGuidance || _waitingForResultSpeech) return;
             var now = DateTime.UtcNow;
             if (_speech.IsSpeaking || NvdaReader.IsSpeaking) _practice.Speech(now, (int)_hybridPause.Value);
             else if (_practice.NeedsFork(now)) Strike();
@@ -627,7 +627,7 @@ internal sealed partial class TunerForm : Form
             "After an in-tune result, wait for the announcement to finish, then strike the same note twice within the selected time. Strikes may differ in volume, but both must be recognized at the target pitch. A longer time is easier to use but raises the chance of accidental advancement. Ctrl+N advances manually.");
         _methodHelp.AccessibleName = T("Zastosowanie metody strojenia", "Tuning method purpose");
         _beginnerHint.AccessibleName = T("Wskazówki dla wybranego instrumentu", "Selected instrument guidance");
-        _hybridPauseTitle.Text = T("Przerwa po komunikacie w hybrydzie, sekundy (3–60):", "Hybrid pause after spoken result, seconds (3–60):");
+        _hybridPauseTitle.Text = T("Przerwa po komunikacie w hybrydzie, sekundy (0–60):", "Hybrid pause after spoken result, seconds (0–60):");
         _hybridPause.AccessibleName = _hybridPauseTitle.Text;
         _intervalTitle.Text = T("Odstęp między uderzeniami w sekundach:", "Seconds between strikes:");
         _forkHelp.Text = T("Kamerton wydaje krótki, gasnący ton. Jeśli nie masz pewności co do strojenia ze słuchu, najpierw ćwicz na niedrogim, łatwym do obsługi instrumencie, np. ukulele lub gitarze. Zerwanie struny nadal może zranić.",
@@ -918,7 +918,7 @@ internal sealed partial class TunerForm : Form
             _status.Text = _activeMethod == TuningMethod.HybridSpeakers
                 ? T("Hybryda: poczekaj na wybrzmienie wzorca, potem graj i wycisz instrument.", "Hybrid: wait for the reference to decay, then play and mute your instrument.")
                 : T("Mikrofon włączony. Zagraj dźwięk i go wycisz.", "Microphone is on. Play a note and let it stop.");
-            if (_activeMethod != TuningMethod.TuningFork) { _stop.Focus(); if (!_waitingForGuidance) Announce(_status.Text); }
+            if (_activeMethod != TuningMethod.TuningFork) { _stop.Focus(); if (!hybrid) Announce(_status.Text); }
             if (_waitingForGuidance) ReadGuidanceBeforeFork();
         }
         catch (Exception error)
@@ -930,6 +930,7 @@ internal sealed partial class TunerForm : Form
     private void StopMicrophone(bool announce = true)
     {
         _guidanceEpoch++; _waitingForGuidance = false;
+        _resultSpeechEpoch++; _waitingForResultSpeech = false;
         _speech.Stop();
         if (_microphone is null) return;
         Microphone microphone = _microphone; _microphone = null;
@@ -969,7 +970,8 @@ internal sealed partial class TunerForm : Form
         }
         if (_activeMethod == TuningMethod.TuningFork && now < _forkQuietUntil) { _windowCount = 0; _session.Reset(); _tapNavigator.Reset(); return; }
         if (now < _ignoreUntil) { _windowCount = 0; return; }
-        bool forkNavigation = _forkTapEnabled && _activeMethod != TuningMethod.Electronic;
+        if (_waitingForGuidance || _waitingForResultSpeech) { _windowCount = 0; _pairCount = 0; _session.Reset(); _tapNavigator.Reset(); return; }
+        bool forkNavigation = _forkTapEnabled && _activeMethod == TuningMethod.TuningFork;
         if (forkNavigation && _tapNavigator.Observe(PitchDetector.Rms(samples), _minimumRms, now, Volatile.Read(ref _doubleStrikeWindowMilliseconds)))
         {
             int nextFrom = target < 0 ? InstrumentCatalog.DefaultMidi(instrument, ukulele) : target;
@@ -1004,7 +1006,7 @@ internal sealed partial class TunerForm : Form
         if (frequency is > 0) frequency *= correction;
         int? advance = null;
         bool needsQuickPitch = false;
-        if (_doubleStrikeEnabled && _activeMethod == TuningMethod.Electronic && !forkNavigation)
+        if (ConfirmedNavigationEnabled)
         {
             lock (_navigationLock)
             {
@@ -1059,13 +1061,13 @@ internal sealed partial class TunerForm : Form
             counting = _strikeNavigator.IsCounting;
             if (!counting)
             {
-                if (_doubleStrikeEnabled && _activeMethod == TuningMethod.Electronic && inTune) _strikeNavigator.Arm(resolved, targetFrequency, now, tolerance);
-                else _strikeNavigator.Reset();
+                _strikeNavigator.Reset();
             }
         }
         if (counting && inTune) return;
         if (!inTune) lock (_navigationLock) _strikeNavigator.Reset();
         _ignoreUntil = now.AddMilliseconds(1500);
+        _waitingForResultSpeech = true;
         try { BeginInvoke((Action)(() => { if (generation == Volatile.Read(ref _measurementGeneration)) ShowResult(result, reference, target, tolerance, instrument, ukulele); })); }
         catch (InvalidOperationException) { }
     }
@@ -1111,15 +1113,11 @@ internal sealed partial class TunerForm : Form
         if (instrument == InstrumentKind.Piano && targetMidi < 0) UpdateGuide();
         _meter.SetReading(cents);
         _keyboard.SelectNote(resolved); _keyboard.SetReading(cents, tolerance);
-        if (announce) Announce(announcement);
-        if (announce && _activeMethod == TuningMethod.HybridSpeakers && _microphone is not null)
-        {
-            _acceptAudio = false;
-            _practice.Result(DateTime.UtcNow, (int)_hybridPause.Value);
-        }
+        if (announce) ReadResult(announcement, Math.Abs(cents) <= tolerance ? resolved : -1, note.Frequency, tolerance);
     }
     private void ResetResult()
     {
+        _resultSpeechEpoch++; _waitingForResultSpeech = false;
         Interlocked.Increment(ref _measurementGeneration);
         _lowerIntervalFrequency = null;
         UpdateIntervalHelp();

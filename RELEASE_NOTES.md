@@ -1,73 +1,61 @@
-# Stroik 1.20
+# Stroik 1.21
 
 ## Polski
 
-Stroik 1.20
+Stroik 1.21
 
-- Dodano niemiecki, rosyjski, francuski i hiszpański obok polskiego i angielskiego: interfejs, komunikaty, nuty, wskazówki, profile i instrukcje.
-- Kamerton ma wyraźniejsze harmoniczne w najniższym rejestrze bez zmiany oktawy. Małe głośniki nadal mogą ograniczać bas.
-- W metodzie Kamerton pole dwóch stuknięć samodzielnie steruje mikrofonem; ukryto osobne przyciski mikrofonu. Rozruch wymaga krótkiej ciszy, aby nie liczyć go jako uderzenia. Automat pozostawia czas na gest.
-- Hybryda dla początkujących czeka na odczyt wskazówek NVDA/SAPI. Inny czytnik otrzymuje dostępne okno z przyciskiem rozpoczęcia po wskazówkach. Klasyczny widok rozpoczyna od razu. Dodano przerwę po wyniku 3–60 sekund, domyślnie 8; NVDA 2026.3+ i SAPI blokują wzorzec podczas mowy.
-- Krótsze odczyty w widoku klasycznym: fortepian, lista nut bez opisów położenia, automat bez dodatkowej instrukcji. Liczby są pojedynczymi polami edycji z obsługą strzałek i wpisu przecinkiem/kropką, bez roli pokrętła.
-- Góra/dół wybierają białe klawisze, lewo/prawo wyłącznie czarne. Następny/poprzedni według planu nadal obejmuje jego wszystkie nuty.
-- Dodano opisy zastosowania czterech metod oraz dostępne z klawiatury wskazówki instrumentu w widoku początkującym; F1 otwiera je także na żądanie.
+- A kontra otrzymało takie samo wsparcie harmonicznych jak niższe nuty. Obie platformy używają tej samej barwy bez zmiany oktawy. Słyszalność basu nadal zależy od głośników.
+- Klasyczna hybryda uruchamia kamerton od razu, bez samouczka. W widoku dla początkujących najpierw czytane są wskazówki. Działanie Windows zachowano i dodano je w Androidzie.
+- Przerwa po wyniku wynosi 0–60 sekund, także 1 lub 2. Zero oznacza powrót wzorca od razu po zakończeniu mowy i jest nowym ustawieniem domyślnym. Zapisane przerwy Windows są zachowane. Android ma tę samą regulację z suwakiem i wpisem liczby.
+- Najpierw cały wynik, potem kamerton i możliwość przejścia. W hybrydzie przejście wymaga dobrego wyniku oraz dwóch uderzeń o potwierdzonej wysokości. W samym kamertonie nadal działa gest akustyczny.
+- Android: klasyczna lista bez opisów położenia klawiszy, opisy metod dla początkujących oraz czarne klawisze strzałkami lewo/prawo. Wyniki i samouczek czyta syntezator aplikacji także przy TalkBack, aby znać koniec mowy; TalkBack nadal obsługuje nawigację.
 
 ## English
 
-Stroik 1.20
+Stroik 1.21
 
-- Added German, Russian, French and Spanish alongside Polish and English: interface, messages, notes, guidance, profiles and guides.
-- Stronger upper partials support the lowest fork register without transposing it. Small speakers can still limit bass.
-- In Fork, the two-strike checkbox owns microphone capture; separate microphone buttons are hidden. Startup requires a brief quiet period so it cannot count as an attack. Automatic playback leaves time for the gesture.
-- Beginner hybrid waits for NVDA/SAPI guidance. Other readers get an accessible Start-after-guidance dialog. Classic starts immediately. The new result pause is 3–60 seconds, default 8; NVDA 2026.3+ and SAPI hold the reference while speaking.
-- Shorter Classic feedback: Piano, note lists without positions, automatic checkbox without extra manual-mode text. Numbers use a single editable text control with arrow keys and comma/dot entry, without a spin-button role.
-- Up/Down select white keys; Left/Right select only black keys. Planned Next/Previous still visits all notes in the selected plan.
-- Added purpose descriptions for all four methods and keyboard-accessible instrument guidance in Beginner; F1 also opens it on demand.
+- Contra A now has the same harmonic support as lower notes. Both platforms use matching timbres without octave transposition. Bass audibility still depends on speakers.
+- Classic hybrid starts its reference immediately without a tutorial. Beginner view reads guidance first. The existing Windows behavior is retained and has been added to Android.
+- The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
+- The whole result finishes before the reference and navigation are released. Hybrid advance requires an in-tune result and two pitch-confirmed attacks. Fork-only mode keeps its acoustic gesture.
+- Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
 
 ## Deutsch
 
-Stroik 1.20
+Stroik 1.21
 
-- Deutsch, Russisch, Französisch und Spanisch ergänzen Polnisch und Englisch: Oberfläche, Meldungen, Töne, Hinweise, Profile und Anleitungen.
-- Stärkere Obertöne unterstützen den tiefsten Stimmgabelbereich ohne Oktavverschiebung. Kleine Lautsprecher bleiben begrenzt.
-- Bei Stimmgabelbetrieb steuert das Doppelanschlag-Kontrollkästchen das Mikrofon. Separate Mikrofonknöpfe sind ausgeblendet; eine anfängliche Ruhephase verhindert falsche Gesten. Die Automatik lässt Zeit für Anschläge.
-- Der Anfänger-Hybrid wartet auf NVDA/SAPI-Hinweise, andere Leser erhalten einen zugänglichen Startknopf. Klassisch startet sofort. Neue Ergebnispause: 3–60 Sekunden, Standard 8. NVDA 2026.3+ und SAPI halten die Referenz während der Sprache an.
-- Kürzere klassische Rückmeldungen; Tonliste ohne Positionen, Automatik ohne Zusatztext. Zahlen sind einzelne Textfelder mit Pfeiltasten und Punkt/Komma, ohne Drehfeldrolle.
-- Auf/Ab wählt weiße, Links/Rechts nur schwarze Tasten. Die geplante Navigation behält alle Töne bei.
-- Erklärungen aller vier Methoden und mit Tastatur zugängliche Instrumenthinweise; F1 öffnet sie auf Wunsch.
+- Kontra-A erhält dieselbe Obertonstütze wie tiefere Töne. Beide Plattformen verwenden dieselbe Klangfarbe ohne Oktavverschiebung. Die Basswiedergabe hängt vom Lautsprecher ab.
+- Der klassische Hybrid startet sofort ohne Anleitung. Für Anfänger werden zuerst Hinweise gelesen. Das Windows-Verhalten bleibt erhalten und wurde für Android ergänzt.
+- Die Ergebnispause erlaubt 0–60 Sekunden, auch 1 und 2. Bei 0 beginnt die Referenz sofort nach dem tatsächlichen Sprachende. Neuer Standard ist 0; gespeicherte Windows-Pausen bleiben erhalten. Android bietet Schieberegler und Zahleneingabe.
+- Erst wird das gesamte Ergebnis gesprochen, dann werden Referenz und Weiterschaltung freigegeben. Der Hybrid verlangt einen korrekt gestimmten Ton und zwei höhenbestätigte Anschläge. Die reine Stimmgabel behält ihre akustische Geste.
+- Android zeigt klassisch keine Tastenpositionen mehr. Methodenhinweise für Anfänger und schwarze Tasten mit Links/Rechts wurden ergänzt. Ergebnisse und Anleitung spricht die App auch mit TalkBack selbst; TalkBack steuert weiter die Navigation.
 
 ## Русский
 
-Stroik 1.20
+Stroik 1.21
 
-- Добавлены немецкий, русский, французский и испанский наряду с польским и английским: интерфейс, сообщения, ноты, советы, профили и руководства.
-- Обертоны усиливают самый низкий регистр камертона без переноса октавы. Маленькие динамики всё ещё ограничивают бас.
-- В режиме камертона флажок двойного удара управляет микрофоном; отдельные кнопки скрыты. Начальная пауза тишины исключает ложный удар при запуске. Автомат оставляет время для жеста.
-- Гибрид для начинающих ждёт советов NVDA/SAPI; другие дикторы получают доступную кнопку запуска. Классический вид запускается сразу. Новая пауза после результата: 3–60 секунд, по умолчанию 8; NVDA 2026.3+ и SAPI задерживают эталон во время речи.
-- Классический вид стал кратким: список нот без расположения, автомат без лишнего текста. Числа вводятся в одиночные текстовые поля со стрелками, точкой или запятой, без роли счётчика.
-- Вверх/вниз выбирают белые клавиши, влево/вправо — только чёрные. Переход по плану сохраняет все его ноты.
-- Описаны четыре метода; советы по инструменту доступны с клавиатуры и по F1.
+- Ля контроктавы получает ту же поддержку обертонов, что и более низкие ноты. Обе платформы используют одинаковый тембр без переноса октавы. Слышимость баса зависит от динамиков.
+- Классический гибрид запускается сразу без учебных подсказок. Для начинающих сначала читаются подсказки. Поведение Windows сохранено и добавлено в Android.
+- Пауза после результата теперь 0–60 секунд, включая 1 и 2. При 0 эталон включается сразу после фактического окончания речи. Новый стандарт — 0; сохранённые паузы Windows не сбрасываются. В Android добавлены ползунок и ввод числа.
+- Результат произносится полностью до повторного эталона и разрешения перехода. В гибриде нужны верный результат и два удара с подтверждённой высотой. В режиме камертона сохранён акустический жест.
+- В классическом списке Android убраны положения клавиш. Добавлены описания методов для начинающих и выбор чёрных клавиш влево/вправо. Результаты и подсказки читает синтезатор приложения даже с TalkBack, чтобы отслеживать конец речи; TalkBack управляет навигацией.
 
 ## Français
 
-Stroik 1.20
+Stroik 1.21
 
-- Ajout de l’allemand, du russe, du français et de l’espagnol au polonais et à l’anglais : interface, messages, notes, conseils, profils et guides.
-- Des harmoniques renforcent le registre le plus grave du diapason sans changer d’octave. Les petits haut-parleurs restent limités.
-- En mode diapason, la case des deux frappes commande le microphone ; les boutons séparés sont masqués. Un silence initial évite une fausse frappe au démarrage. L’automatisme laisse du temps pour le geste.
-- L’hybride débutant attend les conseils NVDA/SAPI ; les autres lecteurs disposent d’un bouton de démarrage accessible. La vue classique démarre immédiatement. Nouvelle pause après résultat : 3–60 secondes, 8 par défaut ; NVDA 2026.3+ et SAPI retardent la référence pendant la parole.
-- Retour classique plus court : notes sans positions, automatisme sans texte superflu. Les nombres utilisent un champ texte unique avec flèches, point ou virgule, sans rôle de bouton rotatif.
-- Haut/bas choisissent les touches blanches, gauche/droite uniquement les noires. La navigation planifiée conserve toutes ses notes.
-- Explications des quatre méthodes et conseils instrumentaux accessibles au clavier et par F1.
+- Le la de contre-octave reçoit le même soutien harmonique que les notes inférieures. Les deux plateformes utilisent le même timbre sans transposition. L’audibilité du grave dépend des haut-parleurs.
+- L’hybride classique démarre immédiatement sans tutoriel. En vue débutant, les conseils sont lus avant la référence. Le comportement Windows est conservé et ajouté à Android.
+- La pause après résultat accepte 0–60 secondes, dont 1 et 2. À 0, la référence reprend dès la fin réelle de la parole. Nouvelle valeur par défaut : 0 ; les pauses Windows enregistrées sont conservées. Android propose un curseur et la saisie numérique.
+- Le résultat est lu intégralement avant la référence et l’autorisation du passage. En hybride, une note juste puis deux attaques de hauteur confirmée sont nécessaires. Le diapason seul conserve son geste acoustique.
+- Android masque les positions dans la liste classique. Ajout des descriptions des méthodes pour débutants et du choix des touches noires avec gauche/droite. La synthèse de l’application lit résultats et tutoriels même avec TalkBack pour connaître la fin de parole ; TalkBack gère la navigation.
 
 ## Español
 
-Stroik 1.20
+Stroik 1.21
 
-- Se añaden alemán, ruso, francés y español al polaco e inglés: interfaz, mensajes, notas, consejos, perfiles y guías.
-- Los armónicos refuerzan el registro más grave del diapasón sin cambiar de octava. Los altavoces pequeños siguen limitados.
-- En modo diapasón, la casilla de dos golpes controla el micrófono; se ocultan los botones separados. Un silencio inicial evita falsos golpes al arrancar. El automático deja tiempo para el gesto.
-- El híbrido para principiantes espera a los consejos de NVDA/SAPI; otros lectores disponen de un botón de inicio accesible. La vista clásica empieza de inmediato. Nueva pausa tras resultado: 3–60 segundos, 8 por defecto; NVDA 2026.3+ y SAPI retrasan la referencia durante la voz.
-- Información clásica más breve: notas sin posiciones y automático sin texto extra. Los números usan un campo de texto único con flechas, punto o coma, sin función de control giratorio.
-- Arriba/abajo eligen teclas blancas e izquierda/derecha solo negras. La navegación del plan mantiene todas sus notas.
-- Explicaciones de los cuatro métodos y consejos del instrumento accesibles por teclado y F1.
+- El la de la contraoctava recibe el mismo apoyo armónico que las notas inferiores. Ambas plataformas usan el mismo timbre sin transposición. La audibilidad del grave depende de los altavoces.
+- El híbrido clásico empieza inmediatamente sin tutorial. La vista para principiantes lee primero las indicaciones. Se conserva el comportamiento de Windows y se añade a Android.
+- La pausa tras el resultado admite 0–60 segundos, incluidos 1 y 2. Con 0, la referencia se reanuda al terminar realmente la voz. El nuevo valor predeterminado es 0; se conservan las pausas guardadas de Windows. Android ofrece deslizador y entrada numérica.
+- El resultado se lee completo antes de la referencia y de permitir avanzar. El híbrido exige un resultado afinado y dos ataques con altura confirmada. El diapasón solo conserva su gesto acústico.
+- Android oculta posiciones en la lista clásica. Se añaden descripciones de métodos para principiantes y selección de teclas negras con izquierda/derecha. La síntesis de la aplicación lee resultados y tutoriales incluso con TalkBack para conocer el final de la voz; TalkBack gestiona la navegación.

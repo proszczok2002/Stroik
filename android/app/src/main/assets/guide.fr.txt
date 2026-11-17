@@ -1,3 +1,11 @@
+Stroik Android 1.09
+
+- Le la de contre-octave reçoit le même soutien harmonique que les notes inférieures. Les deux plateformes utilisent le même timbre sans transposition. L’audibilité du grave dépend des haut-parleurs.
+- L’hybride classique démarre immédiatement sans tutoriel. En vue débutant, les conseils sont lus avant la référence. Le comportement Windows est conservé et ajouté à Android.
+- La pause après résultat accepte 0–60 secondes, dont 1 et 2. À 0, la référence reprend dès la fin réelle de la parole. Nouvelle valeur par défaut : 0 ; les pauses Windows enregistrées sont conservées. Android propose un curseur et la saisie numérique.
+- Le résultat est lu intégralement avant la référence et l’autorisation du passage. En hybride, une note juste puis deux attaques de hauteur confirmée sont nécessaires. Le diapason seul conserve son geste acoustique.
+- Android masque les positions dans la liste classique. Ajout des descriptions des méthodes pour débutants et du choix des touches noires avec gauche/droite. La synthèse de l’application lit résultats et tutoriels même avec TalkBack pour connaître la fin de parole ; TalkBack gère la navigation.
+
  Stroik Android 1.08 — Guide
 
 Accordeur Android accessible aux musiciens aveugles, malvoyants et voyants.

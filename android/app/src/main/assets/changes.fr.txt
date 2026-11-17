@@ -1,3 +1,7 @@
-Stroik Android 1.08
+Stroik Android 1.09
 
-Ajout de l’allemand, du russe, du français et de l’espagnol au polonais et à l’anglais. Interface, messages vocaux, notes, octaves, positions des touches, guide et modifications sont traduits. La langue est conservée dans les réglages et profils JSON ; les anciens profils PL/EN restent compatibles. La voix de l’application utilise la langue choisie ; sa voix Android doit être installée. Les notes de version acceptent six langues et les anciens manifestes. Les mises à jour demandent toujours la confirmation système Android.
+- Le la de contre-octave reçoit le même soutien harmonique que les notes inférieures. Les deux plateformes utilisent le même timbre sans transposition. L’audibilité du grave dépend des haut-parleurs.
+- L’hybride classique démarre immédiatement sans tutoriel. En vue débutant, les conseils sont lus avant la référence. Le comportement Windows est conservé et ajouté à Android.
+- La pause après résultat accepte 0–60 secondes, dont 1 et 2. À 0, la référence reprend dès la fin réelle de la parole. Nouvelle valeur par défaut : 0 ; les pauses Windows enregistrées sont conservées. Android propose un curseur et la saisie numérique.
+- Le résultat est lu intégralement avant la référence et l’autorisation du passage. En hybride, une note juste puis deux attaques de hauteur confirmée sont nécessaires. Le diapason seul conserve son geste acoustique.
+- Android masque les positions dans la liste classique. Ajout des descriptions des méthodes pour débutants et du choix des touches noires avec gauche/droite. La synthèse de l’application lit résultats et tutoriels même avec TalkBack pour connaître la fin de parole ; TalkBack gère la navigation.

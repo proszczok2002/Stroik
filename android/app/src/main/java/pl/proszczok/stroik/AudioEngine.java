@@ -33,6 +33,9 @@ public final class AudioEngine implements AutoCloseable {
   private volatile long muteUntil, repeatAt;
   private volatile boolean speechPending;
   private volatile boolean strikeAfterSpeech;
+  private volatile boolean resultSpeech;
+  private volatile double navigationAfterSpeech;
+  private volatile double navigationTolerance;
   private volatile int generation;
   private final AtomicInteger playbackEpoch = new AtomicInteger();
   private int rate = 48000;
@@ -55,22 +58,32 @@ public final class AudioEngine implements AutoCloseable {
   }
 
   public void holdForSpeech() {
+    holdForSpeech(false);
+  }
+
+  public void holdForSpeech(boolean result) {
+    resultSpeech = result;
     speechPending = true;
-    if (config.method == 2 && running) {
+    if (config.method >= 2 && running) {
       strikeAfterSpeech = true;
       stopFork();
     }
   }
 
   public void speechFinished() {
-    // Leave a small tail after the synthesizer's actual completion callback.
-    muteUntil = Math.max(muteUntil, SystemClock.elapsedRealtime() + 300);
+    long now = SystemClock.elapsedRealtime();
+    muteUntil = now + 200;
+    speechPending = false;
     if (strikeAfterSpeech) {
       strikeAfterSpeech = false;
-      if (!paused && running && config.method == 2) repeatAt = SystemClock.elapsedRealtime() + 300;
+      if (!paused && running && config.method == 2) {
+        int pause = resultSpeech ? config.hybridPause : 0;
+        if (pause == 0) strike();
+        else repeatAt = now + pause * 1000L;
+      }
       else if (!paused && config.method != 1) ui.post(this::strike);
     }
-    speechPending = false;
+    resultSpeech = false;
   }
 
   public void configure(Model m) {
@@ -91,7 +104,7 @@ public final class AudioEngine implements AutoCloseable {
             || previous.instrument != m.instrument
             || previous.swapped != m.swapped;
     config = m.copy();
-    if (measurementChanged) generation++;
+    if (measurementChanged) { generation++; navigationAfterSpeech = 0; }
     // Preserve the reference-decay guard when only appearance/voice/update options change.
     if (referenceChanged && m.method != 1 && (m.method == 0 || running)) strike();
     else if (referenceChanged && m.method == 1) stopFork();
@@ -147,9 +160,10 @@ public final class AudioEngine implements AutoCloseable {
       throw error;
     }
     running = true;
+    if (config.method >= 2 && config.beginner) holdForSpeech();
     worker = new Thread(this::capture, "Stroik microphone");
     worker.start();
-    if (config.method == 2 || config.method == 3) strike();
+    if (config.method >= 2 && !config.beginner) strike();
   }
 
   private AudioRecord createRecord(int source, int min) {
@@ -243,7 +257,11 @@ public final class AudioEngine implements AutoCloseable {
     double rms = Dsp.rms(frame, n),
         threshold = new double[] {.004, .008, .016}[m.sensitivity],
         frequency = 0;
-    if (m.forkTap && m.method != 1 && state.taps.observe(rms, threshold, now, m.gap)) {
+    if (navigationAfterSpeech > 0) {
+      state.confirmed.arm(navigationAfterSpeech, navigationTolerance, now);
+      navigationAfterSpeech = 0;
+    }
+    if (m.forkTap && m.method == 0 && state.taps.observe(rms, threshold, now, m.gap)) {
       muteUntil = now + 2000;
       post(state.g, listener::advance);
       return;
@@ -282,7 +300,6 @@ public final class AudioEngine implements AutoCloseable {
               m, Dsp.compare(v[0] * correction, v[1] * correction, m.interval), true, state.g);
         }
         muteUntil = now + 4000;
-        if (m.method == 2) repeatAt = now + 5000;
       }
       return;
     }
@@ -305,8 +322,7 @@ public final class AudioEngine implements AutoCloseable {
       post(state.g, () -> listener.reading(cents));
     }
     if (m.method == 0) return;
-    if (m.method == 1
-        && m.advance
+    if ((m.method == 1 ? m.advance : m.method >= 2 && m.forkTap)
         && m.interval == 0
         && state.confirmed.observe(rms, threshold, frequency, now, m.gap)) {
       muteUntil = now + 2000;
@@ -347,7 +363,6 @@ public final class AudioEngine implements AutoCloseable {
         reportInterval(m, Dsp.compare(state.storedLower, done, m.interval), false, state.g);
         state.storedLower = 0;
         muteUntil = now + 4000;
-        if (m.method == 2) repeatAt = now + 5000;
       }
       return;
     }
@@ -365,15 +380,13 @@ public final class AudioEngine implements AutoCloseable {
             + ", "
             + String.format(m.locale(), "%+.1f Hz; %+.1f ", done - expected, cents)
             + m.t("centów.", "cents.");
-    post(messageGeneration, () -> listener.result(text));
-    muteUntil = now + 1800;
-    if (m.method == 2) repeatAt = now + 5000;
+    if (Math.abs(cents) <= m.tolerance && (m.method == 1 ? m.advance : m.forkTap)) {
+      navigationTolerance = m.tolerance;
+      navigationAfterSpeech = expected;
+    } else navigationAfterSpeech = 0;
+    deliverResult(text, messageGeneration);
     if (Math.abs(cents) > m.tolerance) {
       state.confirmed.reset();
-      state.taps.reset();
-    }
-    if (m.method == 1 && m.advance && Math.abs(cents) <= m.tolerance) {
-      state.confirmed.arm(expected, m.tolerance, now);
       state.taps.reset();
     }
   }
@@ -392,7 +405,16 @@ public final class AudioEngine implements AutoCloseable {
                         + " second."),
                 v[2],
                 v[3]);
-    post(g, () -> listener.result(text));
+    deliverResult(text, g);
+  }
+
+  private void deliverResult(String text, int g) {
+    holdForSpeech(true);
+    ui.post(() -> {
+      if (closed) return;
+      if (g == generation) listener.result(text);
+      else speechFinished();
+    });
   }
 
   public void strike() {
@@ -402,7 +424,6 @@ public final class AudioEngine implements AutoCloseable {
       return;
     }
     Model m = config;
-    generation++;
     repeatAt = 0;
     int base = m.base();
     if (m.interval != 0 && base + m.semitones() > 108) {
@@ -528,6 +549,8 @@ public final class AudioEngine implements AutoCloseable {
     repeatAt = 0;
     speechPending = false;
     strikeAfterSpeech = false;
+    resultSpeech = false;
+    navigationAfterSpeech = 0;
     if (recorder != null) {
       try {
         recorder.stop();

@@ -304,5 +304,6 @@
   "Play one note": "Сыграйте одну ноту",
   "No release notes are available for this version.": "Описание изменений этой версии недоступно.",
   "Third-party licenses": "Лицензии компонентов",
-  "Ukulele": "Укулеле"
+  "Ukulele": "Укулеле",
+  "Hybrid pause after spoken result, seconds (0–60):": "Пауза после озвученного результата в гибриде, секунды (0–60):"
 }

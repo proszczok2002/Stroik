@@ -16,8 +16,10 @@ final class TuningSession implements AudioEngine.Listener {
   Model model = new Model();
   String lastResult = "";
   boolean serviceActive, ready;
+  private boolean speechInitialized;
   private final TextToSpeech speech;
   private String pendingSpeech = "";
+  private boolean pendingResultSpeech;
   private final Handler main = new Handler(Looper.getMainLooper());
   private int speechEpoch;
   private String utterance = "";
@@ -38,9 +40,10 @@ final class TuningSession implements AudioEngine.Listener {
         new TextToSpeech(
             context,
             status -> {
+              speechInitialized = true;
               ready = status == TextToSpeech.SUCCESS;
-              if (ready && !pendingSpeech.isEmpty()) speak(pendingSpeech);
-              else if (!ready) audio.speechFinished();
+              if (ready && !pendingSpeech.isEmpty()) speak(pendingSpeech, pendingResultSpeech);
+              else if (!ready) { pendingSpeech = ""; audio.speechFinished(); }
             });
     speech.setOnUtteranceProgressListener(
         new UtteranceProgressListener() {
@@ -79,9 +82,17 @@ final class TuningSession implements AudioEngine.Listener {
   }
 
   void speak(String value) {
+    speak(value, false);
+  }
+
+  private void speak(String value, boolean isResult) {
     pendingSpeech = value;
-    audio.holdForSpeech();
-    if (!ready) return;
+    pendingResultSpeech = isResult;
+    audio.holdForSpeech(isResult);
+    if (!ready) {
+      if (speechInitialized) { pendingSpeech = ""; audio.speechFinished(); }
+      return;
+    }
     speech.setLanguage(model.locale());
     speech.setSpeechRate((float) model.speechRate);
     utterance = "stroik-" + (++speechEpoch);
@@ -110,6 +121,16 @@ final class TuningSession implements AudioEngine.Listener {
     } catch (RuntimeException error) {
       serviceActive = false;
       throw error;
+    }
+  }
+
+  void captureStarted() {
+    if (model.method >= 2 && model.beginner) {
+      int epoch = speechEpoch;
+      main.postDelayed(() -> {
+        if (serviceActive && audio.running() && epoch == speechEpoch)
+          speak(model.methodGuidance() + "\n\n" + model.beginnerGuidance());
+      }, 300);
     }
   }
 
@@ -163,8 +184,11 @@ final class TuningSession implements AudioEngine.Listener {
   public void result(String text) {
     lastResult = text;
     MainActivity activity = screen.get();
-    if (activity != null && activity.active && !screenOff()) activity.result(text);
-    else if (screenOff() || !model.graphics || model.voiceInVisual) speak(text);
+    if (activity != null && activity.active && !screenOff()) activity.displayResult(text);
+    // TalkBack announcements have no completion callback. Use the app's TTS
+    // for measurement speech so playback and navigation wait for the real end.
+    if (screenOff() || !model.graphics || model.voiceInVisual) speak(text, true);
+    else audio.speechFinished();
   }
 
   public void reading(double cents) {
