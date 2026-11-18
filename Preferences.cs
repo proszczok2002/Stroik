@@ -38,6 +38,10 @@ internal sealed class Preferences
     public bool MicrophoneMonitor { get; set; }
     public int StrikeIntervalSeconds { get; set; } = 3;
     public int HybridPauseSeconds { get; set; }
+    public int ForkVolume { get; set; } = 100;
+    public int MonitorVolume { get; set; } = 100;
+    public InstrumentMap? InstrumentMap { get; set; }
+    public ForkCalibration? ForkCalibration { get; set; }
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private static string FilePath => Path.Combine(
@@ -60,6 +64,9 @@ internal sealed class Preferences
 
     internal void Validate()
     {
+        InstrumentMap?.Validate();
+        ForkCalibration?.Validate();
+        if (ForkVolume is < 0 or > 100 || MonitorVolume is < 0 or > 100) throw new InvalidDataException("Invalid volume");
         if ((!string.IsNullOrEmpty(Language) && !UiLanguages.Codes.Contains(Language)) || ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) || !Enum.IsDefined(UkuleleTuning) || !Enum.IsDefined(PianoOrder) || !Enum.IsDefined(Consonance) || UpdateMinutes is < 1 or > 1440 ||
             PlanAnchorMidi is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi ||
             MicrophoneCorrectionCents is < -100 or > 100 ||

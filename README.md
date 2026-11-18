@@ -1,14 +1,19 @@
-# Stroik 1.21
+# Stroik 1.22
+
+- W hybrydzie głośnikowej włącz opcję dwóch stuknięć. Po komunikacie o dobrym stroju kamerton pozostawia ciche okno na dwa krótkie stuknięcia. Nie trzeba dwukrotnie zagrać czystej nuty. Bez gestu kamerton powtarza ten sam wzorzec. Po złym wyniku obowiązuje ustawiona przerwa od 0 do 60 sekund.
+- Dla pianin powojennych A4 = 440 Hz to zwykły punkt odniesienia. Przedwojenne instrumenty mogły być przewidziane do niższego stroju. Przed podnoszeniem stroju starego pianina warto uzyskać ocenę technika.
+- W zakładce **Mapowanie instrumentu** wybierz oktawę, nutę i od 1 do 10 uderzeń. Kliknij **Rozpocznij mapowanie**, po każdym uderzeniu pozwól nucie ucichnąć i poczekaj na komunikat. Stroik przypisuje średnią częstotliwość w hercach do wybranej nuty. Po zebraniu całej serii wynik jest zapamiętany. Przejdź do następnej nuty listą, przyciskiem albo dwoma stuknięciami. **Zakończ mapowanie** zatrzymuje mikrofon. **Zapisz plik mapingu** (Ctrl+S) zapisuje JSON. **Użyj mapy do strojenia** włącza ją dla miernika i kamertonu. Nuty spoza mapy korzystają ze zwykłego stroju. Ten sam plik otworzysz na obu systemach.
+- **Stroik-Kalibrator.exe** ma jedną listę 88 nut. Suwaki zapisują harmoniczne (0–200% wartości Stroika) i głośność (0–150%) oddzielnie dla każdej nuty. 100% to punkt wyjścia, a 0% harmonicznych daje czysty ton. Alt+U odtwarza nutę, Ctrl+S zapisuje JSON. W Stroiku na obu systemach wybierz **Ustawienia → Wczytaj kalibrację kamertonu**. Kalibracja zmienia barwę i poziom, a mapa instrumentu zmienia częstotliwości.
+- W ustawieniach są osobne suwaki głośności kamertonu i odsłuchu z mikrofonu. Na Windows odpowiadają im także osobne sesje aktywnych źródeł w mikserze systemowym. Obie aplikacje korzystają z domyślnego wyjścia audio. Odsłuch mikrofonu uruchamiaj w słuchawkach.
 
 - A kontra otrzymało takie samo wsparcie harmonicznych jak niższe nuty. Obie platformy używają tej samej barwy bez zmiany oktawy. Słyszalność basu nadal zależy od głośników.
 - Klasyczna hybryda uruchamia kamerton od razu, bez samouczka. W widoku dla początkujących najpierw czytane są wskazówki. Działanie Windows zachowano i dodano je w Androidzie.
 - Przerwa po wyniku wynosi 0–60 sekund, także 1 lub 2. Zero oznacza powrót wzorca od razu po zakończeniu mowy i jest nowym ustawieniem domyślnym. Zapisane przerwy Windows są zachowane. Android ma tę samą regulację z suwakiem i wpisem liczby.
-- Najpierw cały wynik, potem kamerton i możliwość przejścia. W hybrydzie przejście wymaga dobrego wyniku oraz dwóch uderzeń o potwierdzonej wysokości. W samym kamertonie nadal działa gest akustyczny.
 - Android: klasyczna lista bez opisów położenia klawiszy, opisy metod dla początkujących oraz czarne klawisze strzałkami lewo/prawo. Wyniki i samouczek czyta syntezator aplikacji także przy TalkBack, aby znać koniec mowy; TalkBack nadal obsługuje nawigację.
 
-Aktualne zmiany Windows 1.21 opisano poniżej; starsze sekcje wersji są historyczne.
+Aktualne zmiany Windows 1.22 opisano poniżej; starsze sekcje wersji są historyczne.
 
-[Natywna wersja Android 1.09](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.09) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
+[Natywna wersja Android 1.10](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.10) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
 **Dostępny stroiciel dla Windows x64, zaprojektowany z myślą o osobach niewidomych i słabowidzących.** Oferuje strojenie z mikrofonem lub dźwięk kamertonu, obsługę klawiaturą, komunikaty dla czytników ekranu oraz interfejs w językach PL, EN, DE, RU, FR i ES.
 
@@ -32,7 +37,7 @@ Lista metod zawiera również **Hybrydowy — głośniki (naprzemiennie)** oraz 
 
 W wariancie słuchawkowym mikrofon działa równocześnie z kamertonem. **Odsłuch mikrofonu w słuchawkach** jest opcjonalny, domyślnie wyłączony. Najpierw załóż słuchawki: odtwarzanie mikrofonu przez głośniki może spowodować sprzężenie. Odsłuch korzysta z domyślnych urządzeń Windows, nie zmienia ustawień systemowych; opóźnienie zależy od sprzętu i sterowników.
 
-Pole **Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną kolejnością** działa przy kamertonie i hybrydzie. W metodzie Kamerton pole samodzielnie włącza i wyłącza mikrofon; osobne przyciski mikrofonu są ukryte. Zapisany nasłuch rozpoczyna się także po ponownym otwarciu okna. Przy hybrydzie rozpocznij przyciskiem mikrofonu. Dwa oddzielne ataki w ustawionym czasie wybierają następny cel według planu i odtwarzają jego wzorzec. W samym kamertonie to gest akustyczny: dwa przypadkowe hałasy też mogą go wywołać. W hybrydzie najpierw musi zostać odczytany dobry wynik, a oba uderzenia wymagają właściwej wysokości. Po własnym tonie kamertonu nasłuch czeka na wybrzmienie. Przy automatycznych uderzeniach i tym polu odstęp wynosi co najmniej 6,5 sekundy, żeby pozostawić czas na gest. **Ctrl+N** pozostaje dostępną metodą ręczną.
+Pole **Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną kolejnością** działa przy kamertonie i hybrydzie. W metodzie Kamerton pole samodzielnie włącza i wyłącza mikrofon; osobne przyciski mikrofonu są ukryte. Zapisany nasłuch rozpoczyna się także po ponownym otwarciu okna. Przy hybrydzie rozpocznij przyciskiem mikrofonu. Dwa oddzielne ataki w ustawionym czasie wybierają następny cel według planu i odtwarzają jego wzorzec. W samym kamertonie to gest akustyczny: dwa przypadkowe hałasy też mogą go wywołać. W hybrydzie głośnikowej po odczytaniu dobrego wyniku jest ciche okno na dwa stuknięcia. W hybrydzie słuchawkowej oba uderzenia muszą mieć właściwą wysokość. Po własnym tonie kamertonu nasłuch czeka na wybrzmienie. Przy automatycznych uderzeniach i tym polu odstęp wynosi co najmniej 6,5 sekundy, żeby pozostawić czas na gest. **Ctrl+N** pozostaje dostępną metodą ręczną.
 
 ### Kwinty i oktawy
 

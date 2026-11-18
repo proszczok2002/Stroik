@@ -1,14 +1,19 @@
-# Stroik 1.21
+# Stroik 1.22
+
+- In speaker hybrid, enable the two-tap checkbox. After an in-tune announcement, the reference stays silent while you tap twice. The taps can be unpitched. With no gesture, the reference repeats the same note. A detuned reading uses the configured 0–60 second pause.
+- A4 = 440 Hz is the usual reference for postwar pianos. Prewar instruments may have been built for lower pitch. Have a technician assess an old piano before raising its pitch.
+- In **Instrument mapping**, choose octave, note and 1–10 strikes. Select **Start mapping**, let each strike decay and wait for its announcement. Stroik assigns the average frequency in hertz to the selected note. A complete series is stored automatically. Pick the next note in the list, use the button, or tap twice after saving the reading. **Finish mapping** stops capture. **Save mapping file** (Ctrl+S) exports JSON. **Use map for tuning** makes the readings the targets for the tuner and fork. Unmapped notes use standard tuning. Both platforms read the same file.
+- **Stroik-Kalibrator.exe** has one list of 88 notes. Set harmonics (0–200% of the Stroik baseline) and volume (0–150%) per note. 100% is the baseline and 0% harmonics yields a pure tone. Alt+U plays the selected note. Ctrl+S saves JSON. In Stroik, use **Settings → Open fork calibration** on either platform. Calibration affects timbre and level, while mapping sets pitch.
+- Settings provide separate fork and microphone-monitoring volume sliders. Windows also exposes separate mixer sessions for the active streams. Both apps use the default audio output. Use headphones for microphone monitoring.
 
 - Contra A now has the same harmonic support as lower notes. Both platforms use matching timbres without octave transposition. Bass audibility still depends on speakers.
 - Classic hybrid starts its reference immediately without a tutorial. Beginner view reads guidance first. The existing Windows behavior is retained and has been added to Android.
 - The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
-- The whole result finishes before the reference and navigation are released. Hybrid advance requires an in-tune result and two pitch-confirmed attacks. Fork-only mode keeps its acoustic gesture.
 - Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
 
-Current Windows 1.21 changes are described below; older version sections are historical.
+Current Windows 1.22 changes are described below; older version sections are historical.
 
-[Native Android 1.09](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.09) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
+[Native Android 1.10](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.10) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
 **An accessible Windows x64 instrument tuner for blind and visually impaired musicians.** It offers microphone based tuning or a synthesized tuning fork, keyboard controls, screen reader announcements, and interfaces in PL, EN, DE, RU, FR and ES.
 
@@ -32,7 +37,7 @@ Choose **Hybrid — speakers (alternating)** or **Hybrid — headphones**, then 
 
 The headphone variant listens while the tuning fork plays. Optional **Monitor microphone in headphones** is off by default. Put headphones on first: routing the microphone through speakers can cause feedback. Monitoring uses the default Windows devices, changes no system settings and has hardware and driver dependent latency.
 
-**Two strikes advance to the next note in the selected order** works with the fork and hybrid methods. In Fork, this checkbox alone starts/stops the microphone, including on reopening with the option saved. Separate microphone buttons are hidden. Start hybrids with the microphone button. Two distinct attacks within the selected time advance according to the tuning plan and play the new reference. Fork-only mode uses an acoustic gesture that incidental noises may trigger. Hybrid mode first completes an in-tune announcement and requires both attacks at the target pitch. Listening waits for the app's own fork tone to decay. Automatic fork strikes are at least 6.5 seconds apart with tap navigation enabled. **Ctrl+N** still advances manually.
+**Two strikes advance to the next note in the selected order** works with the fork and hybrid methods. In Fork, this checkbox alone starts/stops the microphone, including on reopening with the option saved. Separate microphone buttons are hidden. Start hybrids with the microphone button. Two distinct attacks within the selected time advance according to the tuning plan and play the new reference. Fork-only mode uses an acoustic gesture that incidental noises may trigger. Speaker hybrid leaves a quiet window for two taps after the in-tune announcement. Headphone hybrid requires pitch confirmation for both attacks. Listening waits for the app's own fork tone to decay. Automatic fork strikes are at least 6.5 seconds apart with tap navigation enabled. **Ctrl+N** still advances manually.
 
 ### Fifths and octaves
 

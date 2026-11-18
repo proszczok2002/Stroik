@@ -31,7 +31,7 @@ internal sealed partial class TunerForm
         int lower = _targetMidi < 0 ? InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind) : _targetMidi;
         int wanted = lower + (_lowerIntervalFrequency is null ? 0 : IntervalAnalysis.Semitones(_consonanceKind));
         if (wanted > NoteCatalog.HighestMidi) { Announce(T("Wybierz niższy cel.", "Choose a lower target.")); return; }
-        double expected = PitchDetector.NoteFromMidi(wanted, _reference).Frequency;
+        double expected = TargetFrequency(wanted, _reference);
         if (Math.Abs(1200 * Math.Log2(frequency / expected)) > 90)
         {
             ReadResult(Tf($"Nie ten dźwięk. Zagraj {NoteCatalog.Label(wanted, Locale)}.", $"Wrong note. Play {NoteCatalog.Label(wanted, Locale)}."));
@@ -61,7 +61,7 @@ internal sealed partial class TunerForm
         _lastPairAt = now;
         int lower = _targetMidi < 0 ? InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind) : _targetMidi;
         var reading = lower + IntervalAnalysis.Semitones(_consonanceKind) <= NoteCatalog.HighestMidi
-            ? IntervalAnalysis.Together(_pairWindow, _microphone?.SampleRate ?? 48000, PitchDetector.NoteFromMidi(lower, _reference).Frequency / _correctionFactor, _consonanceKind) : null;
+            ? IntervalAnalysis.Together(_pairWindow, _microphone?.SampleRate ?? 48000, TargetFrequency(lower, _reference) / _correctionFactor, _consonanceKind) : null;
         try
         {
             BeginInvoke((Action)(() =>

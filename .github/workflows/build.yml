@@ -29,4 +29,6 @@ jobs:
           path: |
             dist/Stroik.exe
             dist/Stroik.exe.sha256
+            dist/Stroik-Kalibrator.exe
+            dist/Stroik-Kalibrator.exe.sha256
             dist/Stroik-*-Windows-x64.zip

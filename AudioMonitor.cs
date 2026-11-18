@@ -2,64 +2,49 @@ using System.Runtime.InteropServices;
 
 namespace Stroik;
 
-// Optional headphone monitoring. Bounded queue; never changes Windows settings.
 internal sealed class AudioMonitor : IDisposable
 {
     private readonly object _sync = new();
-    private readonly List<(IntPtr Header, IntPtr Data)> _pending = [];
-    private IntPtr _device;
+    private WindowsAudioStream? _stream;
     private bool _disposed;
-    internal void Write(short[] samples, int rate)
+    private readonly string _label;
+
+    internal AudioMonitor(string label = "Stroik — microphone monitoring") => _label = label;
+
+    internal void Write(short[] samples, int rate, int volume = 100)
     {
         lock (_sync)
         {
             if (_disposed) return;
-            if (_device == IntPtr.Zero)
+            try
             {
-                var format = new Format { Tag = 1, Channels = 1, Rate = (uint)rate, Bytes = (uint)rate * 2, Align = 2, Bits = 16 };
-                Check(waveOutOpen(out _device, uint.MaxValue, ref format, IntPtr.Zero, IntPtr.Zero, 0));
+                _stream ??= new WindowsAudioStream(rate, WindowsAudioStream.Monitor, _label);
+                int count = Math.Min(samples.Length, _stream.Available);
+                if (count <= 0) return;
+                if (volume != 100)
+                {
+                    var scaled = new short[count];
+                    for (int i = 0; i < count; i++) scaled[i] = (short)(samples[i] * volume / 100);
+                    samples = scaled;
+                }
+                _stream.Write(samples, 0, count);
             }
-            for (int i = _pending.Count - 1; i >= 0; i--)
-                if ((Marshal.PtrToStructure<Header>(_pending[i].Header).Flags & 1) != 0) Free(i);
-            if (_pending.Count >= 4) return;
-            IntPtr data = Marshal.AllocHGlobal(samples.Length * 2);
-            IntPtr header = Marshal.AllocHGlobal(Marshal.SizeOf<Header>());
-            Marshal.Copy(samples, 0, data, samples.Length);
-            Marshal.StructureToPtr(new Header { Data = data, Length = (uint)samples.Length * 2 }, header, false);
-            _pending.Add((header, data));
-            Check(waveOutPrepareHeader(_device, header, (uint)Marshal.SizeOf<Header>()));
-            Check(waveOutWrite(_device, header, (uint)Marshal.SizeOf<Header>()));
+            catch (COMException error) when ((uint)error.HResult is 0x88890004 or 0x88890026)
+            {
+                // An endpoint changed while monitoring. Open the current default on the next frame.
+                _stream?.Dispose();
+                _stream = null;
+            }
         }
     }
-    private void Free(int i)
-    {
-        var item = _pending[i];
-        Check(waveOutUnprepareHeader(_device, item.Header, (uint)Marshal.SizeOf<Header>()));
-        Marshal.FreeHGlobal(item.Header); Marshal.FreeHGlobal(item.Data); _pending.RemoveAt(i);
-    }
+
     public void Dispose()
     {
         lock (_sync)
         {
             _disposed = true;
-            if (_device == IntPtr.Zero) return;
-            Check(waveOutReset(_device));
-            for (int i = _pending.Count - 1; i >= 0; i--) Free(i);
-            Check(waveOutClose(_device)); _device = IntPtr.Zero;
+            _stream?.Dispose();
+            _stream = null;
         }
     }
-    private static void Check(int result)
-    {
-        if (result != 0) throw new InvalidOperationException($"Odsłuch mikrofonu / Microphone monitor: Windows {result}");
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    private struct Format { public ushort Tag, Channels; public uint Rate, Bytes; public ushort Align, Bits, Extra; }
-    [StructLayout(LayoutKind.Sequential)]
-    private struct Header { public IntPtr Data; public uint Length, Recorded; public UIntPtr User; public uint Flags, Loops; public IntPtr Next; public UIntPtr Reserved; }
-    [DllImport("winmm.dll")] private static extern int waveOutOpen(out IntPtr device, uint id, ref Format format, IntPtr callback, IntPtr instance, uint flags);
-    [DllImport("winmm.dll")] private static extern int waveOutPrepareHeader(IntPtr device, IntPtr header, uint size);
-    [DllImport("winmm.dll")] private static extern int waveOutWrite(IntPtr device, IntPtr header, uint size);
-    [DllImport("winmm.dll")] private static extern int waveOutUnprepareHeader(IntPtr device, IntPtr header, uint size);
-    [DllImport("winmm.dll")] private static extern int waveOutReset(IntPtr device);
-    [DllImport("winmm.dll")] private static extern int waveOutClose(IntPtr device);
 }

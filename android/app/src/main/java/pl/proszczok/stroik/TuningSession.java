@@ -125,7 +125,7 @@ final class TuningSession implements AudioEngine.Listener {
   }
 
   void captureStarted() {
-    if (model.method >= 2 && model.beginner) {
+    if (!audio.mappingActive() && model.method >= 2 && model.beginner) {
       int epoch = speechEpoch;
       main.postDelayed(() -> {
         if (serviceActive && audio.running() && epoch == speechEpoch)
@@ -194,6 +194,17 @@ final class TuningSession implements AudioEngine.Listener {
   public void reading(double cents) {
     MainActivity activity = screen.get();
     if (activity != null && activity.active) activity.reading(cents);
+  }
+
+  public void mapped(int midi, int count, int needed, double average) {
+    MainActivity activity = screen.get();
+    if (activity != null && activity.active) activity.mapped(midi, count, needed, average);
+    else audio.speechFinished();
+  }
+
+  public void nextMapped() {
+    MainActivity activity = screen.get();
+    if (activity != null && activity.active) activity.nextMapped();
   }
 
   public void advance() {

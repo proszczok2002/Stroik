@@ -1,3 +1,11 @@
+Stroik Android 1.10
+
+- En hybride haut-parleurs, activez l’option des deux frappes. Après un résultat juste, la référence reste silencieuse pour le geste. Sans geste, elle répète la même note. Si la note est fausse, la pause configurée de 0–60 secondes s’applique.
+- La4 = 440 Hz est la référence habituelle des pianos d’après-guerre. Les instruments d’avant-guerre peuvent être conçus pour un diapason plus bas. Faites examiner un vieux piano avant de relever son diapason.
+- Dans Relevé de l’accord, choisissez octave, note et 1–10 frappes. Lancez le relevé. Laissez chaque note s’éteindre et attendez le message. La fréquence moyenne en hertz est associée à la note choisie. Passez à la suivante par liste, bouton ou deux frappes après l’enregistrement. Terminer arrête le micro. Ctrl+S exporte le JSON. Activez le relevé pour la mesure et la référence. Les notes absentes gardent l’accord standard. Le fichier est commun aux deux plateformes.
+- Le calibrateur Windows réunit 88 notes dans une liste, avec harmoniques 0–200 % et volume 0–150 % par note. 100 % correspond au réglage initial de Stroik. Alt+U joue, Ctrl+S exporte en JSON. Ouvrez ce fichier dans les paramètres Stroik sur les deux plateformes pour ajuster timbre et niveau.
+- Volumes séparés du diapason et du retour micro dans les paramètres. Windows présente aussi deux sessions actives dans le mixeur système. La sortie audio par défaut est utilisée. Écoutez le retour micro au casque.
+
 Stroik Android 1.09
 
 - Le la de contre-octave reçoit le même soutien harmonique que les notes inférieures. Les deux plateformes utilisent le même timbre sans transposition. L’audibilité du grave dépend des haut-parleurs.
@@ -48,4 +56,4 @@ Soutenir : https://paypal.me/proszczok · https://revolut.me/r_rosiejka
 
  Android / TalkBack
 
-Utilisez TalkBack pour naviguer. Les trois boutons de page occupent une ligne en bas. Les curseurs modifient les nombres ; un double appui ouvre la saisie numérique. Un seul bouton active ou désactive le microphone. Écran éteint, la synthèse système peut lire les résultats ; vitesse et maintien de l’écran se règlent dans les paramètres. La voix choisie doit être installée dans Android. Le mode hybride sur haut-parleurs attend sa propre synthèse vocale. Les mises à jour demandent toujours la confirmation d’installation Android ; aucune installation silencieuse.
+Utilisez TalkBack pour naviguer. Les quatre boutons de page occupent une ligne en bas. Les curseurs modifient les nombres ; un double appui ouvre la saisie numérique. Un seul bouton active ou désactive le microphone. Écran éteint, la synthèse système peut lire les résultats ; vitesse et maintien de l’écran se règlent dans les paramètres. La voix choisie doit être installée dans Android. Le mode hybride sur haut-parleurs attend sa propre synthèse vocale. Les mises à jour demandent toujours la confirmation d’installation Android ; aucune installation silencieuse.

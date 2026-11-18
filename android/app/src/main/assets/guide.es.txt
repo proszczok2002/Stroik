@@ -1,3 +1,11 @@
+Stroik Android 1.10
+
+- En el híbrido con altavoces, active la opción de dos golpes. Tras un resultado afinado, la referencia queda en silencio para el gesto. Sin gesto se repite la misma nota. Si está desafinada, se respeta la pausa elegida de 0–60 segundos.
+- La4 = 440 Hz es la referencia habitual para pianos de posguerra. Los de preguerra podían estar diseñados para un tono más bajo. Consulte a un técnico antes de subir el tono de un piano antiguo.
+- En Mapa del instrumento, elija octava, nota y 1–10 golpes. Inicie el mapa, deje apagar cada golpe y espere el mensaje. La frecuencia media en hercios se asigna a la nota elegida. Pase a la siguiente en la lista, con el botón o con dos golpes después de guardar. Finalizar detiene el micrófono. Ctrl+S guarda JSON. Active el mapa para la medición y el diapasón. Las notas ausentes usan el tono estándar. El archivo sirve en ambas plataformas.
+- El calibrador de Windows reúne 88 notas en una lista y ofrece armónicos 0–200 % y volumen 0–150 % por nota. 100 % es la referencia de Stroik. Alt+U reproduce, Ctrl+S guarda JSON. Abra el archivo desde los ajustes de Stroik en ambas plataformas para ajustar timbre y nivel.
+- Los ajustes tienen volúmenes independientes de diapasón y monitorización del micrófono. Windows también muestra sesiones activas separadas en el mezclador del sistema. Se usa la salida de audio predeterminada. Monitorice con auriculares.
+
 Stroik Android 1.09
 
 - El la de la contraoctava recibe el mismo apoyo armónico que las notas inferiores. Ambas plataformas usan el mismo timbre sin transposición. La audibilidad del grave depende de los altavoces.
@@ -47,4 +55,4 @@ Apoyo: https://paypal.me/proszczok · https://revolut.me/r_rosiejka
 
  Android / TalkBack
 
-Use TalkBack para navegar. Los tres botones de página están abajo en una fila. Los deslizadores cambian números; un doble toque abre la entrada numérica. Un único botón alterna el micrófono. Con la pantalla apagada, la síntesis del sistema puede leer resultados; velocidad y pantalla activa están en Ajustes. La voz elegida debe instalarse en Android. El híbrido con altavoces espera a su propia síntesis de voz. Las actualizaciones siempre requieren confirmación de Android; no se instalan en silencio.
+Use TalkBack para navegar. Los cuatro botones de página están abajo en una fila. Los deslizadores cambian números; un doble toque abre la entrada numérica. Un único botón alterna el micrófono. Con la pantalla apagada, la síntesis del sistema puede leer resultados; velocidad y pantalla activa están en Ajustes. La voz elegida debe instalarse en Android. El híbrido con altavoces espera a su propia síntesis de voz. Las actualizaciones siempre requieren confirmación de Android; no se instalan en silencio.

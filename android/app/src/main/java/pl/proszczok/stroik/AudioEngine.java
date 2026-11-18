@@ -13,6 +13,9 @@ public final class AudioEngine implements AutoCloseable {
 
     void advance();
 
+    default void mapped(int midi, int count, int needed, double average) {}
+    default void nextMapped() {}
+
     void failed(String text);
 
     default void forkPaused(String text) {
@@ -36,10 +39,25 @@ public final class AudioEngine implements AutoCloseable {
   private volatile boolean resultSpeech;
   private volatile double navigationAfterSpeech;
   private volatile double navigationTolerance;
+  private volatile long speakerAdvanceUntil;
   private volatile int generation;
   private final AtomicInteger playbackEpoch = new AtomicInteger();
   private int rate = 48000;
   private final AudioManager manager;
+  private volatile Mapping mapping;
+
+  private static final class Mapping {
+    final int midi, needed;
+    final boolean tap;
+    final Capture capture = new Capture();
+    int count;
+    double sum;
+
+    Mapping(int midi, int needed, boolean tap) { this.midi = midi; this.needed = needed; this.tap = tap; }
+  }
+
+  void configureMapping(int midi, int count, boolean tap) { mapping = new Mapping(midi, count, tap); }
+  boolean mappingActive() { return mapping != null; }
 
   public AudioEngine(Model m, Listener l, AudioManager manager) {
     config = m.copy();
@@ -64,7 +82,7 @@ public final class AudioEngine implements AutoCloseable {
   public void holdForSpeech(boolean result) {
     resultSpeech = result;
     speechPending = true;
-    if (config.method >= 2 && running) {
+    if (mapping == null && config.method >= 2 && running) {
       strikeAfterSpeech = true;
       stopFork();
     }
@@ -78,7 +96,11 @@ public final class AudioEngine implements AutoCloseable {
       strikeAfterSpeech = false;
       if (!paused && running && config.method == 2) {
         int pause = resultSpeech ? config.hybridPause : 0;
-        if (pause == 0) strike();
+        if (resultSpeech && navigationAfterSpeech > 0 && config.forkTap) {
+          speakerAdvanceUntil = now + (long)(config.gap * 1000) + 2200;
+          navigationAfterSpeech = 0;
+          repeatAt = Math.max(speakerAdvanceUntil, now + pause * 1000L);
+        } else if (pause == 0) strike();
         else repeatAt = now + pause * 1000L;
       }
       else if (!paused && config.method != 1) ui.post(this::strike);
@@ -92,7 +114,9 @@ public final class AudioEngine implements AutoCloseable {
         previous.method != m.method
             || previous.base() != m.base()
             || previous.reference != m.reference
-            || previous.interval != m.interval;
+            || previous.interval != m.interval
+            || !previous.instrumentMap.equals(m.instrumentMap)
+            || !previous.forkCalibration.equals(m.forkCalibration);
     boolean measurementChanged =
         referenceChanged
             || previous.sensitivity != m.sensitivity
@@ -104,7 +128,7 @@ public final class AudioEngine implements AutoCloseable {
             || previous.instrument != m.instrument
             || previous.swapped != m.swapped;
     config = m.copy();
-    if (measurementChanged) { generation++; navigationAfterSpeech = 0; }
+    if (measurementChanged) { generation++; navigationAfterSpeech = 0; speakerAdvanceUntil = 0; }
     // Preserve the reference-decay guard when only appearance/voice/update options change.
     if (referenceChanged && m.method != 1 && (m.method == 0 || running)) strike();
     else if (referenceChanged && m.method == 1) stopFork();
@@ -160,10 +184,10 @@ public final class AudioEngine implements AutoCloseable {
       throw error;
     }
     running = true;
-    if (config.method >= 2 && config.beginner) holdForSpeech();
+    if (mapping == null && config.method >= 2 && config.beginner) holdForSpeech();
     worker = new Thread(this::capture, "Stroik microphone");
     worker.start();
-    if (config.method >= 2 && !config.beginner) strike();
+    if (mapping == null && config.method >= 2 && !config.beginner) strike();
   }
 
   private AudioRecord createRecord(int source, int min) {
@@ -217,6 +241,11 @@ public final class AudioEngine implements AutoCloseable {
 
   void process(short[] frame, int n, long now, Capture state) {
     Model m = config;
+    Mapping currentMapping = mapping;
+    if (currentMapping != null) {
+      if (!speechPending && now >= muteUntil) captureMapping(currentMapping, m, frame, n, now);
+      return;
+    }
     int current = generation;
     if (state.g != current) {
       state.g = current;
@@ -238,6 +267,16 @@ public final class AudioEngine implements AutoCloseable {
     if (m.method == 2 && repeatAt > 0 && now >= repeatAt && !paused && !speechPending) {
       repeatAt = 0;
       strike();
+    }
+    if (!speechPending && speakerAdvanceUntil > 0 && now >= muteUntil && now < speakerAdvanceUntil) {
+      double threshold = new double[] {.004, .008, .016}[m.sensitivity];
+      if (state.taps.observe(Dsp.Taps.transientLevel(frame, n), threshold, now, m.gap)) {
+        speakerAdvanceUntil = 0;
+        repeatAt = 0;
+        muteUntil = now + 1000;
+        post(state.g, listener::advance);
+      }
+      return;
     }
     if (speechPending || now < muteUntil || (m.method == 2 && repeatAt > 0)) {
       state.count = state.pairCount = 0;
@@ -283,7 +322,7 @@ public final class AudioEngine implements AutoCloseable {
                 ? Dsp.together(
                     state.pair,
                     rate,
-                    Model.hz(m.base(), m.reference) / Math.pow(2, m.correction / 1200),
+                    m.targetHz(m.base()) / Math.pow(2, m.correction / 1200),
                     m.interval)
                 : null;
         if (v == null) {
@@ -318,11 +357,11 @@ public final class AudioEngine implements AutoCloseable {
     if (m.graphics && frequency > 0 && now - state.lastVisual > 200) {
       state.lastVisual = now;
       double cents =
-          1200 * Math.log(frequency / Model.hz(m.resolved(frequency), m.reference)) / Math.log(2);
+          1200 * Math.log(frequency / m.targetHz(m.resolved(frequency))) / Math.log(2);
       post(state.g, () -> listener.reading(cents));
     }
     if (m.method == 0) return;
-    if ((m.method == 1 ? m.advance : m.method >= 2 && m.forkTap)
+    if ((m.method == 1 ? m.advance : m.method == 3 && m.forkTap)
         && m.interval == 0
         && state.confirmed.observe(rms, threshold, frequency, now, m.gap)) {
       muteUntil = now + 2000;
@@ -340,7 +379,7 @@ public final class AudioEngine implements AutoCloseable {
         muteUntil = now + 2000;
         return;
       }
-      if (Math.abs(1200 * Math.log(done / Model.hz(wanted, m.reference)) / Math.log(2)) > 90) {
+      if (Math.abs(1200 * Math.log(done / m.targetHz(wanted)) / Math.log(2)) > 90) {
         post(
             state.g,
             () ->
@@ -367,7 +406,7 @@ public final class AudioEngine implements AutoCloseable {
       return;
     }
     int midi = m.resolved(done);
-    double expected = Model.hz(midi, m.reference),
+    double expected = m.targetHz(midi),
         cents = 1200 * Math.log(done / expected) / Math.log(2);
     String direction =
         Math.abs(cents) <= m.tolerance
@@ -383,7 +422,9 @@ public final class AudioEngine implements AutoCloseable {
     if (Math.abs(cents) <= m.tolerance && (m.method == 1 ? m.advance : m.forkTap)) {
       navigationTolerance = m.tolerance;
       navigationAfterSpeech = expected;
+      if (m.method == 2) text += " " + m.t("Stuknij dwa razy, aby przejść dalej.", "Tap twice to advance.");
     } else navigationAfterSpeech = 0;
+    if (m.method == 2) state.taps.reset();
     deliverResult(text, messageGeneration);
     if (Math.abs(cents) > m.tolerance) {
       state.confirmed.reset();
@@ -417,14 +458,46 @@ public final class AudioEngine implements AutoCloseable {
     });
   }
 
+  private void captureMapping(Mapping current, Model model, short[] frame, int n, long now) {
+    Capture captured = current.capture;
+    double threshold = new double[] {.004, .008, .016}[model.sensitivity];
+    double rms = Dsp.rms(frame, n);
+    if (current.count >= current.needed) {
+      if (current.tap && captured.taps.observe(Dsp.Taps.transientLevel(frame, n), threshold, now, model.gap))
+        ui.post(() -> { if (mapping == current) listener.nextMapped(); });
+      return;
+    }
+    double frequency = 0;
+    if (rms >= threshold) {
+      int take = Math.min(n, captured.window.length);
+      int keep = Math.min(captured.count, captured.window.length - take);
+      System.arraycopy(captured.window, captured.count - keep, captured.window, 0, keep);
+      System.arraycopy(frame, n - take, captured.window, keep, take);
+      captured.count = keep + take;
+      if (captured.count == captured.window.length)
+        frequency = Dsp.pitch(captured.window, rate) * Math.pow(2, model.correction / 1200);
+    } else captured.count = 0;
+    double hz = captured.session.observe(frequency, now);
+    if (hz <= 0) return;
+    current.sum += hz;
+    int count = ++current.count;
+    double average = current.sum / count;
+    speechPending = true;
+    ui.post(() -> {
+      if (mapping == current) listener.mapped(current.midi, count, current.needed, average);
+      else if (mapping != null) speechFinished();
+    });
+  }
+
   public void strike() {
-    if (closed) return;
+    if (closed || mapping != null) return;
     if (speechPending) {
       strikeAfterSpeech = true;
       return;
     }
     Model m = config;
     repeatAt = 0;
+    speakerAdvanceUntil = 0;
     int base = m.base();
     if (m.interval != 0 && base + m.semitones() > 108) {
       setPaused(true);
@@ -446,9 +519,10 @@ public final class AudioEngine implements AutoCloseable {
       try {
         short[] data =
             Dsp.fork(
-                Model.hz(base, m.reference),
-                m.interval == 0 ? 0 : Model.hz(base + m.semitones(), m.reference),
-                44100);
+                m.targetHz(base),
+                m.interval == 0 ? 0 : m.targetHz(base + m.semitones()),
+                44100, m.tone(base, "harmonics"), m.tone(base, "volume"),
+                m.tone(base + m.semitones(), "harmonics"), m.tone(base + m.semitones(), "volume"), m.forkVolume);
         synchronized (this) {
           if (closed || generation != playbackGeneration || request != playbackEpoch.get()) return;
           releaseFork();
@@ -514,6 +588,7 @@ public final class AudioEngine implements AutoCloseable {
                           rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)))
               .setTransferMode(AudioTrack.MODE_STREAM)
               .build();
+    monitor.setVolume(config.monitorVolume / 100f);
     monitor.play();
     monitor.write(data, 0, n, AudioTrack.WRITE_NON_BLOCKING);
   }
@@ -545,8 +620,10 @@ public final class AudioEngine implements AutoCloseable {
 
   public void stop() {
     running = false;
+    mapping = null;
     generation++;
     repeatAt = 0;
+    speakerAdvanceUntil = 0;
     speechPending = false;
     strikeAfterSpeech = false;
     resultSpeech = false;

@@ -37,6 +37,17 @@ if(args.Contains("--nvda-probe")) {
 }
 if(args.Contains("--guidance-probe")) {CurrentReleaseChecks.GuidanceProbe();return;}
 if(args.Contains("--hybrid-probe")) {CurrentReleaseChecks.HybridProbe();return;}
+if (args.Contains("--mixer-probe"))
+{
+    using var forkSession = new WindowsAudioStream(44100, WindowsAudioStream.Fork, "Stroik — tuning fork");
+    using var monitorSession = new WindowsAudioStream(48000, WindowsAudioStream.Monitor, "Stroik — microphone monitoring");
+    var silence = new short[960];
+    forkSession.Write(silence, 0, Math.Min(silence.Length, forkSession.Available));
+    monitorSession.Write(silence, 0, Math.Min(silence.Length, monitorSession.Available));
+    if (WindowsAudioStream.Fork == WindowsAudioStream.Monitor) throw new Exception("Mixer session IDs must differ");
+    Console.WriteLine("Default Windows endpoint accepted both independently named and grouped WASAPI sessions at once (silent PCM).");
+    return;
+}
 
 int natural = 60;
 foreach (int expectedNatural in new[] {62, 64, 65, 67, 69, 71, 72})
@@ -430,7 +441,7 @@ var uiThread = new Thread(() =>
                 : NoteCatalog.HighestMidi - NoteCatalog.LowestMidi + 2) ||
             octave.Items.Count != 9 || view.Items.Count != 2 || string.IsNullOrWhiteSpace(target.AccessibleName))
             throw new Exception("Interfejs nie udostępnia wszystkich metod, oktaw lub opisów dostępności.");
-        if (tabs.TabPages.Count != 2 || tabs.SelectedIndex != 0 ||
+        if (tabs.TabPages.Count != 3 || tabs.SelectedIndex != 0 ||
             tabs.AccessibleName is not null ||
             tabs.AccessibilityObject.Role != System.Windows.Forms.AccessibleRole.PageTabList ||
             language.Parent is null || language.Parent.Parent != settingsTab ||

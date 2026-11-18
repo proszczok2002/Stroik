@@ -1,7 +1,7 @@
-Stroik Android 1.09
+Stroik Android 1.10
 
-- Le la de contre-octave reçoit le même soutien harmonique que les notes inférieures. Les deux plateformes utilisent le même timbre sans transposition. L’audibilité du grave dépend des haut-parleurs.
-- L’hybride classique démarre immédiatement sans tutoriel. En vue débutant, les conseils sont lus avant la référence. Le comportement Windows est conservé et ajouté à Android.
-- La pause après résultat accepte 0–60 secondes, dont 1 et 2. À 0, la référence reprend dès la fin réelle de la parole. Nouvelle valeur par défaut : 0 ; les pauses Windows enregistrées sont conservées. Android propose un curseur et la saisie numérique.
-- Le résultat est lu intégralement avant la référence et l’autorisation du passage. En hybride, une note juste puis deux attaques de hauteur confirmée sont nécessaires. Le diapason seul conserve son geste acoustique.
-- Android masque les positions dans la liste classique. Ajout des descriptions des méthodes pour débutants et du choix des touches noires avec gauche/droite. La synthèse de l’application lit résultats et tutoriels même avec TalkBack pour connaître la fin de parole ; TalkBack gère la navigation.
+- En hybride haut-parleurs, activez l’option des deux frappes. Après un résultat juste, la référence reste silencieuse pour le geste. Sans geste, elle répète la même note. Si la note est fausse, la pause configurée de 0–60 secondes s’applique.
+- La4 = 440 Hz est la référence habituelle des pianos d’après-guerre. Les instruments d’avant-guerre peuvent être conçus pour un diapason plus bas. Faites examiner un vieux piano avant de relever son diapason.
+- Dans Relevé de l’accord, choisissez octave, note et 1–10 frappes. Lancez le relevé. Laissez chaque note s’éteindre et attendez le message. La fréquence moyenne en hertz est associée à la note choisie. Passez à la suivante par liste, bouton ou deux frappes après l’enregistrement. Terminer arrête le micro. Ctrl+S exporte le JSON. Activez le relevé pour la mesure et la référence. Les notes absentes gardent l’accord standard. Le fichier est commun aux deux plateformes.
+- Le calibrateur Windows réunit 88 notes dans une liste, avec harmoniques 0–200 % et volume 0–150 % par note. 100 % correspond au réglage initial de Stroik. Alt+U joue, Ctrl+S exporte en JSON. Ouvrez ce fichier dans les paramètres Stroik sur les deux plateformes pour ajuster timbre et niveau.
+- Volumes séparés du diapason et du retour micro dans les paramètres. Windows présente aussi deux sessions actives dans le mixeur système. La sortie audio par défaut est utilisée. Écoutez le retour micro au casque.

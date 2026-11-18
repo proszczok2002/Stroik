@@ -89,6 +89,23 @@ public final class Dsp {
   }
 
   public static final class Taps {
+    static double transientLevel(short[] samples, int length) {
+      double level = 0;
+      for (int from = 0; from < length; from += 192) {
+        int end = Math.min(from + 192, length);
+        double sum = 0, squares = 0;
+        for (int i = from; i < end; i++) {
+          double sample = samples[i] / 32768.0;
+          sum += sample;
+          squares += sample * sample;
+        }
+        int count = end - from;
+        double mean = sum / count;
+        level = Math.max(level, Math.sqrt(Math.max(0, squares / count - mean * mean)));
+      }
+      return level;
+    }
+
     double envelope;
     long first = -1, last = -1000;
     boolean sound;
@@ -184,13 +201,19 @@ public final class Dsp {
   }
 
   public static short[] fork(double lower, double upper, int rate) {
+    return fork(lower, upper, rate, 100, 100, 100, 100, 100);
+  }
+
+  public static short[] fork(double lower, double upper, int rate, int lowerHarmonics,
+      int lowerVolume, int upperHarmonics, int upperVolume, int volume) {
     short[] samples = new short[rate * 3];
+    double lowerLevel = level(lower) * lowerVolume / 100, upperLevel = upper > 0 ? level(upper) * upperVolume / 100 : 0;
     for (int i = 0; i < samples.length; i++) {
       double t = i / (double) rate,
-          phase = 2 * Math.PI * lower * t,
           env = Math.min(1, t / .012) * Math.min(1, (3 - t) / .08) * Math.exp(-1.2 * t),
-          v = level(lower) * env * oscillator(lower, t);
-      if (upper > 0) v = (v + level(upper) * env * oscillator(upper, t)) / 1.55;
+          v = lowerLevel * oscillator(lower, t, lowerHarmonics);
+      if (upper > 0) v = (v + upperLevel * oscillator(upper, t, upperHarmonics)) / 1.55;
+      v *= env * volume / 100;
       samples[i] = (short) Math.round(Math.max(-1, Math.min(1, v)) * 32767);
     }
     return samples;
@@ -200,14 +223,17 @@ public final class Dsp {
     return Math.max(.045, Math.min(.6, .18 * Math.pow(440 / frequency, .65)));
   }
 
-  private static double oscillator(double frequency, double t) {
+  private static double oscillator(double frequency, double t, int harmonics) {
     double phase = 2 * Math.PI * frequency * t;
     double support = Math.max(0, Math.min(1, Math.log(110 / frequency) / Math.log(2)));
     double second = (frequency < 130 ? .12 : .015) + .18 * support;
     double third = (frequency < 130 ? .06 : 0) + .16 * support;
-    return (Math.sin(phase) + second * Math.sin(2 * phase) + third * Math.sin(3 * phase)
-        + support * (.26 * Math.sin(4 * phase) + .14 * Math.sin(5 * phase)
-            + .20 * Math.sin(6 * phase) + .12 * Math.sin(8 * phase))) / (1 + .62 * support);
+    double strength = harmonics / 100.0;
+    double extra = Math.max(0, strength - 1) * (1 - support);
+    return (Math.sin(phase) + (strength * second + .18 * extra) * Math.sin(2 * phase)
+        + (strength * third + .10 * extra) * Math.sin(3 * phase)
+        + strength * support * (.26 * Math.sin(4 * phase) + .14 * Math.sin(5 * phase)
+            + .20 * Math.sin(6 * phase) + .12 * Math.sin(8 * phase))) / (1 + .62 * support * strength);
   }
 
   // Targeted FFT for two expected spectral components. Not proof of two independent strings.

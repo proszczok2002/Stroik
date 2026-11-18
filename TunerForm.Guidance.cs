@@ -4,9 +4,10 @@ internal sealed partial class TunerForm
 {
     private volatile bool _waitingForResultSpeech;
     private int _resultSpeechEpoch;
+    private long _speakerAdvanceUntil;
     private bool ConfirmedNavigationEnabled => _consonanceKind == Consonance.Off &&
         (_activeMethod == TuningMethod.Electronic ? _doubleStrikeEnabled :
-         _activeMethod is TuningMethod.HybridSpeakers or TuningMethod.HybridHeadphones && _forkTapEnabled);
+         _activeMethod == TuningMethod.HybridHeadphones && _forkTapEnabled);
 
     // Arm navigation only once the user has heard the result. The microphone
     // must not interpret the synthesizer or the reference as navigation strikes.
@@ -40,8 +41,13 @@ internal sealed partial class TunerForm
         _waitingForResultSpeech = false;
         if (speakers && _microphone is not null)
         {
-            _practice.Result(DateTime.UtcNow, (int)_hybridPause.Value);
-            if (_hybridPause.Value == 0) Strike();
+            var now = DateTime.UtcNow;
+            _tapNavigator.Reset();
+            bool offerAdvance = inTuneMidi >= 0 && _forkTapEnabled && _consonanceKind == Consonance.Off;
+            int window = offerAdvance ? Volatile.Read(ref _doubleStrikeWindowMilliseconds) + 2200 : 0;
+            Interlocked.Exchange(ref _speakerAdvanceUntil, offerAdvance ? now.AddMilliseconds(window).Ticks : 0);
+            _practice.Result(now, Math.Max((int)_hybridPause.Value, (window + 999) / 1000));
+            if (_hybridPause.Value == 0 && !offerAdvance) Strike();
         }
         else if (hybrid && _microphone is not null) Strike();
     }
@@ -75,6 +81,7 @@ internal sealed partial class TunerForm
     {
         int epoch = ++_guidanceEpoch;
         string text = _methodHelp.Text + "\n\n" + _beginnerHint.Text;
+        if (_instrumentKind == InstrumentKind.Piano) text += "\n\n" + _concertHelp.Text;
         // Native focus events reach the reader after the button handler returns.
         // Let them settle before submitting guidance, then wait for actual completion.
         await Task.Delay(300);

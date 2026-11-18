@@ -75,11 +75,17 @@ try {
     New-Item -ItemType Directory -Force -Path $stage | Out-Null
     & $dotnet publish (Join-Path $repoRoot 'Stroik.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $stage
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
+    & $dotnet publish (Join-Path $repoRoot 'tools/ForkCalibrator/ForkCalibrator.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o $stage
+    if ($LASTEXITCODE -ne 0) { throw 'Calibrator publish failed.' }
 
     $newExe = Join-Path $stage 'Stroik.exe'
     $newHash = (Get-FileHash -LiteralPath $newExe -Algorithm SHA256).Hash.ToLowerInvariant()
     [System.IO.File]::WriteAllText((Join-Path $stage 'Stroik.exe.sha256'),
         $newHash + '  Stroik.exe' + [Environment]::NewLine, [System.Text.Encoding]::ASCII)
+    $calibrator = Join-Path $stage 'Stroik-Kalibrator.exe'
+    $calibratorHash = (Get-FileHash -LiteralPath $calibrator -Algorithm SHA256).Hash.ToLowerInvariant()
+    [System.IO.File]::WriteAllText((Join-Path $stage 'Stroik-Kalibrator.exe.sha256'),
+        $calibratorHash + '  Stroik-Kalibrator.exe' + [Environment]::NewLine, [System.Text.Encoding]::ASCII)
     foreach ($name in @('README.md', 'README.en.md', 'README.de.md', 'README.ru.md', 'README.fr.md', 'README.es.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'NVDA-LGPL-2.1.txt')) {
         Copy-Item -LiteralPath (Join-Path $repoRoot $name) -Destination (Join-Path $stage $name)
     }
@@ -100,13 +106,13 @@ try {
     }
 
     try {
-        foreach ($name in @('Stroik.exe', 'Stroik.exe.sha256', 'README.md', 'README.en.md', 'README.de.md', 'README.ru.md', 'README.fr.md', 'README.es.md', 'THIRD_PARTY_NOTICES.md', 'NVDA-LGPL-2.1.txt', 'LICENSE', 'build-version.txt')) {
+        foreach ($name in @('Stroik.exe', 'Stroik.exe.sha256', 'Stroik-Kalibrator.exe', 'Stroik-Kalibrator.exe.sha256', 'README.md', 'README.en.md', 'README.de.md', 'README.ru.md', 'README.fr.md', 'README.es.md', 'THIRD_PARTY_NOTICES.md', 'NVDA-LGPL-2.1.txt', 'LICENSE', 'build-version.txt')) {
             Move-ToArchive (Join-Path $output $name) (Join-Path 'wydanie' $name)
         }
         foreach ($file in Get-ChildItem -LiteralPath $output -Filter 'Stroik-*-Windows-x64.zip' -File) {
             Move-ToArchive $file.FullName (Join-Path 'wydanie' $file.Name)
         }
-        foreach ($name in @('Stroik.exe', 'Stroik.exe.sha256', 'README.md', 'README.en.md', 'README.de.md', 'README.ru.md', 'README.fr.md', 'README.es.md', 'THIRD_PARTY_NOTICES.md', 'NVDA-LGPL-2.1.txt', 'LICENSE', $zipName)) {
+        foreach ($name in @('Stroik.exe', 'Stroik.exe.sha256', 'Stroik-Kalibrator.exe', 'Stroik-Kalibrator.exe.sha256', 'README.md', 'README.en.md', 'README.de.md', 'README.ru.md', 'README.fr.md', 'README.es.md', 'THIRD_PARTY_NOTICES.md', 'NVDA-LGPL-2.1.txt', 'LICENSE', $zipName)) {
             Copy-Item -LiteralPath (Join-Path $stage $name) -Destination (Join-Path $output $name)
         }
         if ((Get-FileHash -LiteralPath $activeExe -Algorithm SHA256).Hash.ToLowerInvariant() -ne $newHash) {

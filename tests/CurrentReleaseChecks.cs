@@ -157,7 +157,54 @@ internal static class CurrentReleaseChecks
                 for(int i=0;i<count;i++) {double t=i/44100.0;double sample=TuningFork.Oscillator(frequency,t);partial+=sample*Math.Sin(2*Math.PI*frequency*4*t);fundamental+=sample*Math.Sin(2*Math.PI*frequency*t);}
                 if(partial/fundamental<.2)throw new Exception("Lowest register lacks audible upper partials");
             }
+            CheckMappingAndSpeakerAdvance(form);
             Console.WriteLine("Six languages, accessible edits/guidance, fork controls, quiet startup, speech pause, black keys and 245 unclipped fork combinations: OK");
         } finally { Call(form,"ApplySettings",saved); }
+    }
+
+    private static short[] Tone(double hz, int frame) => Enumerable.Range(0, 4096)
+        .Select(i => (short)(9000 * Math.Sin(2 * Math.PI * hz * (i + frame * 4096) / 48000))).ToArray();
+
+    private static void CheckMappingAndSpeakerAdvance(TunerForm form)
+    {
+        Call(form,"ApplySettings",new Preferences { Language="en", Method=TuningMethod.HybridSpeakers, TargetMidi=69,
+            ForkTapAdvance=true, VisualMode=true, VoiceInVisualMode=false, AutomaticUpdates=false });
+        var tabs = Get<TabControl>(form,"_tabs");
+        tabs.SelectedTab = Get<TabPage>(form,"_mappingTab");
+        Get<ComboBox>(form,"_mapCount").SelectedIndex = 1;
+        typeof(TunerForm).GetField("_mapMic",Hidden)!.SetValue(form,new Microphone());
+        var at = DateTime.UtcNow;
+        foreach (double hz in new[]{421.0, 433.0})
+        {
+            for (int frame=0; frame<8; frame++) { Call(form,"CaptureMappingAt",Tone(hz,frame),48000,at); at=at.AddMilliseconds(86); }
+            for (int frame=0; frame<8; frame++) { Call(form,"CaptureMappingAt",new short[4096],48000,at); at=at.AddMilliseconds(86); }
+            Application.DoEvents();
+            if (hz == 421 && Get<InstrumentMap>(form,"_mapDraft").Notes.ContainsKey(69)) throw new Exception("Mapping committed before the requested strike count");
+        }
+        double average = Get<InstrumentMap>(form,"_mapDraft").Notes[69];
+        if (Math.Abs(average-427)>.15) throw new Exception("Mapping lost selected note or averaged incorrectly: "+average);
+        Get<Button>(form,"_mapUse").PerformClick();
+        if (Math.Abs((double)Call(form,"TargetFrequency",69,440.0)!-427)>.15 || (double)Call(form,"TargetFrequency",81,440.0)! != 880)
+            throw new Exception("Active partial map did not supply reference/fallback");
+        tabs.SelectedTab = Get<TabPage>(form,"_tunerTab");
+        typeof(TunerForm).GetField("_microphone",Hidden)!.SetValue(form,new Microphone());
+        at = DateTime.UtcNow;
+        Call(form,"ReadResult","In tune",69,427.0,5.0);
+        var silence = new short[4096];
+        var random = new Random(42);
+        var tap = new short[4096];
+        for (int i=0;i<96;i++) tap[300+i]=(short)random.Next(-1900,1901);
+        foreach(int offset in new[]{0,86,172,258})Call(form,"ProcessFrameAt",silence,at.AddMilliseconds(offset));
+        Call(form,"ProcessFrameAt",tap,at.AddMilliseconds(400));
+        Call(form,"ProcessFrameAt",silence,at.AddMilliseconds(500));
+        Call(form,"ProcessFrameAt",tap,at.AddMilliseconds(700));
+        Application.DoEvents();
+        if (Get<int>(form,"_targetMidi")!=70) throw new Exception("Speaker hybrid missed two acoustic taps after a good result");
+        Call(form,"StopMicrophone",false);
+        var preset = new ForkCalibration { Notes = new() { [69] = new ForkTone(21, 67) } };
+        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid()+".json");
+        try { TuningFiles.Write(path,preset); var restored=TuningFiles.Read<ForkCalibration>(path,preset.Format); restored.Validate(); if(restored.Tone(69)!=preset.Tone(69)||restored.Tone(21)!=ForkTone.Default)throw new Exception("Calibration JSON round trip"); }
+        finally { File.Delete(path); }
+        Console.WriteLine("Mapped two out-of-standard readings by chosen MIDI, reused mean and fallback, advanced on two acoustic taps, calibration JSON round trip: OK");
     }
 }

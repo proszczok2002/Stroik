@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Stroik-Kalibrator</AssemblyName>
+    <Version>1.0.0</Version>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../TuningFork.cs;../../TuningFiles.cs;../../PitchDetector.cs;../../NoteCatalog.cs;../../UiLanguages.cs;../../WindowsAudioStream.cs" />
+    <EmbeddedResource Include="../../locales/*.json" Exclude="../../locales/source*.json" LogicalName="Stroik.locale.%(Filename).json" />
+  </ItemGroup>
+</Project>

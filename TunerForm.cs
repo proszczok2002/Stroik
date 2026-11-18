@@ -133,6 +133,8 @@ internal sealed partial class TunerForm : Form
         var settingsContent = new TableLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, ColumnCount = 1, Padding = new Padding(18) };
         settingsContent.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         _settingsTab.Controls.Add(settingsContent);
+        BuildMappingUI(settingsContent);
+        LoadAudioPreferences(settings);
         Add(content, _heading); Add(content, _intro);
         Add(content, _viewTitle); Add(content, _view);
         Add(content, _methodTitle); Add(content, _method); Add(content, _methodHelp);
@@ -262,7 +264,7 @@ internal sealed partial class TunerForm : Form
             }
             Persist();
         };
-        _monitor.CheckedChanged += (_, _) => { _monitorEnabled = _monitor.Checked; if (!_monitor.Checked) { _audioMonitor?.Dispose(); _audioMonitor = null; } else if (_microphone is not null && _activeMethod == TuningMethod.HybridHeadphones) _audioMonitor = new AudioMonitor(); Persist(); };
+        _monitor.CheckedChanged += (_, _) => { _monitorEnabled = _monitor.Checked; if (!_monitor.Checked) { _audioMonitor?.Dispose(); _audioMonitor = null; } else if (_microphone is not null && _activeMethod == TuningMethod.HybridHeadphones) _audioMonitor = CreateMonitor(); Persist(); };
         _automaticUpdates.CheckedChanged += (_, _) => { ConfigureUpdateTimer(); Persist(); };
         _updateMinutes.ValueChanged += (_, _) => { ConfigureUpdateTimer(); Persist(); };
         _practiceTimer.Tick += (_, _) =>
@@ -279,12 +281,19 @@ internal sealed partial class TunerForm : Form
         KeyDown += (_, e) => { if (e.Control && e.KeyCode == Keys.S) { SaveProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.O) { LoadProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.N) { AdvanceTarget(_targetMidi < 0 ? _lastResolvedTarget : _targetMidi); e.SuppressKeyPress = true; } };
         _updateTimer.Tick += async (_, _) => await CheckUpdatesAsync(true);
         Shown += async (_, _) => { if (_activeMethod == TuningMethod.TuningFork && _forkTap.Checked) StartMicrophone(); ConfigureUpdateTimer(); if (_automaticUpdates.Checked) await CheckUpdatesAsync(true); };
-        FormClosing += (_, _) => { _closing = true; _updateTimer.Stop(); StopMicrophone(false); _strikeTimer.Stop(); _fork.Dispose(); };
+        FormClosing += (_, _) => { _closing = true; StopMapping(false); _updateTimer.Stop(); StopMicrophone(false); _strikeTimer.Stop(); _fork.Dispose(); };
         AcceptButton = _method.SelectedIndex == 0 ? _strike : _start;
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
+        if (_tabs.SelectedTab == _mappingTab)
+        {
+            if (keyData == (Keys.Control | Keys.S)) { SaveMapping(); return true; }
+            if (keyData == (Keys.Control | Keys.O)) { OpenTuningFile(false); return true; }
+            if (keyData == (Keys.Control | Keys.N) || keyData == (Keys.Alt | Keys.N)) { NextMappingNote(); return true; }
+            if (keyData == (Keys.Alt | Keys.U)) return true;
+        }
         if (keyData == (Keys.Alt | Keys.N) || keyData == (Keys.Control | Keys.N) ||
             keyData == (Keys.Alt | Keys.Shift | Keys.N) || keyData == (Keys.Control | Keys.Shift | Keys.N))
         {
@@ -529,17 +538,20 @@ internal sealed partial class TunerForm : Form
     }
     private void Strike()
     {
+        Interlocked.Exchange(ref _speakerAdvanceUntil, 0);
         try
         {
             int midi = _targetMidi < 0 ? InstrumentCatalog.DefaultMidi(_instrumentKind, _ukuleleKind) : _targetMidi;
-            double frequency = PitchDetector.NoteFromMidi(midi, _reference).Frequency;
+            double frequency = TargetFrequency(midi, _reference);
             if (midi > IntervalAnalysis.HighestTarget(_consonanceKind))
             {
                 StopOutOfRangeFork();
                 return;
             }
-            double? upper = _consonanceKind == Consonance.Off ? null : PitchDetector.NoteFromMidi(midi + IntervalAnalysis.Semitones(_consonanceKind), _reference).Frequency;
-            _fork.Strike(frequency, upper);
+            int upperMidi = midi + IntervalAnalysis.Semitones(_consonanceKind);
+            double? upper = _consonanceKind == Consonance.Off ? null : TargetFrequency(upperMidi, _reference);
+            _fork.Strike(frequency, upper, _forkCalibration?.Tone(midi), _forkCalibration?.Tone(upperMidi), _forkVolume.Value,
+                "Stroik — " + T("Kamerton", "Tuning fork"));
             _forkQuietUntil = DateTime.UtcNow.AddMilliseconds(3400);
             if (_activeMethod == TuningMethod.HybridSpeakers && _microphone is not null)
             {
@@ -569,6 +581,7 @@ internal sealed partial class TunerForm : Form
         _licenses.Text = T("Licencje składników", "Third-party licenses"); _licenses.AccessibleName = _licenses.Text;
         _tunerTab.Text = T("Stroik", "Tuner");
         _settingsTab.Text = T("Ustawienia", "Settings");
+        ApplyMappingLanguage();
         _tunerTab.AccessibleName = _tunerTab.Text;
         _settingsTab.AccessibleName = _settingsTab.Text;
         _preferencesIntro.Text = T("Język, wygląd, korekta mikrofonu, aktualizacje i informacje o programie.", "Language, appearance, microphone correction, updates and program information.");
@@ -635,8 +648,8 @@ internal sealed partial class TunerForm : Form
         _resultTitle.Text = T("Ostatni wynik:", "Last result:");
         _settingsTitle.Text = T("Parametry strojenia", "Tuning parameters");
         _concertTitle.Text = T("Częstotliwość, Hz:", "Frequency, Hz:");
-        _concertHelp.Text = T("Starszy instrument może wymagać niższego stroju, np. 430–435 Hz, ale wiek nie wyznacza bezpiecznej wartości. Przed podniesieniem naciągu starego pianina do 440 Hz poproś technika o ocenę stanu, konstrukcji i właściwej wysokości stroju.",
-            "An older instrument may need a lower pitch, such as 430–435 Hz, but age alone does not determine a safe value. Before raising an old piano to 440 Hz, ask a piano technician to assess its condition, design and suitable pitch.");
+        _concertHelp.Text = T("Dla pianin powojennych A4 = 440 Hz to zwykły punkt odniesienia. Pianina przedwojenne mogły być przewidziane do niższego stroju. Przed podniesieniem stroju starego pianina poproś technika o ocenę instrumentu.",
+            "A4 = 440 Hz is the usual reference for postwar pianos. Prewar pianos may have been designed for lower pitch. Ask a technician to assess an old piano before raising its pitch.");
         _sensitivityTitle.Text = T("Czułość mikrofonu:", "Microphone sensitivity:");
         _toleranceTitle.Text = T("Próg oceny „dobrze” w centach:", "In-tune tolerance in cents:");
         _showOctave.Text = T("Pokaż wybór oktawy", "Show octave selector");
@@ -712,13 +725,19 @@ internal sealed partial class TunerForm : Form
         ShowOctaveInClassic = _showOctave.Checked,
         AutoStrike = _autoStrike.Checked,
         StrikeIntervalSeconds = (int)_interval.Value,
-        HybridPauseSeconds = (int)_hybridPause.Value
+        HybridPauseSeconds = (int)_hybridPause.Value,
+        ForkVolume = _forkVolume.Value,
+        MonitorVolume = _monitorVolume.Value,
+        InstrumentMap = _instrumentMap,
+        ForkCalibration = _forkCalibration
     };
     private void Persist() { if (!_initializing) Preferences.Save(ReadSettings()); }
     private void ApplySettings(Preferences settings)
     {
         StopMicrophone(false);
+        StopMapping(false);
         _initializing = true;
+        LoadAudioPreferences(settings);
         _languageCode = string.IsNullOrEmpty(settings.Language) ? (settings.English ? "en" : "pl") : settings.Language;
         _english = _languageCode != "pl";
         _language.SelectedIndex = Array.IndexOf(UiLanguages.Codes, _languageCode);
@@ -905,7 +924,7 @@ internal sealed partial class TunerForm : Form
             if (_activeMethod == TuningMethod.TuningFork && _forkQuietUntil < DateTime.UtcNow.AddMilliseconds(600)) _forkQuietUntil = DateTime.UtcNow.AddMilliseconds(600);
             microphone.Start(); _microphone = microphone;
             _acceptAudio = true;
-            if (_activeMethod == TuningMethod.HybridHeadphones && _monitor.Checked) _audioMonitor = new AudioMonitor();
+            if (_activeMethod == TuningMethod.HybridHeadphones && _monitor.Checked) _audioMonitor = CreateMonitor();
             bool hybrid = _activeMethod is TuningMethod.HybridSpeakers or TuningMethod.HybridHeadphones;
             if (hybrid && _view.SelectedIndex == (int)TunerView.Beginner)
             {
@@ -931,6 +950,7 @@ internal sealed partial class TunerForm : Form
     {
         _guidanceEpoch++; _waitingForGuidance = false;
         _resultSpeechEpoch++; _waitingForResultSpeech = false;
+        Interlocked.Exchange(ref _speakerAdvanceUntil, 0);
         _speech.Stop();
         if (_microphone is null) return;
         Microphone microphone = _microphone; _microphone = null;
@@ -962,7 +982,20 @@ internal sealed partial class TunerForm : Form
         int target = _targetMidi;
         InstrumentKind instrument = _instrumentKind;
         UkuleleTuning ukulele = _ukuleleKind;
-        if (_activeMethod == TuningMethod.HybridHeadphones && _monitorEnabled) _audioMonitor?.Write(samples, _microphone?.SampleRate ?? 48000);
+        if (_activeMethod == TuningMethod.HybridHeadphones && _monitorEnabled) _audioMonitor?.Write(samples, _microphone?.SampleRate ?? 48000, _monitorLevel);
+        if (_activeMethod == TuningMethod.HybridSpeakers && Interlocked.Read(ref _speakerAdvanceUntil) != 0)
+        {
+            long until = Interlocked.Read(ref _speakerAdvanceUntil);
+            if (now.Ticks < until && _tapNavigator.Observe(TapNavigator.TransientLevel(samples), _minimumRms, now,
+                Volatile.Read(ref _doubleStrikeWindowMilliseconds)))
+            {
+                Interlocked.Exchange(ref _speakerAdvanceUntil, 0);
+                int from = target < 0 ? _lastResolvedTarget : target;
+                try { BeginInvoke((Action)(() => { if (generation == Volatile.Read(ref _measurementGeneration)) AdvanceTarget(from); })); }
+                catch (InvalidOperationException) { }
+            }
+            return;
+        }
         if (_activeMethod == TuningMethod.HybridSpeakers && !_acceptAudio)
         {
             if (!_practice.Listening(now)) { _windowCount = 0; _pairCount = 0; _session.Reset(); _tapNavigator.Reset(); return; }
@@ -1053,7 +1086,7 @@ internal sealed partial class TunerForm : Form
         }
         double result = completed.Value;
         int resolved = ResolveTarget(target, instrument, ukulele, result, reference);
-        double targetFrequency = PitchDetector.NoteFromMidi(resolved, reference).Frequency;
+        double targetFrequency = TargetFrequency(resolved, reference);
         bool inTune = Math.Abs(1200 * Math.Log2(result / targetFrequency)) <= tolerance;
         bool counting;
         lock (_navigationLock)
@@ -1071,16 +1104,23 @@ internal sealed partial class TunerForm : Form
         try { BeginInvoke((Action)(() => { if (generation == Volatile.Read(ref _measurementGeneration)) ShowResult(result, reference, target, tolerance, instrument, ukulele); })); }
         catch (InvalidOperationException) { }
     }
-    private static int ResolveTarget(int target, InstrumentKind instrument, UkuleleTuning ukulele,
-        double measured, double reference) => target >= 0 ? target :
-        InstrumentCatalog.HasStrings(instrument)
-            ? InstrumentCatalog.NearestOpenString(instrument, measured, reference, ukulele)
-            : PitchDetector.Nearest(measured, reference).Midi;
+    private int ResolveTarget(int target, InstrumentKind instrument, UkuleleTuning ukulele, double measured, double reference)
+    {
+        if (target >= 0) return target;
+        var map = _instrumentMap;
+        if (map is null)
+            return InstrumentCatalog.HasStrings(instrument)
+                ? InstrumentCatalog.NearestOpenString(instrument, measured, reference, ukulele)
+                : PitchDetector.Nearest(measured, reference).Midi;
+        IEnumerable<int> candidates = InstrumentCatalog.HasStrings(instrument)
+            ? InstrumentCatalog.Strings(instrument, ukulele).Select(item => item.Midi) : Enumerable.Range(21, 88);
+        return candidates.MinBy(midi => Math.Abs(Math.Log(measured / map.Frequency(midi, reference))));
+    }
     private void UpdateMeter(double measured)
     {
         if (!_visualMode.Checked || _activeMethod == TuningMethod.TuningFork || _consonanceKind != Consonance.Off) return;
         int target = ResolveTarget(_targetMidi, _instrumentKind, _ukuleleKind, measured, _reference);
-        double expected = PitchDetector.NoteFromMidi(target, _reference).Frequency;
+        double expected = TargetFrequency(target, _reference);
         double cents = 1200 * Math.Log2(measured / expected);
         _meter.SetReading(cents);
         _keyboard.SelectNote(target); _keyboard.SetReading(cents, _toleranceCents);
@@ -1091,7 +1131,7 @@ internal sealed partial class TunerForm : Form
         _hasResult = true; _lastMeasured = measured; _lastReference = reference; _lastTarget = targetMidi; _lastTolerance = tolerance; _lastInstrument = instrument; _lastUkulele = ukulele;
         int resolved = ResolveTarget(targetMidi, instrument, ukulele, measured, reference);
         _lastResolvedTarget = resolved;
-        Note note = PitchDetector.NoteFromMidi(resolved, reference);
+        Note note = PitchDetector.NoteFromMidi(resolved, reference) with { Frequency = TargetFrequency(resolved, reference) };
         double hertz = measured - note.Frequency;
         double cents = 1200 * Math.Log2(measured / note.Frequency);
         CultureInfo culture = UiLanguages.Culture(Locale);
@@ -1106,6 +1146,8 @@ internal sealed partial class TunerForm : Form
         string direction = Math.Abs(cents) <= tolerance ? T("dobrze", "in tune") : hertz < 0 ? T("za nisko", "too low") : T("za wysoko", "too high");
         string offset = hertz < -0.05 ? T("minus ", "minus ") + hz : hertz > 0.05 ? T("plus ", "plus ") + hz : T("zero", "zero");
         string announcement = Tf($"{name}, {direction}, {offset} herca.", $"{name}, {direction}, {offset} hertz.");
+        if (Math.Abs(cents) <= tolerance && _activeMethod == TuningMethod.HybridSpeakers && _forkTapEnabled)
+            announcement += " " + T("Stuknij dwa razy, aby przejść dalej.", "Tap twice to advance.");
         _result.Text = announcement;
         _details.Text = Tf($"Zmierzono: {measured.ToString("0.0", culture)} Hz. Cel: {note.Frequency.ToString("0.0", culture)} Hz. Odchyłka: {cents.ToString("+0.0;-0.0;0.0", culture)} centów.",
             $"Measured: {measured.ToString("0.0", culture)} Hz. Target: {note.Frequency.ToString("0.0", culture)} Hz. Difference: {cents.ToString("+0.0;-0.0;0.0", culture)} cents.");
@@ -1117,6 +1159,7 @@ internal sealed partial class TunerForm : Form
     }
     private void ResetResult()
     {
+        Interlocked.Exchange(ref _speakerAdvanceUntil, 0);
         _resultSpeechEpoch++; _waitingForResultSpeech = false;
         Interlocked.Increment(ref _measurementGeneration);
         _lowerIntervalFrequency = null;

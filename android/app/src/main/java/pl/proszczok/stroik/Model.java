@@ -5,6 +5,8 @@ import org.json.JSONObject;
 
 public final class Model {
   public String language = "";
+  public String instrumentMap = "", forkCalibration = "";
+  private JSONObject mappedNotes, calibratedNotes;
   public boolean english,
       dark,
       beginner = true,
@@ -26,6 +28,8 @@ public final class Model {
       pairMode = 0,
       sensitivity = 1,
       hybridPause = 0,
+      forkVolume = 100,
+      monitorVolume = 100,
       minutes = 5;
   public double reference = 440,
       tolerance = 5,
@@ -151,6 +155,22 @@ public final class Model {
     return a * Math.pow(2, (midi - 69) / 12.0);
   }
 
+  public double targetHz(int midi) {
+    return mappedNotes == null ? hz(midi, reference) : mappedNotes.optDouble(Integer.toString(midi), hz(midi, reference));
+  }
+
+  public int tone(int midi, String setting) {
+    JSONObject note = calibratedNotes == null ? null : calibratedNotes.optJSONObject(Integer.toString(midi));
+    return note == null ? 100 : note.optInt(setting, 100);
+  }
+
+  public void refreshTuningFiles() {
+    try {
+      mappedNotes = instrumentMap.isEmpty() ? null : TuningFiles.parse(instrumentMap, TuningFiles.MAP);
+      calibratedNotes = forkCalibration.isEmpty() ? null : TuningFiles.parse(forkCalibration, TuningFiles.CALIBRATION);
+    } catch (Exception invalid) { throw new IllegalArgumentException("Invalid Stroik tuning file", invalid); }
+  }
+
   public int semitones() {
     return interval == 2 ? 12 : 7;
   }
@@ -177,10 +197,11 @@ public final class Model {
   public int resolved(double frequency) {
     if (target >= 21) return target;
     int n = (int) Math.round(69 + 12 * Math.log(frequency / reference) / Math.log(2));
-    if (strings()) {
+    if (strings() || mappedNotes != null) {
       double best = Double.MAX_VALUE;
-      for (int v : stringsMidi()) {
-        double d = Math.abs(Math.log(frequency / hz(v, reference)));
+      int[] candidates = strings() ? stringsMidi() : java.util.stream.IntStream.rangeClosed(21, 108).toArray();
+      for (int v : candidates) {
+        double d = Math.abs(Math.log(frequency / targetHz(v)));
         if (d < best) {
           best = d;
           n = v;
@@ -374,7 +395,9 @@ public final class Model {
               "Stare pianino powinien ocenić technik przed podnoszeniem naciągu. Zacznij od środka,"
                   + " zmieniaj strony równomiernie i wytłumiaj pozostałe struny.",
               "Have an old piano assessed before raising tension. Start near the middle, work"
-                  + " evenly on both sides and mute unused strings.");
+                  + " evenly on both sides and mute unused strings.") + " " + t(
+              "Dla pianin powojennych A4 = 440 Hz to zwykły punkt odniesienia. Pianina przedwojenne mogły być przewidziane do niższego stroju. Przed podniesieniem stroju starego pianina poproś technika o ocenę instrumentu.",
+              "A4 = 440 Hz is the usual reference for postwar pianos. Prewar pianos may have been designed for lower pitch. Ask a technician to assess an old piano before raising its pitch.");
     return common
         + (strings()
             ? t(
@@ -427,6 +450,7 @@ public final class Model {
   }
 
   public void validate() {
+    refreshTuningFiles();
     if (language == null || (!language.isEmpty() && !Translations.supported(language)))
       throw new IllegalArgumentException("Language");
     if (method < 0
@@ -448,6 +472,7 @@ public final class Model {
         || sensitivity > 2
         || hybridPause < 0
         || hybridPause > 60
+        || forkVolume < 0 || forkVolume > 100 || monitorVolume < 0 || monitorVolume > 100
         || minutes < 1
         || minutes > 1440
         || !Double.isFinite(reference)

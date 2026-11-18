@@ -8,6 +8,17 @@ public final class CoreChecks {
   }
 
   public static void main(String[] args) {
+    short[] shortTap = new short[4096];
+    for (int i = 280; i < 370; i++) shortTap[i] = (short)(i % 2 == 0 ? 1600 : -1600);
+    double tapLevel = Dsp.Taps.transientLevel(shortTap, shortTap.length);
+    require(Dsp.rms(shortTap, shortTap.length) < .008 && tapLevel > .0088, "Short acoustic tap was lost in the measurement window");
+    Dsp.Taps shortcut = new Dsp.Taps();
+    require(!shortcut.observe(tapLevel,.008,1000,1.2), "One tap advanced");
+    shortcut.observe(0,.008,1150,1.2);
+    require(shortcut.observe(tapLevel,.008,1320,1.2), "Two short, separated taps did not advance");
+    short[] audible = Dsp.fork(55,0,44100,0,100,100,100,100);
+    short[] silent = Dsp.fork(55,0,44100,200,100,100,100,0);
+    require(Dsp.rms(audible,audible.length) > .05 && Dsp.rms(silent,silent.length) == 0, "Fork volume failed to mute playback");
     for (String language : Translations.CODES) {
       Model translated = new Model();
       translated.language = language;

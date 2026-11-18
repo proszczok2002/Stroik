@@ -1,7 +1,7 @@
-Stroik Android 1.09
+Stroik Android 1.10
 
-- Kontra-A erhält dieselbe Obertonstütze wie tiefere Töne. Beide Plattformen verwenden dieselbe Klangfarbe ohne Oktavverschiebung. Die Basswiedergabe hängt vom Lautsprecher ab.
-- Der klassische Hybrid startet sofort ohne Anleitung. Für Anfänger werden zuerst Hinweise gelesen. Das Windows-Verhalten bleibt erhalten und wurde für Android ergänzt.
-- Die Ergebnispause erlaubt 0–60 Sekunden, auch 1 und 2. Bei 0 beginnt die Referenz sofort nach dem tatsächlichen Sprachende. Neuer Standard ist 0; gespeicherte Windows-Pausen bleiben erhalten. Android bietet Schieberegler und Zahleneingabe.
-- Erst wird das gesamte Ergebnis gesprochen, dann werden Referenz und Weiterschaltung freigegeben. Der Hybrid verlangt einen korrekt gestimmten Ton und zwei höhenbestätigte Anschläge. Die reine Stimmgabel behält ihre akustische Geste.
-- Android zeigt klassisch keine Tastenpositionen mehr. Methodenhinweise für Anfänger und schwarze Tasten mit Links/Rechts wurden ergänzt. Ergebnisse und Anleitung spricht die App auch mit TalkBack selbst; TalkBack steuert weiter die Navigation.
+- Aktivieren Sie im Lautsprecher-Hybrid die Zwei-Klopfzeichen-Option. Nach einem korrekt gestimmten Ergebnis bleibt die Referenz kurz stumm. Zwei Klopfzeichen genügen. Ohne Geste wird derselbe Ton wiederholt. Bei verstimmtem Ton gilt die eingestellte Pause von 0–60 Sekunden.
+- Für Nachkriegsklaviere ist A4 = 440 Hz üblich. Vorkriegsinstrumente können für niedrigere Stimmung gebaut sein. Vor einer Erhöhung ein altes Klavier von einem Techniker beurteilen lassen.
+- Unter Instrumentenstimmung erfassen wählen Sie Oktave, Ton und 1–10 Anschläge. Starten, jeden Ton ausklingen lassen und die Ansage abwarten. Der Mittelwert in Hertz wird dem ausgewählten Ton zugeordnet. Weiter über Liste, Taste oder nach dem Speichern mit zwei Klopfzeichen. Beenden stoppt das Mikrofon. Strg+S speichert die JSON-Datei. Aktivieren Sie die Stimmung für Messung und Referenz. Nicht erfasste Töne verwenden die Standardstimmung. Die Datei funktioniert auf beiden Plattformen.
+- Der Windows-Kalibrator bietet 88 Töne in einer Liste, Obertöne 0–200 % und Lautstärke 0–150 % je Ton. 100 % entspricht Stroik. Alt+U spielt, Strg+S speichert JSON. Öffnen Sie die Datei in den Stroik-Einstellungen beider Plattformen. Sie ändert Klangfarbe und Pegel.
+- Getrennte Regler für Stimmgabel und Mikrofon-Mithören sind in den Einstellungen. Windows führt aktive Quellen auch getrennt im Systemmixer. Das Standard-Ausgabegerät wird verwendet. Mithören nur mit Kopfhörern.

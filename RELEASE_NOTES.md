@@ -1,61 +1,61 @@
-# Stroik 1.21
+# Stroik 1.22
 
 ## Polski
 
-Stroik 1.21
+Stroik 1.22
 
-- A kontra otrzymało takie samo wsparcie harmonicznych jak niższe nuty. Obie platformy używają tej samej barwy bez zmiany oktawy. Słyszalność basu nadal zależy od głośników.
-- Klasyczna hybryda uruchamia kamerton od razu, bez samouczka. W widoku dla początkujących najpierw czytane są wskazówki. Działanie Windows zachowano i dodano je w Androidzie.
-- Przerwa po wyniku wynosi 0–60 sekund, także 1 lub 2. Zero oznacza powrót wzorca od razu po zakończeniu mowy i jest nowym ustawieniem domyślnym. Zapisane przerwy Windows są zachowane. Android ma tę samą regulację z suwakiem i wpisem liczby.
-- Najpierw cały wynik, potem kamerton i możliwość przejścia. W hybrydzie przejście wymaga dobrego wyniku oraz dwóch uderzeń o potwierdzonej wysokości. W samym kamertonie nadal działa gest akustyczny.
-- Android: klasyczna lista bez opisów położenia klawiszy, opisy metod dla początkujących oraz czarne klawisze strzałkami lewo/prawo. Wyniki i samouczek czyta syntezator aplikacji także przy TalkBack, aby znać koniec mowy; TalkBack nadal obsługuje nawigację.
+- W hybrydzie głośnikowej włącz opcję dwóch stuknięć. Po komunikacie o dobrym stroju kamerton pozostawia ciche okno na dwa krótkie stuknięcia. Nie trzeba dwukrotnie zagrać czystej nuty. Bez gestu kamerton powtarza ten sam wzorzec. Po złym wyniku obowiązuje ustawiona przerwa od 0 do 60 sekund.
+- Dla pianin powojennych A4 = 440 Hz to zwykły punkt odniesienia. Przedwojenne instrumenty mogły być przewidziane do niższego stroju. Przed podnoszeniem stroju starego pianina warto uzyskać ocenę technika.
+- W zakładce **Mapowanie instrumentu** wybierz oktawę, nutę i od 1 do 10 uderzeń. Kliknij **Rozpocznij mapowanie**, po każdym uderzeniu pozwól nucie ucichnąć i poczekaj na komunikat. Stroik przypisuje średnią częstotliwość w hercach do wybranej nuty. Po zebraniu całej serii wynik jest zapamiętany. Przejdź do następnej nuty listą, przyciskiem albo dwoma stuknięciami. **Zakończ mapowanie** zatrzymuje mikrofon. **Zapisz plik mapingu** (Ctrl+S) zapisuje JSON. **Użyj mapy do strojenia** włącza ją dla miernika i kamertonu. Nuty spoza mapy korzystają ze zwykłego stroju. Ten sam plik otworzysz na obu systemach.
+- **Stroik-Kalibrator.exe** ma jedną listę 88 nut. Suwaki zapisują harmoniczne (0–200% wartości Stroika) i głośność (0–150%) oddzielnie dla każdej nuty. 100% to punkt wyjścia, a 0% harmonicznych daje czysty ton. Alt+U odtwarza nutę, Ctrl+S zapisuje JSON. W Stroiku na obu systemach wybierz **Ustawienia → Wczytaj kalibrację kamertonu**. Kalibracja zmienia barwę i poziom, a mapa instrumentu zmienia częstotliwości.
+- W ustawieniach są osobne suwaki głośności kamertonu i odsłuchu z mikrofonu. Na Windows odpowiadają im także osobne sesje aktywnych źródeł w mikserze systemowym. Obie aplikacje korzystają z domyślnego wyjścia audio. Odsłuch mikrofonu uruchamiaj w słuchawkach.
 
 ## English
 
-Stroik 1.21
+Stroik 1.22
 
-- Contra A now has the same harmonic support as lower notes. Both platforms use matching timbres without octave transposition. Bass audibility still depends on speakers.
-- Classic hybrid starts its reference immediately without a tutorial. Beginner view reads guidance first. The existing Windows behavior is retained and has been added to Android.
-- The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
-- The whole result finishes before the reference and navigation are released. Hybrid advance requires an in-tune result and two pitch-confirmed attacks. Fork-only mode keeps its acoustic gesture.
-- Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
+- In speaker hybrid, enable the two-tap checkbox. After an in-tune announcement, the reference stays silent while you tap twice. The taps can be unpitched. With no gesture, the reference repeats the same note. A detuned reading uses the configured 0–60 second pause.
+- A4 = 440 Hz is the usual reference for postwar pianos. Prewar instruments may have been built for lower pitch. Have a technician assess an old piano before raising its pitch.
+- In **Instrument mapping**, choose octave, note and 1–10 strikes. Select **Start mapping**, let each strike decay and wait for its announcement. Stroik assigns the average frequency in hertz to the selected note. A complete series is stored automatically. Pick the next note in the list, use the button, or tap twice after saving the reading. **Finish mapping** stops capture. **Save mapping file** (Ctrl+S) exports JSON. **Use map for tuning** makes the readings the targets for the tuner and fork. Unmapped notes use standard tuning. Both platforms read the same file.
+- **Stroik-Kalibrator.exe** has one list of 88 notes. Set harmonics (0–200% of the Stroik baseline) and volume (0–150%) per note. 100% is the baseline and 0% harmonics yields a pure tone. Alt+U plays the selected note. Ctrl+S saves JSON. In Stroik, use **Settings → Open fork calibration** on either platform. Calibration affects timbre and level, while mapping sets pitch.
+- Settings provide separate fork and microphone-monitoring volume sliders. Windows also exposes separate mixer sessions for the active streams. Both apps use the default audio output. Use headphones for microphone monitoring.
 
 ## Deutsch
 
-Stroik 1.21
+Stroik 1.22
 
-- Kontra-A erhält dieselbe Obertonstütze wie tiefere Töne. Beide Plattformen verwenden dieselbe Klangfarbe ohne Oktavverschiebung. Die Basswiedergabe hängt vom Lautsprecher ab.
-- Der klassische Hybrid startet sofort ohne Anleitung. Für Anfänger werden zuerst Hinweise gelesen. Das Windows-Verhalten bleibt erhalten und wurde für Android ergänzt.
-- Die Ergebnispause erlaubt 0–60 Sekunden, auch 1 und 2. Bei 0 beginnt die Referenz sofort nach dem tatsächlichen Sprachende. Neuer Standard ist 0; gespeicherte Windows-Pausen bleiben erhalten. Android bietet Schieberegler und Zahleneingabe.
-- Erst wird das gesamte Ergebnis gesprochen, dann werden Referenz und Weiterschaltung freigegeben. Der Hybrid verlangt einen korrekt gestimmten Ton und zwei höhenbestätigte Anschläge. Die reine Stimmgabel behält ihre akustische Geste.
-- Android zeigt klassisch keine Tastenpositionen mehr. Methodenhinweise für Anfänger und schwarze Tasten mit Links/Rechts wurden ergänzt. Ergebnisse und Anleitung spricht die App auch mit TalkBack selbst; TalkBack steuert weiter die Navigation.
+- Aktivieren Sie im Lautsprecher-Hybrid die Zwei-Klopfzeichen-Option. Nach einem korrekt gestimmten Ergebnis bleibt die Referenz kurz stumm. Zwei Klopfzeichen genügen. Ohne Geste wird derselbe Ton wiederholt. Bei verstimmtem Ton gilt die eingestellte Pause von 0–60 Sekunden.
+- Für Nachkriegsklaviere ist A4 = 440 Hz üblich. Vorkriegsinstrumente können für niedrigere Stimmung gebaut sein. Vor einer Erhöhung ein altes Klavier von einem Techniker beurteilen lassen.
+- Unter **Instrumentenstimmung erfassen** wählen Sie Oktave, Ton und 1–10 Anschläge. Starten, jeden Ton ausklingen lassen und die Ansage abwarten. Der Mittelwert in Hertz wird dem ausgewählten Ton zugeordnet. Weiter über Liste, Taste oder nach dem Speichern mit zwei Klopfzeichen. Beenden stoppt das Mikrofon. Strg+S speichert die JSON-Datei. Aktivieren Sie die Stimmung für Messung und Referenz. Nicht erfasste Töne verwenden die Standardstimmung. Die Datei funktioniert auf beiden Plattformen.
+- Der Windows-Kalibrator bietet 88 Töne in einer Liste, Obertöne 0–200 % und Lautstärke 0–150 % je Ton. 100 % entspricht Stroik. Alt+U spielt, Strg+S speichert JSON. Öffnen Sie die Datei in den Stroik-Einstellungen beider Plattformen. Sie ändert Klangfarbe und Pegel.
+- Getrennte Regler für Stimmgabel und Mikrofon-Mithören sind in den Einstellungen. Windows führt aktive Quellen auch getrennt im Systemmixer. Das Standard-Ausgabegerät wird verwendet. Mithören nur mit Kopfhörern.
 
 ## Русский
 
-Stroik 1.21
+Stroik 1.22
 
-- Ля контроктавы получает ту же поддержку обертонов, что и более низкие ноты. Обе платформы используют одинаковый тембр без переноса октавы. Слышимость баса зависит от динамиков.
-- Классический гибрид запускается сразу без учебных подсказок. Для начинающих сначала читаются подсказки. Поведение Windows сохранено и добавлено в Android.
-- Пауза после результата теперь 0–60 секунд, включая 1 и 2. При 0 эталон включается сразу после фактического окончания речи. Новый стандарт — 0; сохранённые паузы Windows не сбрасываются. В Android добавлены ползунок и ввод числа.
-- Результат произносится полностью до повторного эталона и разрешения перехода. В гибриде нужны верный результат и два удара с подтверждённой высотой. В режиме камертона сохранён акустический жест.
-- В классическом списке Android убраны положения клавиш. Добавлены описания методов для начинающих и выбор чёрных клавиш влево/вправо. Результаты и подсказки читает синтезатор приложения даже с TalkBack, чтобы отслеживать конец речи; TalkBack управляет навигацией.
+- В гибриде с динамиками включите опцию двух стуков. После сообщения о верном строе есть тихое окно для жеста. Без жеста повторяется та же нота. При расстройке действует выбранная пауза 0–60 секунд.
+- Для послевоенных пианино обычный ориентир — A4 = 440 Гц. Довоенные инструменты могли рассчитываться на более низкий строй. Перед повышением строя старого пианино обратитесь к мастеру.
+- В разделе **Карта строя инструмента** выберите октаву, ноту и 1–10 ударов. Запустите запись, дайте ноте затихнуть после каждого удара и дождитесь сообщения. Средняя частота в герцах сохраняется под выбранной нотой. Следующую ноту можно выбрать в списке, кнопкой или двумя стуками после сохранения. Завершение останавливает микрофон. Ctrl+S сохраняет JSON. Включите карту для измерителя и камертона. Ноты вне карты используют стандартный строй. Файл подходит обеим платформам.
+- В калибраторе Windows 88 нот в одном списке. Для каждой ноты доступны обертоны 0–200 % и громкость 0–150 %. 100 % — исходный уровень Stroik. Alt+U воспроизводит ноту, Ctrl+S сохраняет JSON. В обеих версиях Stroik файл открывается в настройках и меняет тембр и уровень.
+- В настройках есть отдельные регуляторы громкости камертона и прослушивания микрофона. Windows также показывает отдельные активные сессии в системном микшере. Используется выход по умолчанию. Прослушивайте микрофон в наушниках.
 
 ## Français
 
-Stroik 1.21
+Stroik 1.22
 
-- Le la de contre-octave reçoit le même soutien harmonique que les notes inférieures. Les deux plateformes utilisent le même timbre sans transposition. L’audibilité du grave dépend des haut-parleurs.
-- L’hybride classique démarre immédiatement sans tutoriel. En vue débutant, les conseils sont lus avant la référence. Le comportement Windows est conservé et ajouté à Android.
-- La pause après résultat accepte 0–60 secondes, dont 1 et 2. À 0, la référence reprend dès la fin réelle de la parole. Nouvelle valeur par défaut : 0 ; les pauses Windows enregistrées sont conservées. Android propose un curseur et la saisie numérique.
-- Le résultat est lu intégralement avant la référence et l’autorisation du passage. En hybride, une note juste puis deux attaques de hauteur confirmée sont nécessaires. Le diapason seul conserve son geste acoustique.
-- Android masque les positions dans la liste classique. Ajout des descriptions des méthodes pour débutants et du choix des touches noires avec gauche/droite. La synthèse de l’application lit résultats et tutoriels même avec TalkBack pour connaître la fin de parole ; TalkBack gère la navigation.
+- En hybride haut-parleurs, activez l’option des deux frappes. Après un résultat juste, la référence reste silencieuse pour le geste. Sans geste, elle répète la même note. Si la note est fausse, la pause configurée de 0–60 secondes s’applique.
+- La4 = 440 Hz est la référence habituelle des pianos d’après-guerre. Les instruments d’avant-guerre peuvent être conçus pour un diapason plus bas. Faites examiner un vieux piano avant de relever son diapason.
+- Dans **Relevé de l’accord**, choisissez octave, note et 1–10 frappes. Lancez le relevé. Laissez chaque note s’éteindre et attendez le message. La fréquence moyenne en hertz est associée à la note choisie. Passez à la suivante par liste, bouton ou deux frappes après l’enregistrement. Terminer arrête le micro. Ctrl+S exporte le JSON. Activez le relevé pour la mesure et la référence. Les notes absentes gardent l’accord standard. Le fichier est commun aux deux plateformes.
+- Le calibrateur Windows réunit 88 notes dans une liste, avec harmoniques 0–200 % et volume 0–150 % par note. 100 % correspond au réglage initial de Stroik. Alt+U joue, Ctrl+S exporte en JSON. Ouvrez ce fichier dans les paramètres Stroik sur les deux plateformes pour ajuster timbre et niveau.
+- Volumes séparés du diapason et du retour micro dans les paramètres. Windows présente aussi deux sessions actives dans le mixeur système. La sortie audio par défaut est utilisée. Écoutez le retour micro au casque.
 
 ## Español
 
-Stroik 1.21
+Stroik 1.22
 
-- El la de la contraoctava recibe el mismo apoyo armónico que las notas inferiores. Ambas plataformas usan el mismo timbre sin transposición. La audibilidad del grave depende de los altavoces.
-- El híbrido clásico empieza inmediatamente sin tutorial. La vista para principiantes lee primero las indicaciones. Se conserva el comportamiento de Windows y se añade a Android.
-- La pausa tras el resultado admite 0–60 segundos, incluidos 1 y 2. Con 0, la referencia se reanuda al terminar realmente la voz. El nuevo valor predeterminado es 0; se conservan las pausas guardadas de Windows. Android ofrece deslizador y entrada numérica.
-- El resultado se lee completo antes de la referencia y de permitir avanzar. El híbrido exige un resultado afinado y dos ataques con altura confirmada. El diapasón solo conserva su gesto acústico.
-- Android oculta posiciones en la lista clásica. Se añaden descripciones de métodos para principiantes y selección de teclas negras con izquierda/derecha. La síntesis de la aplicación lee resultados y tutoriales incluso con TalkBack para conocer el final de la voz; TalkBack gestiona la navegación.
+- En el híbrido con altavoces, active la opción de dos golpes. Tras un resultado afinado, la referencia queda en silencio para el gesto. Sin gesto se repite la misma nota. Si está desafinada, se respeta la pausa elegida de 0–60 segundos.
+- La4 = 440 Hz es la referencia habitual para pianos de posguerra. Los de preguerra podían estar diseñados para un tono más bajo. Consulte a un técnico antes de subir el tono de un piano antiguo.
+- En **Mapa del instrumento**, elija octava, nota y 1–10 golpes. Inicie el mapa, deje apagar cada golpe y espere el mensaje. La frecuencia media en hercios se asigna a la nota elegida. Pase a la siguiente en la lista, con el botón o con dos golpes después de guardar. Finalizar detiene el micrófono. Ctrl+S guarda JSON. Active el mapa para la medición y el diapasón. Las notas ausentes usan el tono estándar. El archivo sirve en ambas plataformas.
+- El calibrador de Windows reúne 88 notas en una lista y ofrece armónicos 0–200 % y volumen 0–150 % por nota. 100 % es la referencia de Stroik. Alt+U reproduce, Ctrl+S guarda JSON. Abra el archivo desde los ajustes de Stroik en ambas plataformas para ajustar timbre y nivel.
+- Los ajustes tienen volúmenes independientes de diapasón y monitorización del micrófono. Windows también muestra sesiones activas separadas en el mezclador del sistema. Se usa la salida de audio predeterminada. Monitorice con auriculares.

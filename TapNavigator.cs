@@ -3,6 +3,14 @@ namespace Stroik;
 // Explicitly enabled acoustic gesture: two separate attacks, independent of pitch.
 internal sealed class TapNavigator
 {
+    internal static double TransientLevel(ReadOnlySpan<short> samples)
+    {
+        double level = 0;
+        for (int i = 0; i < samples.Length; i += 192)
+            level = Math.Max(level, PitchDetector.Rms(samples.Slice(i, Math.Min(192, samples.Length - i))));
+        return level;
+    }
+
     private double _envelope;
     private DateTime _lastAttack, _first;
     private bool _sound, _ready;

@@ -35,6 +35,9 @@
     <Compile Include="../VisualControls.cs" Link="VisualControls.cs" />
     <Compile Include="../Preferences.cs" Link="Preferences.cs" />
     <Compile Include="../TuningFork.cs" Link="TuningFork.cs" />
+    <Compile Include="../WindowsAudioStream.cs" Link="WindowsAudioStream.cs" />
+    <Compile Include="../TuningFiles.cs" Link="TuningFiles.cs" />
+    <Compile Include="../TunerForm.Mapping.cs" Link="TunerForm.Mapping.cs" />
     <Compile Include="../TunerForm.cs" Link="TunerForm.cs" />
     <Compile Include="../Microphone.cs" Link="Microphone.cs" />
     <EmbeddedResource Include="../RELEASE_NOTES.md" LogicalName="Stroik.RELEASE_NOTES.md" />

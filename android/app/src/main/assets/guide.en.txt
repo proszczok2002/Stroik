@@ -1,3 +1,11 @@
+Stroik Android 1.10
+
+- In speaker hybrid, enable the two-tap checkbox. After an in-tune announcement, the reference stays silent while you tap twice. The taps can be unpitched. With no gesture, the reference repeats the same note. A detuned reading uses the configured 0–60 second pause.
+- A4 = 440 Hz is the usual reference for postwar pianos. Prewar instruments may have been built for lower pitch. Have a technician assess an old piano before raising its pitch.
+- In Instrument mapping, choose octave, note and 1–10 strikes. Select Start mapping, let each strike decay and wait for its announcement. Stroik assigns the average frequency in hertz to the selected note. A complete series is stored automatically. Pick the next note in the list, use the button, or tap twice after saving the reading. Finish mapping stops capture. Save mapping file (Ctrl+S) exports JSON. Use map for tuning makes the readings the targets for the tuner and fork. Unmapped notes use standard tuning. Both platforms read the same file.
+- Stroik-Kalibrator.exe has one list of 88 notes. Set harmonics (0–200% of the Stroik baseline) and volume (0–150%) per note. 100% is the baseline and 0% harmonics yields a pure tone. Alt+U plays the selected note. Ctrl+S saves JSON. In Stroik, use Settings → Open fork calibration on either platform. Calibration affects timbre and level, while mapping sets pitch.
+- Settings provide separate fork and microphone-monitoring volume sliders. Windows also exposes separate mixer sessions for the active streams. Both apps use the default audio output. Use headphones for microphone monitoring.
+
 Stroik Android 1.09
 
 - Contra A now has the same harmonic support as lower notes. Both platforms use matching timbres without octave transposition. Bass audibility still depends on speakers.
@@ -9,7 +17,7 @@ Stroik Android 1.09
 Stroik Android — guide
 
 Accessibility
-Bottom buttons open Tuner, Settings and Help in one row. Use TalkBack gestures to navigate standard buttons, checkboxes, dropdowns and labelled fields. Controls have large touch targets. Android announces checkbox state. Only final readings are announced, not every audio sample. App speech reads results even with TalkBack enabled. Graphics are optional and off by default. Polish, English, German, Russian, French, Spanish and dark theme are in Settings.
+Bottom buttons open Tuner, Settings, Help and Instrument mapping in one row. Use TalkBack gestures to navigate standard buttons, checkboxes, dropdowns and labelled fields. Controls have large touch targets. Android announces checkbox state. Only final readings are announced, not every audio sample. App speech reads results even with TalkBack enabled. Graphics are optional and off by default. Polish, English, German, Russian, French, Spanish and dark theme are in Settings.
 
 Methods
 Tuning fork plays a decaying reference. Enable automatic strikes and set an interval or use Strike tuning fork. Pause/resume controls automatic playback.
@@ -19,7 +27,7 @@ Headphone hybrid listens while the reference plays. Optional microphone monitori
 
 Instruments and notes
 Piano and chromatic modes cover 88 notes, A0 to C8, and always show the octave dropdown. Default target: one-line G (G4). Guitar, ukulele, violin and bass presets list open strings. Ukulele standard, floor upward: A E C G; alternative G E C A. Guitar, thickest first: E A D G B E. Use chromatic mode for other tunings. Piano order can ascend, alternate blocks of five semitones to either side, or alternate whole-tone blocks. Next note advances manually.
-In electronic mode, two strikes after an in-tune result can advance. Fork-only mode has an acoustic two-attack gesture which incidental noises can trigger. Hybrid mode requires an in-tune result and two pitch-confirmed attacks. Set the gap from 0.5 to 2.5 seconds. The app's speaker reference is ignored, and automatic fork strikes with the gesture enabled are at least 6.5 seconds apart.
+In electronic mode, two strikes after an in-tune result can advance. Fork-only mode has an acoustic two-attack gesture which incidental noises can trigger. Speaker hybrid recognizes two taps in the quiet after an in-tune result. Set the gap from 0.5 to 2.5 seconds. The app's speaker reference is ignored, and automatic fork strikes with the gesture enabled are at least 6.5 seconds apart.
 
 Consonance
 Select the lower target, then Fifths or Octaves. C4 pairs with G4 or C5. Fork mode plays the pair together. Separate measurement: lower, mute, confirmation, upper, mute. Results give deviation from 700/1200 cents and estimated ideal-harmonic beats: |2×upper−3×lower| or |upper−2×lower| Hz.
@@ -39,7 +47,7 @@ Stroik Android 1.07
 
 Classic hides guidance, including the 440 Hz standard hint and piano advice for ukulele. Choose the view only on Tuner; the duplicate Settings checkbox is removed.
 
-Hybrid microphone controls also start its reference. Manual strike, fork automation and interval controls appear only in Fork; hybrids keep their separate pitch-confirmed double-strike checkbox. Electronic and Hybrid advance require a completed in-tune announcement. Both attacks require fresh pitch at the expected note within the chosen tolerance. Detuning cancels arming; a normal reading alone does not change target. Reference playback no longer invalidates an already completed reading. The fork waits for its own TTS utterance to actually finish.
+Hybrid microphone controls also start its reference. Manual strike, fork automation and interval controls appear only in Fork; hybrids keep their separate double-tap checkbox. Electronic and Hybrid advance require a completed in-tune announcement. Electronic and headphone advance require matching pitch on both attacks. Speaker hybrid listens for two acoustic taps after an in-tune announcement. Detuning cancels arming; a normal reading alone does not change target. Reference playback no longer invalidates an already completed reading. The fork waits for its own TTS utterance to actually finish.
 
 Shift+Alt+N and Shift+Ctrl+N select the previous planned note. Numeric entry opens the numeric keyboard and accepts either decimal separator; the slider and profile retain the entered value. Speech rate remains in Settings.
 

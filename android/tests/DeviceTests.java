@@ -17,8 +17,8 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
-  private int expectedCode = 109;
-  private String expectedName = "1.09";
+  private int expectedCode = 110;
+  private String expectedName = "1.10";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
@@ -26,8 +26,8 @@ public final class DeviceTests extends Instrumentation {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
     if (args != null) {
-      expectedCode = args.getInt("expectedCode", 109);
-      expectedName = args.getString("expectedName", "1.09");
+      expectedCode = args.getInt("expectedCode", 110);
+      expectedName = args.getString("expectedName", "1.10");
     }
     start();
   }
@@ -187,6 +187,10 @@ public final class DeviceTests extends Instrumentation {
 
   @Override
   public void onStart() {
+    if (scenario.equals("mapping110")) {
+      mapping110Scenario();
+      return;
+    }
     if (scenario.equals("hybrid109")) {
       hybrid109Scenario();
       return;
@@ -1856,6 +1860,92 @@ public final class DeviceTests extends Instrumentation {
     }
     output.putString("stream", report.toString());
     finish(Activity.RESULT_OK, output);
+  }
+
+  private void mapping110Scenario() {
+    Bundle output = new Bundle();
+    String saved = null;
+    AudioEngine synthetic = null;
+    try {
+      automation = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+      Context context = getTargetContext();
+      saved = context.getSharedPreferences("stroik", 0).getString("settings", null);
+      activity = (MainActivity)startActivitySync(new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+      TuningSession session = TuningSession.get(activity);
+      main(() -> {
+        session.stop();
+        activity.model.language = "en";
+        activity.model.updates = false;
+        session.configure(activity.model);
+        invokeRender();
+      });
+      page("Instrument mapping");
+      inspect("Mapping page");
+      require(findSpinner("Strikes per note (1–10)").getCount()==10, "Expected ten measurement options");
+      require(findSpinner("Choose octave").getCount()==9, "Expected nine octaves");
+      require(findSpinner("Target note").getCount()==88, "Expected 88 notes");
+      main(() -> findButton("Start mapping").performClick());
+      long deadline = SystemClock.elapsedRealtime()+6000;
+      while (!session.audio.running() && SystemClock.elapsedRealtime()<deadline) SystemClock.sleep(25);
+      require(session.audio.running() && session.audio.mappingActive() && !session.audio.forkPlaying(), "Mapping must start actual recording without the reference");
+      main(() -> findButton("Finish mapping").performClick());
+      require(!session.audio.running() && !session.audio.mappingActive(), "Mapping did not stop");
+      java.util.concurrent.atomic.AtomicReference<AudioEngine> holder = new java.util.concurrent.atomic.AtomicReference<>();
+      java.util.concurrent.CopyOnWriteArrayList<Double> averages = new java.util.concurrent.CopyOnWriteArrayList<>();
+      AtomicInteger next = new AtomicInteger();
+      Model fixture = new Model();
+      fixture.method = 2;
+      fixture.forkTap = true;
+      synthetic = new AudioEngine(fixture,new AudioEngine.Listener() {
+        public void result(String text) { throw new AssertionError("Tuner ran instead of mapping"); }
+        public void advance() { throw new AssertionError("Tuner advanced instead of mapping"); }
+        public void reading(double cents) {}
+        public void failed(String error) { throw new AssertionError(error); }
+        public void mapped(int midi, int count, int needed, double average) {
+          require(midi==69 && needed==2,"Selected note or strike count lost");
+          averages.add(average);
+          holder.get().speechFinished();
+        }
+        public void nextMapped() { next.incrementAndGet(); }
+      },(android.media.AudioManager)context.getSystemService(Context.AUDIO_SERVICE));
+      holder.set(synthetic);
+      synthetic.configureMapping(69,2,true);
+      long now = SystemClock.elapsedRealtime()+4000;
+      AudioEngine.Capture capture = new AudioEngine.Capture();
+      for (double hz:new double[]{421,433}) {
+        for(int frame=0;frame<8;frame++) {
+          short[] tone=new short[4096];
+          for(int i=0;i<tone.length;i++)tone[i]=(short)(9000*Math.sin(2*Math.PI*hz*(i+frame*4096)/48000));
+          synthetic.process(tone,tone.length,now,capture);now+=86;
+        }
+        for(int frame=0;frame<8;frame++) {
+          synthetic.process(new short[4096],4096,now,capture);now+=86;
+        }
+        waitForIdleSync();
+      }
+      require(averages.size()==2 && Math.abs(averages.get(0)-421)<.15 && Math.abs(averages.get(1)-427)<.15,"Measured average is incorrect: "+averages);
+      short[] tap=new short[4096];
+      for(int i=280;i<370;i++)tap[i]=(short)(i%2==0?1600:-1600);
+      synthetic.process(tap,tap.length,now+400,capture);
+      synthetic.process(new short[4096],4096,now+550,capture);
+      synthetic.process(tap,tap.length,now+750,capture);
+      waitForIdleSync();
+      require(next.get()==1,"Two taps must advance the completed mapping");
+      fixture.instrumentMap="{\"format\":\"stroik-instrument-map\",\"version\":1,\"notes\":{\"69\":427.0}}";
+      fixture.forkCalibration="{\"format\":\"stroik-fork-calibration\",\"version\":1,\"notes\":{\"69\":{\"harmonics\":21,\"volume\":67}}}";
+      Model imported = Model.from(fixture.json());
+      require(imported.targetHz(69)==427&&imported.targetHz(81)==880&&imported.tone(69,"harmonics")==21&&imported.tone(69,"volume")==67,"Shared file round trip or fallback");
+      log("Actual mapping microphone lifecycle, accessible controls, synthetic average/advance and shared file parsing: "+assertions+" assertions PASS");
+      output.putString("result","PASS");
+    } catch(Throwable error) {
+      log("FAIL: "+error);
+      output.putString("result","FAIL");
+    } finally {
+      if(synthetic!=null)synthetic.close();
+      restoreSettings(saved);
+    }
+    output.putString("stream",report.toString());
+    finish(Activity.RESULT_OK,output);
   }
 
   private void hybrid109Scenario() {

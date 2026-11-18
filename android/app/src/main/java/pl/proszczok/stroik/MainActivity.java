@@ -24,7 +24,13 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private TextView heading, result, guide, status, referenceHelp, beginnerHelp, methodHelp;
   private ScrollView scroll;
   private Spinner targetList, octaveList;
-  private final Button[] tabs = new Button[3];
+  private final Button[] tabs = new Button[4];
+  private JSONObject mapDraft;
+  private int mappingMidi = 69, mappingCount = 1;
+  private boolean mappingTap = true;
+  private Spinner mappingOctave, mappingNote;
+  private TextView mappingStatus;
+  private Button mappingStart, mappingFinish;
   private Button microphoneButton;
   private TuningSession session;
   private LinearLayout targetsBox;
@@ -105,7 +111,10 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       page =
           state.getInt("stroik.layout", 1) < 2
               ? (oldPage < 2 ? 0 : oldPage - 1)
-              : Math.max(0, Math.min(2, oldPage));
+              : Math.max(0, Math.min(3, oldPage));
+      mappingMidi = Math.max(21, Math.min(108, state.getInt("stroik.mappingMidi", 69)));
+      mappingCount = Math.max(1, Math.min(10, state.getInt("stroik.mappingCount", 1)));
+      mappingTap = state.getBoolean("stroik.mappingTap", true);
       lastResult = state.getString("stroik.result", "");
       autoPaused = state.getBoolean("stroik.autoPaused", false);
       restoredFocus = state.getInt("stroik.accessibilityFocus", View.NO_ID);
@@ -119,6 +128,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     if (session.serviceActive) model = session.model.copy();
     session.attach(this);
     audio = session.audio;
+    try { mapDraft = new JSONObject(getSharedPreferences("stroik", 0).getString("mappingDraft", "")); }
+    catch (Exception absent) { mapDraft = TuningFiles.create(TuningFiles.MAP); }
     if (!session.serviceActive) session.configure(model);
     updater = new Updater(this);
     render();
@@ -155,6 +166,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   protected void onSaveInstanceState(Bundle state) {
     state.putInt("stroik.page", page);
     state.putInt("stroik.layout", 2);
+    state.putInt("stroik.mappingMidi", mappingMidi);
+    state.putInt("stroik.mappingCount", mappingCount);
+    state.putBoolean("stroik.mappingTap", mappingTap);
     state.putInt("stroik.scroll", scroll == null ? 0 : scroll.getScrollY());
     state.putString("stroik.result", lastResult);
     state.putBoolean("stroik.autoPaused", autoPaused);
@@ -422,19 +436,21 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     body.removeAllViews();
     root.setBackgroundColor(model.dark ? Color.rgb(30, 30, 30) : Color.WHITE);
     heading.setTextColor(model.dark ? Color.WHITE : Color.BLACK);
-    String[] pages = {t("Stroik", "Tuner"), t("Ustawienia", "Settings"), t("Pomoc", "Help")};
+    String[] pages = {t("Stroik", "Tuner"), t("Ustawienia", "Settings"), t("Pomoc", "Help"), t("Mapowanie instrumentu", "Instrument mapping")};
     heading.setText("Stroik " + version() + " — " + pages[page]);
     result = guide = status = null;
     consonanceList = null;
     targetList = octaveList = null;
     targetsBox = null;
     microphoneButton = null;
+    mappingStart = mappingFinish = null;
     pairControls = micControls = forkControls = monitorControls = advanceControls = null;
     ukuleleControls = orderControls = null;
     monitorCheck = null;
     if (page == 0) tuner();
     else if (page == 1) settings();
-    else help();
+    else if (page == 2) help();
+    else mappingPage();
     visualPanel.setVisibility(page == 0 && model.graphics ? View.VISIBLE : View.GONE);
     for (int i = 0; i < tabs.length; i++) {
       tabs[i].setText(pages[i]);
@@ -578,12 +594,13 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       b.setAllCaps(false);
       b.setMinHeight(dp(64));
       b.setTextSize(14);
-      b.setSingleLine(true);
+      b.setMaxLines(2);
       b.setEllipsize(android.text.TextUtils.TruncateAt.END);
       b.setPadding(dp(2), dp(4), dp(2), dp(4));
       b.setOnClickListener(v -> {
         if (page == at) return;
         getCurrentFocusClear();
+        if (page == 3 || at == 3) session.stop();
         page = at;
         render();
       });
@@ -612,6 +629,12 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   private boolean handleKey(int key, KeyEvent event) {
+    if (page == 3) {
+      if (event.isCtrlPressed() && key == KeyEvent.KEYCODE_S) { saveMapping(); return true; }
+      if (event.isCtrlPressed() && key == KeyEvent.KEYCODE_O) { openTuningFile(false); return true; }
+      if ((event.isCtrlPressed() || event.isAltPressed()) && key == KeyEvent.KEYCODE_N) { nextMapped(); return true; }
+      if (event.isAltPressed() && key == KeyEvent.KEYCODE_U) return true;
+    }
     if (event.isCtrlPressed()) {
       if (key == KeyEvent.KEYCODE_Q) {
         session.stop();
@@ -1078,7 +1101,117 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     updateInstrumentSections();
   }
 
+  private void mappingPage() {
+    String[] counts = new String[10], octaves = new String[9], notes = new String[88];
+    for (int i = 0; i < counts.length; i++) counts[i] = Integer.toString(i + 1);
+    for (int i = 0; i < octaves.length; i++) octaves[i] = model.octave(i);
+    for (int i = 0; i < notes.length; i++) notes[i] = model.note(i + 21);
+    choice(t("Liczba uderzeń na dźwięk (1–10)", "Strikes per note (1–10)"), counts, mappingCount - 1, v -> {
+      mappingCount = v + 1;
+      configureMapping();
+    });
+    mappingOctave = choice(t("Wybierz oktawę", "Choose octave"), octaves, mappingMidi / 12 - 1,
+        v -> selectMapped(Math.max(21, Math.min(108, (v + 1) * 12 + mappingMidi % 12))));
+    mappingNote = choice(t("Dźwięk docelowy", "Target note"), notes, mappingMidi - 21, v -> selectMapped(v + 21));
+    check(t("Po zapisaniu pomiaru dwa stuknięcia wybierają następny dźwięk", "After a measurement is stored, two taps select the next note"), mappingTap, enabled -> {
+      mappingTap = enabled;
+      configureMapping();
+    });
+    mappingStart = button(t("Rozpocznij mapowanie", "Start mapping"), this::startMic);
+    mappingFinish = button(t("Zakończ mapowanie", "Finish mapping"), () -> {
+      session.stop();
+      sayAction(t("Mapowanie zatrzymane.", "Mapping stopped."), mappingFinish);
+    });
+    mappingStart.setEnabled(!audio.running());
+    mappingFinish.setEnabled(audio.running());
+    button(t("Następny dźwięk", "Next note"), this::nextMapped);
+    mappingStatus = text("", false);
+    updateMappingStatus();
+    button(t("Zapisz plik mapingu", "Save mapping file"), this::saveMapping);
+    button(t("Wczytaj plik mapingu", "Open mapping file"), () -> openTuningFile(false));
+    button(t("Użyj mapy do strojenia", "Use map for tuning"), () -> {
+      if (mapDraft.optJSONObject("notes").length() == 0) return;
+      model.instrumentMap = mapDraft.toString();
+      model.refreshTuningFiles();
+      changed();
+      sayAction(t("Mapa aktywna.", "Instrument map active."), mappingStatus);
+    });
+    button(t("Przywróć strój standardowy", "Restore standard tuning"), () -> {
+      model.instrumentMap = "";
+      model.refreshTuningFiles();
+      changed();
+      sayAction(t("Przywrócono strój standardowy.", "Standard tuning restored."), mappingStatus);
+    });
+  }
+
+  private void configureMapping() {
+    if (audio.mappingActive()) audio.configureMapping(mappingMidi, mappingCount, mappingTap);
+    updateMappingStatus();
+  }
+
+  private String storedMapping(double hz) {
+    return String.format(model.locale(), t("Zapisano %.2f Hz.", "Stored %.2f Hz."), hz);
+  }
+
+  private void updateMappingStatus() {
+    if (mappingStatus == null) return;
+    double hz = mapDraft.optJSONObject("notes").optDouble(Integer.toString(mappingMidi), 0);
+    mappingStatus.setText(hz > 0 ? storedMapping(hz) : t("Zagraj wybrany dźwięk i pozwól mu ucichnąć po każdym uderzeniu.", "Play the selected note and let it decay after each strike."));
+  }
+
+  private void selectMapped(int midi) {
+    if (midi == mappingMidi) return;
+    mappingMidi = midi;
+    selectSilently(mappingOctave, midi / 12 - 1);
+    selectSilently(mappingNote, midi - 21);
+    configureMapping();
+  }
+
+  public void nextMapped() {
+    if (page != 3) return;
+    if (mappingMidi < 108) {
+      selectMapped(mappingMidi + 1);
+      session.speak(model.note(mappingMidi));
+    } else session.stop();
+  }
+
+  private void persistMapDraft() {
+    getSharedPreferences("stroik", 0).edit().putString("mappingDraft", mapDraft.toString()).apply();
+  }
+
+  public void mapped(int midi, int count, int needed, double average) {
+    if (page != 3) { audio.speechFinished(); return; }
+    String reading;
+    if (count >= needed) {
+      try { mapDraft.optJSONObject("notes").put(Integer.toString(midi), average); }
+      catch (org.json.JSONException error) { audio.speechFinished(); message(error.getMessage()); return; }
+      persistMapDraft();
+      reading = storedMapping(average);
+    } else reading = String.format(model.locale(), t("Pomiar %1$d z %2$d.", "Measurement %1$d of %2$d."), count, needed);
+    mappingStatus.setText(reading);
+    session.speak(reading);
+  }
+
+  private void saveMapping() {
+    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT).setType("application/json")
+        .addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE, "stroik-instrument-map.json");
+    startActivityForResult(intent, 61);
+  }
+
+  private void openTuningFile(boolean calibration) {
+    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE);
+    startActivityForResult(intent, calibration ? 63 : 62);
+  }
+
   private void settings() {
+    number(t("Głośność kamertonu, procent", "Fork volume, percent"), model.forkVolume, 0, 100, 1, v -> model.forkVolume = (int)v);
+    number(t("Głośność odsłuchu mikrofonu, procent", "Microphone monitoring volume, percent"), model.monitorVolume, 0, 100, 1, v -> model.monitorVolume = (int)v);
+    button(t("Wczytaj kalibrację kamertonu", "Open fork calibration"), () -> openTuningFile(true));
+    button(t("Przywróć fabryczną barwę kamertonu", "Restore default fork calibration"), () -> {
+      model.forkCalibration = "";
+      model.refreshTuningFiles();
+      changed();
+    });
     choice(
         t("Język", "Language"),
         Translations.NAMES,
@@ -1260,7 +1393,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       requestPermissions(new String[] {Manifest.permission.POST_NOTIFICATIONS}, 42);
       return;
     }
-    if (model.method == 0 && !model.forkTap) {
+    if (page != 3 && model.method == 0 && !model.forkTap) {
       message(
           t(
               "Włącz nasłuch dwóch stuknięć albo wybierz stroik elektroniczny.",
@@ -1269,6 +1402,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     }
     try {
       session.configure(model);
+      if (page == 3) audio.configureMapping(mappingMidi, mappingCount, mappingTap);
       session.start();
     } catch (Exception e) {
       session.stop();
@@ -1393,6 +1527,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   void magicTap() {
+    if (page == 3) {
+      if (session.serviceActive) session.stop();
+      else startMic();
+      return;
+    }
     if (playbackActive()) {
       session.endSequence();
     } else {
@@ -1424,6 +1563,10 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   void microphoneState() {
+    if (mappingStart != null) {
+      mappingStart.setEnabled(!audio.running());
+      mappingFinish.setEnabled(audio.running());
+    }
     String value =
         audio.running()
             ? t("Mikrofon włączony", "Microphone on")
@@ -1465,6 +1608,34 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     super.onActivityResult(request, code, data);
     if (code != RESULT_OK || data == null || data.getData() == null) return;
     try {
+      if (request == 61) {
+        try (OutputStream out = getContentResolver().openOutputStream(data.getData(), "wt")) {
+          out.write(mapDraft.toString(2).getBytes(StandardCharsets.UTF_8));
+        }
+        return;
+      }
+      if (request == 62 || request == 63) {
+        boolean calibration = request == 63;
+        try (InputStream in = getContentResolver().openInputStream(data.getData())) {
+          byte[] bytes = readBytes(in, 100000);
+          if (bytes.length > 100000) throw new IOException("JSON exceeds 100 KB");
+          String json = new String(bytes, StandardCharsets.UTF_8);
+          TuningFiles.parse(json, calibration ? TuningFiles.CALIBRATION : TuningFiles.MAP);
+          if (calibration) {
+            model.forkCalibration = json;
+            model.refreshTuningFiles();
+            changed();
+            sayAction(t("Wczytano kalibrację kamertonu.", "Fork calibration loaded."), root);
+          } else {
+            session.stop();
+            mapDraft = new JSONObject(json);
+            persistMapDraft();
+            updateMappingStatus();
+            sayAction(t("Wczytano mapę instrumentu.", "Instrument map loaded."), mappingStatus);
+          }
+        }
+        return;
+      }
       if (request == 51) {
         try (OutputStream out = getContentResolver().openOutputStream(data.getData(), "wt")) {
           out.write(model.json().toString(2).getBytes(StandardCharsets.UTF_8));
@@ -1524,7 +1695,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     getCurrentFocusClear();
     active = false;
     handler.removeCallbacksAndMessages(null);
-    if (!session.serviceActive) audio.stop();
+    if (audio.mappingActive()) session.stop();
+    else if (!session.serviceActive) audio.stop();
     session.media.setAvailable(false);
     persist();
     super.onPause();

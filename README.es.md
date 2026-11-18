@@ -1,9 +1,14 @@
-# Stroik 1.21 — Guía
+# Stroik 1.22 — Guía
+
+- En el híbrido con altavoces, active la opción de dos golpes. Tras un resultado afinado, la referencia queda en silencio para el gesto. Sin gesto se repite la misma nota. Si está desafinada, se respeta la pausa elegida de 0–60 segundos.
+- La4 = 440 Hz es la referencia habitual para pianos de posguerra. Los de preguerra podían estar diseñados para un tono más bajo. Consulte a un técnico antes de subir el tono de un piano antiguo.
+- En **Mapa del instrumento**, elija octava, nota y 1–10 golpes. Inicie el mapa, deje apagar cada golpe y espere el mensaje. La frecuencia media en hercios se asigna a la nota elegida. Pase a la siguiente en la lista, con el botón o con dos golpes después de guardar. Finalizar detiene el micrófono. Ctrl+S guarda JSON. Active el mapa para la medición y el diapasón. Las notas ausentes usan el tono estándar. El archivo sirve en ambas plataformas.
+- El calibrador de Windows reúne 88 notas en una lista y ofrece armónicos 0–200 % y volumen 0–150 % por nota. 100 % es la referencia de Stroik. Alt+U reproduce, Ctrl+S guarda JSON. Abra el archivo desde los ajustes de Stroik en ambas plataformas para ajustar timbre y nivel.
+- Los ajustes tienen volúmenes independientes de diapasón y monitorización del micrófono. Windows también muestra sesiones activas separadas en el mezclador del sistema. Se usa la salida de audio predeterminada. Monitorice con auriculares.
 
 - El la de la contraoctava recibe el mismo apoyo armónico que las notas inferiores. Ambas plataformas usan el mismo timbre sin transposición. La audibilidad del grave depende de los altavoces.
 - El híbrido clásico empieza inmediatamente sin tutorial. La vista para principiantes lee primero las indicaciones. Se conserva el comportamiento de Windows y se añade a Android.
 - La pausa tras el resultado admite 0–60 segundos, incluidos 1 y 2. Con 0, la referencia se reanuda al terminar realmente la voz. El nuevo valor predeterminado es 0; se conservan las pausas guardadas de Windows. Android ofrece deslizador y entrada numérica.
-- El resultado se lee completo antes de la referencia y de permitir avanzar. El híbrido exige un resultado afinado y dos ataques con altura confirmada. El diapasón solo conserva su gesto acústico.
 - Android oculta posiciones en la lista clásica. Se añaden descripciones de métodos para principiantes y selección de teclas negras con izquierda/derecha. La síntesis de la aplicación lee resultados y tutoriales incluso con TalkBack para conocer el final de la voz; TalkBack gestiona la navegación.
 
 Afinador de Windows accesible para músicos ciegos, con baja visión y videntes.

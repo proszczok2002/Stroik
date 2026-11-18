@@ -12,7 +12,7 @@ string Template(ExpressionSyntax exp) {
  return null;
 }
 var pairs=new SortedDictionary<string,string>();
-foreach(var file in Directory.GetFiles(".","*.cs")) {
+foreach(var file in Directory.GetFiles(".","*.cs").Concat(Directory.GetFiles("tools/ForkCalibrator", "*.cs"))) {
  var root=CSharpSyntaxTree.ParseText(File.ReadAllText(file)).GetRoot();
  foreach(var call in root.DescendantNodes().OfType<InvocationExpressionSyntax>()) {
   int offset=call.Expression.ToString() is "UiLanguages.Get" or "UiLanguages.Format" ? 1 : 0;
