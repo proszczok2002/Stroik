@@ -1,5 +1,16 @@
 # Android device verification
 
+## 1.10 / 110 — Pixel 11, 2026-11-18
+
+- Pixel 11 connected over Wi-Fi ADB. BackTalk, PixelSpeechEQ and AutoSpeaker stayed enabled. The display was unlocked for interface and installation checks.
+- The production 1.09 updater fetched the public 1.10 manifest and APK. The app offered the update with the Polish release notes. The visible Android update confirmation and Play Protect scan completed, followed by the visible install action. The upgrade from 109 to 110 preserved the signer, existing settings and an app-data test marker. The installed APK hash matched the public file, `b96f51029194cc14e2a0f5a1bec18d7cf5ce30ff6906420d054d576e1fda7617` (152747 bytes).
+- `mapping110.txt` passed **55 assertions**. Mapping exposed the 1–10 strikes, nine octaves and 88 notes, and opened and released the actual microphone without playing a reference. Injected PCM measurements of 421 and 433 Hz averaged to approximately 427 Hz under the selected A4. Two synthetic taps advanced the completed mapping. Shared mapping/calibration JSON was read through the Android model and preserved the standard fallback for unmapped notes.
+- `speaker-taps110.txt` passed **5 assertions** against the production capture loop with synthetic PCM and mock speech completion. Taps before an in-tune result did not advance. An in-tune result left its reference quiet, prompted for the gesture, and advanced once after two short unpitched taps. One tap alone did not advance.
+- `hybrid109.txt` repeated the actual Classic microphone/reference and Beginner TTS sequencing on 1.10. Measured reference resumption after result speech was 51/1093/2065 ms for pause settings 0/1/2. Five detuned injected PCM readings each produced a result without advancing. No physical notes were played.
+- `languages.txt` passed **2370 assertions** covering all six languages, controls for all four tuning methods, settings, labels and the installed guide assets. These instrumented checks cover interface structure and application speech timing. Human listening, natural gestures, physical headphones and instruments, and other phone models remain untested for 1.10.
+
+Local evidence is in `android/device-results/pixel11-1.10-20261118`.
+
 ## 1.09 / 109 — Pixel 11, 2026-11-17
 
 - Pixel 11, Android 17; connected by discovered Wi-Fi ADB endpoint. Google TalkBack, AutoSpeaker and PixelSpeechEQ remained enabled. The screen was awake during UI tests.

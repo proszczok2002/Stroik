@@ -187,6 +187,10 @@ public final class DeviceTests extends Instrumentation {
 
   @Override
   public void onStart() {
+    if (scenario.equals("speaker-taps110")) {
+      speakerTaps110Scenario();
+      return;
+    }
     if (scenario.equals("mapping110")) {
       mapping110Scenario();
       return;
@@ -1860,6 +1864,69 @@ public final class DeviceTests extends Instrumentation {
     }
     output.putString("stream", report.toString());
     finish(Activity.RESULT_OK, output);
+  }
+
+  private void speakerTaps110Scenario() {
+    Bundle output = new Bundle();
+    AudioEngine engine = null;
+    try {
+      Context context = getTargetContext();
+      Model fixture = new Model();
+      fixture.method = 2;
+      fixture.language = "en";
+      fixture.target = 69;
+      fixture.forkTap = true;
+      var holder = new java.util.concurrent.atomic.AtomicReference<AudioEngine>();
+      var messages = new java.util.concurrent.CopyOnWriteArrayList<String>();
+      AtomicInteger advances = new AtomicInteger();
+      engine = new AudioEngine(fixture, new AudioEngine.Listener() {
+        public void result(String text) { messages.add(text); holder.get().speechFinished(); }
+        public void reading(double cents) {}
+        public void advance() { advances.incrementAndGet(); }
+        public void failed(String error) { throw new AssertionError(error); }
+      }, (android.media.AudioManager)context.getSystemService(Context.AUDIO_SERVICE));
+      holder.set(engine);
+      java.lang.reflect.Field running = AudioEngine.class.getDeclaredField("running");
+      running.setAccessible(true);
+      // Drive the real processing loop with PCM and a mock speech completion, without opening a second microphone.
+      running.setBoolean(engine, true);
+      AudioEngine.Capture capture = new AudioEngine.Capture();
+      short[] silence = new short[4096], tap = new short[4096];
+      for (int i=280;i<370;i++) tap[i]=(short)(i%2==0?1600:-1600);
+      long now = SystemClock.elapsedRealtime()-2000;
+      engine.process(tap,tap.length,now,capture);
+      engine.process(silence,silence.length,now+160,capture);
+      engine.process(tap,tap.length,now+330,capture);
+      waitForIdleSync();
+      require(advances.get()==0,"Acoustic taps advanced without an in-tune result");
+      now+=400;
+      for(int frame=0;frame<8;frame++) {
+        short[] tone=new short[4096];
+        for(int i=0;i<tone.length;i++)tone[i]=(short)(9000*Math.sin(2*Math.PI*440*(i+frame*4096)/48000));
+        engine.process(tone,tone.length,now,capture);
+        now+=86;
+      }
+      for(int frame=0;frame<8;frame++) { engine.process(silence,silence.length,now,capture);now+=86; }
+      waitForIdleSync();
+      require(messages.size()==1 && messages.get(0).contains("in tune") && messages.get(0).contains("Tap twice"),"Expected a completed in-tune result and gesture prompt");
+      require(!engine.forkPlaying(),"The reference must be quiet during the tap window");
+      now=SystemClock.elapsedRealtime()+300;
+      engine.process(silence,silence.length,now,capture);
+      engine.process(tap,tap.length,now+200,capture);
+      waitForIdleSync();
+      require(advances.get()==0,"One short tap advanced");
+      engine.process(silence,silence.length,now+350,capture);
+      engine.process(tap,tap.length,now+530,capture);
+      waitForIdleSync();
+      require(advances.get()==1,"Two short unpitched taps should advance once after the result");
+      log("Speaker hybrid gate and two soft taps with synthetic PCM and mock speech completion: "+assertions+" assertions PASS");
+      output.putString("result","PASS");
+    } catch(Throwable error) {
+      log("FAIL: "+error);
+      output.putString("result","FAIL");
+    } finally { if(engine!=null) engine.close(); }
+    output.putString("stream",report.toString());
+    finish(Activity.RESULT_OK,output);
   }
 
   private void mapping110Scenario() {
