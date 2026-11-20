@@ -1,4 +1,4 @@
-# Stroik 1.25 — Anleitung
+# Stroik 1.26 — Anleitung
 
 - Für den ersten Download wählen Sie das vollständige Windows-ZIP. Entpacken Sie es in einen Ordner, um Stroik.exe, Stroik-Kalibrator.exe, Anleitungen und Prüfsummen zusammen zu erhalten.
 - Fehlt der Kalibrator oder ist er veraltet, fragt Stroik beim Start nach dem Download. Bei Ablehnung wird für das fehlende Programm oder dieselbe Version nicht erneut gefragt. In den Einstellungen können Sie die Startprüfung abschalten und den Kalibrator weiterhin manuell prüfen.
@@ -7,6 +7,7 @@
 - Stroik speichert Einstellungen in `Stroik.settings.json` neben `Stroik.exe`. Protokolle, Aktualisierungsdateien und die NVDA-Bibliothek liegen unter `Stroik-data`. Kopieren Sie zum Umzug den gesamten Ordner.
 - Beim ersten Start behält Stroik das Profil, die Instrumentenstimmung und die Stimmgabelkalibrierung bei. Es sichert `%LOCALAPPDATA%\Stroik` unter `Stroik-data\migracja-*`. Vorhandene Einstellungen neben der EXE haben Vorrang. Der alte Ordner wird nach der Prüfung der Sicherung entfernt.
 - Entpacken Sie die ZIP-Datei in einen beschreibbaren Ordner. Bei einer Dateisperre oder fehlenden Rechten bleiben die noch zu übertragenden Quelldaten erhalten. Stroik versucht die Migration beim nächsten Start erneut.
+- Wenn die alte Einstellungsdatei selbst vorübergehend gesperrt ist, wartet Stroik mit dem Anlegen eines Profils. Nach dem Entsperren werden beim nächsten Start die vorhandenen Einstellungen übernommen.
 
 - Aktivieren Sie im Lautsprecher-Hybrid die Zwei-Klopfzeichen-Option. Nach einem korrekt gestimmten Ergebnis bleibt die Referenz kurz stumm. Zwei Klopfzeichen genügen. Ohne Geste wird derselbe Ton wiederholt. Bei verstimmtem Ton gilt die eingestellte Pause von 0–60 Sekunden.
 - Für Nachkriegsklaviere ist A4 = 440 Hz üblich. Vorkriegsinstrumente können für niedrigere Stimmung gebaut sein. Vor einer Erhöhung ein altes Klavier von einem Techniker beurteilen lassen.

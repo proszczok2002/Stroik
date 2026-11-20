@@ -760,7 +760,7 @@ internal sealed partial class TunerForm : Form
         if (_storageWarningShown || _closing || IsDisposed || !Visible) return;
         if (!saveFailed && _preferencesStore.CanSave && !_preferencesStore.MigrationPending) return;
         _storageWarningShown = true;
-        string message = saveFailed || !_preferencesStore.CanSave
+        string message = !_preferencesStore.MigrationPending && (saveFailed || !_preferencesStore.CanSave)
             ? T("Nie można zapisać ustawień obok Stroik.exe. Sprawdź uprawnienia folderu programu i stan pliku Stroik.settings.json.",
                 "Could not save settings beside Stroik.exe. Check the program folder permissions and the Stroik.settings.json file.")
             : T("Migracja z AppData nie została ukończona. Zamknij starsze kopie Stroika i sprawdź, czy folder programu jest zapisywalny. Migracja zostanie ponowiona przy następnym uruchomieniu.",

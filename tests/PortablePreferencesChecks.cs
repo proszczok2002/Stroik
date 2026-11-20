@@ -94,6 +94,19 @@ internal static class PortablePreferencesChecks
         if (Directory.Exists(locked.LegacyDirectory) || File.ReadAllBytes(Path.Combine(locked.Snapshot(), "update.log"))[0] != 5)
             throw new Exception("A previously locked migration did not resume safely.");
 
+        using var lockedProfile = new Fixture();
+        Directory.CreateDirectory(lockedProfile.LegacyDirectory);
+        File.WriteAllText(lockedProfile.LegacyFile, originalJson);
+        using (File.Open(lockedProfile.LegacyFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            var waiting = lockedProfile.Store();
+            if (waiting.Save(waiting.Load()) || File.Exists(lockedProfile.PortableFile) || !waiting.MigrationPending)
+                throw new Exception("A locked legacy profile allowed a portable default to take precedence.");
+        }
+        if (lockedProfile.Store().Load().ForkVolume != 72 || Directory.Exists(lockedProfile.LegacyDirectory) ||
+            !File.Exists(Path.Combine(lockedProfile.Snapshot(), "settings.json")))
+            throw new Exception("The unlocked profile was not activated by the next launch.");
+
         using var insideSource = new Fixture();
         Directory.CreateDirectory(insideSource.LegacyDirectory);
         File.WriteAllText(insideSource.LegacyFile, originalJson);
@@ -130,4 +143,5 @@ internal static class PortablePreferencesChecks
 
         Console.WriteLine("Portable data: full verified archive and AppData removal, portable priority, atomic saves, locked and damaged files, no AppData writes, updater path scope: OK");
     }
+
 }

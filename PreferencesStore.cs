@@ -27,6 +27,14 @@ internal sealed class PreferencesStore(string programDirectory, string legacyFil
         }
 
         var legacy = ReadLegacy();
+        if (legacy.Blocked)
+        {
+            // A valid profile may become readable on the next launch. Do not create
+            // defaults that would then take precedence over that profile.
+            CanSave = false;
+            DeferMigration();
+            return new Preferences();
+        }
         Preferences settings = legacy.Settings ?? new Preferences();
         if (TryWrite(_portableFile, legacy.Json ?? settings.Serialize(), overwrite: false))
         {
@@ -51,20 +59,20 @@ internal sealed class PreferencesStore(string programDirectory, string legacyFil
 
     internal void DeferMigration() => MigrationPending = Directory.Exists(_legacyRoot);
 
-    private (bool Exists, Preferences? Settings, string? Json) ReadLegacy() => Read(legacyFile, _legacyRoot);
+    private (bool Exists, bool Blocked, Preferences? Settings, string? Json) ReadLegacy() => Read(legacyFile, _legacyRoot);
 
-    private static (bool Exists, Preferences? Settings, string? Json) Read(string path, string? root = null)
+    private static (bool Exists, bool Blocked, Preferences? Settings, string? Json) Read(string path, string? root = null)
     {
         try
         {
             if (root is null) PortableData.RejectLink(path);
             else PortableData.RejectLinksUnder(root, path);
             string json = File.ReadAllText(path);
-            return (true, Preferences.Parse(json), json);
+            return (true, false, Preferences.Parse(json), json);
         }
-        catch (Exception error) when (error is FileNotFoundException or DirectoryNotFoundException) { return (false, null, null); }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
-        { return (true, null, null); }
+        catch (Exception error) when (error is FileNotFoundException or DirectoryNotFoundException) { return (false, false, null, null); }
+        catch (Exception error) when (error is JsonException or InvalidDataException) { return (true, false, null, null); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return (true, true, null, null); }
     }
 
     private static bool TryWrite(string path, string json, bool overwrite)

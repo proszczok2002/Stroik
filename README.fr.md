@@ -1,4 +1,4 @@
-# Stroik 1.25 — Guide
+# Stroik 1.26 — Guide
 
 - Pour un premier téléchargement, choisissez le ZIP Windows complet. Extrayez-le dans un dossier pour obtenir ensemble Stroik.exe, Stroik-Kalibrator.exe, les guides et les sommes de contrôle.
 - Si le calibrateur manque ou doit être mis à jour, Stroik propose son téléchargement au démarrage. Après un refus, la même proposition ne revient pas. Dans les paramètres, vous pouvez désactiver la vérification au démarrage et la lancer manuellement.
@@ -7,6 +7,7 @@
 - Stroik enregistre ses réglages dans `Stroik.settings.json`, à côté de `Stroik.exe`. Les journaux, les fichiers de mise à jour et la bibliothèque NVDA sont dans `Stroik-data`. Copiez tout le dossier pour déplacer le logiciel avec ses données.
 - Au premier lancement, Stroik conserve le profil, le relevé de l’instrument et le calibrage du diapason. Il sauvegarde `%LOCALAPPDATA%\Stroik` dans `Stroik-data\migracja-*`. Les réglages présents à côté de l’EXE sont prioritaires. Une fois la copie vérifiée, Stroik supprime l’ancien dossier.
 - Extrayez le ZIP dans un dossier accessible en écriture. Si un fichier est verrouillé ou que l’accès est refusé, Stroik conserve les données sources restantes et réessaie au prochain lancement.
+- Si l’ancien fichier de réglages est temporairement verrouillé, Stroik attend avant de créer un profil. Une fois le fichier déverrouillé, les réglages existants sont repris au prochain lancement.
 
 - En hybride haut-parleurs, activez l’option des deux frappes. Après un résultat juste, la référence reste silencieuse pour le geste. Sans geste, elle répète la même note. Si la note est fausse, la pause configurée de 0–60 secondes s’applique.
 - La4 = 440 Hz est la référence habituelle des pianos d’après-guerre. Les instruments d’avant-guerre peuvent être conçus pour un diapason plus bas. Faites examiner un vieux piano avant de relever son diapason.

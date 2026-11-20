@@ -1,5 +1,15 @@
 # Changelog / Historia zmian
 
+## 1.0.26 (Stroik 1.26)
+
+PL:
+
+- Jeśli sam plik ustawień w AppData jest chwilowo zablokowany, Stroik poczeka z utworzeniem nowego profilu. Po odblokowaniu pliku i ponownym uruchomieniu zachowa dotychczasowe ustawienia.
+
+EN:
+
+- If the old settings file itself is temporarily locked, Stroik waits before creating a profile. Once the file is unlocked, the next launch activates the existing settings.
+
 ## 1.0.25 (Stroik 1.25)
 
 PL:

@@ -1,4 +1,4 @@
-# Stroik 1.25
+# Stroik 1.26
 
 - For a first download, use the complete Windows ZIP. Extract it to one folder to get Stroik.exe, Stroik-Kalibrator.exe, guides and checksums together.
 - If the calibrator is missing or out of date, Stroik asks at startup whether to download it. Declining skips further offers for the missing program or the same version. Disable **Check for the calibrator at startup** at any time, or use **Check calibrator now** in Settings.
@@ -7,6 +7,7 @@
 - Stroik saves preferences to `Stroik.settings.json` next to `Stroik.exe`. Logs, updater files and the NVDA library are under `Stroik-data`. Copy the whole folder to move the program and its data.
 - On first launch Stroik preserves the profile, instrument map and fork calibration. It copies `%LOCALAPPDATA%\Stroik` to a backup under `Stroik-data\migracja-*`. Existing settings next to the EXE take priority. Stroik removes the old directory once it has verified the copy.
 - Extract the ZIP to a writable folder. If a file is locked or access is denied, Stroik keeps the source data that still needs migrating and retries on the next launch.
+- If the old settings file itself is temporarily locked, Stroik waits before creating a profile. Once the file is unlocked, the next launch activates the existing settings.
 
 - In speaker hybrid, enable the two-tap checkbox. After an in-tune announcement, the reference stays silent while you tap twice. The taps can be unpitched. With no gesture, the reference repeats the same note. A detuned reading uses the configured 0–60 second pause.
 - A4 = 440 Hz is the usual reference for postwar pianos. Prewar instruments may have been built for lower pitch. Have a technician assess an old piano before raising its pitch.
@@ -19,7 +20,7 @@
 - The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
 - Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
 
-Current Windows 1.25 changes are described above; older version sections are historical.
+Current Windows 1.26 changes are described above; older version sections are historical.
 
 [Native Android 1.10](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.10) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
