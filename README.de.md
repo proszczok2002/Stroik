@@ -1,4 +1,8 @@
-# Stroik 1.22 — Anleitung
+# Stroik 1.23 — Anleitung
+
+- Stroik speichert Einstellungen in `Stroik.settings.json` neben `Stroik.exe`. Kopieren Sie beide Dateien, um das Programm mit seinen Einstellungen auf einen anderen PC oder USB-Stick zu übertragen.
+- Fehlt beim ersten Start die Datei neben dem Programm, kopiert Stroik das aktuelle Profil aus `%LOCALAPPDATA%\Stroik\settings.json`, einschließlich der aktiven Instrumentenstimmung und Stimmgabelkalibrierung. Die Originaldatei bleibt erhalten. Eine vorhandene Datei neben dem Programm hat Vorrang.
+- Kann im Programmordner keine Datei erstellt werden, verwendet Stroik das Windows-Benutzerprofil. Für portable Einstellungen muss der Programmordner beschreibbar sein.
 
 - Aktivieren Sie im Lautsprecher-Hybrid die Zwei-Klopfzeichen-Option. Nach einem korrekt gestimmten Ergebnis bleibt die Referenz kurz stumm. Zwei Klopfzeichen genügen. Ohne Geste wird derselbe Ton wiederholt. Bei verstimmtem Ton gilt die eingestellte Pause von 0–60 Sekunden.
 - Für Nachkriegsklaviere ist A4 = 440 Hz üblich. Vorkriegsinstrumente können für niedrigere Stimmung gebaut sein. Vor einer Erhöhung ein altes Klavier von einem Techniker beurteilen lassen.

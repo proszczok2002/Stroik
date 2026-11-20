@@ -44,19 +44,11 @@ internal sealed class Preferences
     public ForkCalibration? ForkCalibration { get; set; }
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-    private static string FilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroik", "settings.json");
+    internal static Preferences ReadFile(string path) => Parse(File.ReadAllText(path));
 
-    internal static Preferences Load()
+    internal static Preferences Parse(string json)
     {
-        try { return File.Exists(FilePath) ? ReadFile(FilePath) : new Preferences(); }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
-        { return new Preferences(); }
-    }
-
-    internal static Preferences ReadFile(string path)
-    {
-        var settings = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(path))
+        var settings = JsonSerializer.Deserialize<Preferences>(json)
             ?? throw new InvalidDataException("The settings file is empty.");
         settings.Validate();
         return settings;
@@ -79,19 +71,11 @@ internal sealed class Preferences
             throw new InvalidDataException("Invalid Stroik settings file.");
     }
 
-    internal static void Save(Preferences settings)
-    {
-        try
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-            SaveToFile(FilePath, settings);
-        }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
-    }
+    internal static void SaveToFile(string path, Preferences settings) => File.WriteAllText(path, settings.Serialize());
 
-    internal static void SaveToFile(string path, Preferences settings)
+    internal string Serialize()
     {
-        settings.Validate();
-        File.WriteAllText(path, JsonSerializer.Serialize(settings, JsonOptions));
+        Validate();
+        return JsonSerializer.Serialize(this, JsonOptions);
     }
 }

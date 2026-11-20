@@ -1,4 +1,4 @@
-param([switch]$LegacyClient)
+param([switch]$LegacyClient, [switch]$ExistingPortable)
 $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $id = [guid]::NewGuid().ToString('N')
@@ -11,8 +11,14 @@ $current = Join-Path $fixture 'Stroik.exe'
 $source = Join-Path $root 'dist\Stroik.exe'
 $expected = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash
 Copy-Item -LiteralPath $source -Destination (Join-Path $download 'Stroik.exe')
-$settings = Join-Path $env:LOCALAPPDATA 'Stroik\settings.json'
-$before = if (Test-Path -LiteralPath $settings) { [IO.File]::ReadAllBytes($settings) } else { $null }
+$legacySettings = Join-Path $env:LOCALAPPDATA 'Stroik\settings.json'
+$portableSettings = Join-Path $fixture 'Stroik.settings.json'
+$legacyBefore = if (Test-Path -LiteralPath $legacySettings) { [IO.File]::ReadAllText($legacySettings) } else { $null }
+$portableBefore = $null
+if ($ExistingPortable) {
+    $portableBefore = '{"ProfileVersion":1,"Language":"pl","ForkVolume":27,"AutomaticUpdates":false}'
+    [IO.File]::WriteAllText($portableSettings, $portableBefore)
+}
 $env:DOTNET_ROOT = Join-Path $root '.dotnet10'
 $client = $null
 $helper = $null
@@ -63,9 +69,16 @@ $file.Dispose()
         Start-Sleep -Milliseconds 250
     }
     if ((Get-FileHash -LiteralPath $current -Algorithm SHA256).Hash -ne $expected) { throw 'Installed EXE differs from release' }
+    $actualSettings = [IO.File]::ReadAllText($portableSettings)
+    if ($ExistingPortable -and $actualSettings -cne $portableBefore) { throw 'The existing portable settings changed during the update' }
+    if (!$ExistingPortable -and $null -ne $legacyBefore -and $actualSettings -cne $legacyBefore) { throw 'The restarted EXE did not migrate the full legacy file' }
+    $legacyAfter = if (Test-Path -LiteralPath $legacySettings) { [IO.File]::ReadAllText($legacySettings) } else { $null }
+    if ($legacyAfter -cne $legacyBefore) { throw 'Legacy preferences changed during the isolated upgrade' }
     $report = [ordered]@{ time = [DateTimeOffset]::Now.ToString('O'); legacyProtocol = [bool]$LegacyClient; sha256 = $expected;
         bytes = (Get-Item -LiteralPath $current).Length; title = $installed.MainWindowTitle; windowHandle = $installed.MainWindowHandle.ToInt64();
-        installedPid = $installed.Id; clientExitCode = $client.ExitCode; oldExeRemoved = $true; downloadRemoved = $true }
+        installedPid = $installed.Id; clientExitCode = $client.ExitCode; oldExeRemoved = $true; downloadRemoved = $true;
+        portableSettings = if ($ExistingPortable) { 'preserved' } elseif ($null -ne $legacyBefore) { 'migrated' } else { 'new defaults' };
+        legacySettingsUnchanged = $true }
     $report | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $fixture 'result.json') -Encoding UTF8
     $report | ConvertTo-Json
 } finally {
@@ -74,7 +87,4 @@ $file.Dispose()
         if (-not $installed.WaitForExit(10000)) { $installed.Kill(); $installed.WaitForExit(5000) | Out-Null }
     }
     foreach ($owned in @($client, $helper)) { if ($owned -and -not $owned.HasExited) { $owned.Kill(); $owned.WaitForExit(5000) | Out-Null } }
-    # The isolated GUI can persist its own settings on startup/closure.
-    if ($null -ne $before) { [IO.File]::WriteAllBytes($settings, $before) }
-    elseif (Test-Path -LiteralPath $settings) { Remove-Item -LiteralPath $settings }
 }

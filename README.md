@@ -1,4 +1,8 @@
-# Stroik 1.22
+# Stroik 1.23
+
+- Stroik zapisuje ustawienia w pliku `Stroik.settings.json` obok `Stroik.exe`. Aby przenieść ustawienia na inny komputer lub pendrive, skopiuj oba pliki.
+- Jeśli przy pierwszym uruchomieniu obok programu brakuje pliku ustawień, Stroik kopiuje aktualny profil z `%LOCALAPPDATA%\Stroik\settings.json`, w tym aktywną mapę instrumentu i kalibrację kamertonu. Zachowuje oryginał. Istniejący plik obok programu ma pierwszeństwo.
+- Jeśli folder programu nie pozwala utworzyć pliku, Stroik korzysta z ustawień w profilu Windows. Do przenośnego zapisu uruchamiaj `Stroik.exe` z folderu, do którego masz prawo zapisu.
 
 - W hybrydzie głośnikowej włącz opcję dwóch stuknięć. Po komunikacie o dobrym stroju kamerton pozostawia ciche okno na dwa krótkie stuknięcia. Nie trzeba dwukrotnie zagrać czystej nuty. Bez gestu kamerton powtarza ten sam wzorzec. Po złym wyniku obowiązuje ustawiona przerwa od 0 do 60 sekund.
 - Dla pianin powojennych A4 = 440 Hz to zwykły punkt odniesienia. Przedwojenne instrumenty mogły być przewidziane do niższego stroju. Przed podnoszeniem stroju starego pianina warto uzyskać ocenę technika.
@@ -11,7 +15,7 @@
 - Przerwa po wyniku wynosi 0–60 sekund, także 1 lub 2. Zero oznacza powrót wzorca od razu po zakończeniu mowy i jest nowym ustawieniem domyślnym. Zapisane przerwy Windows są zachowane. Android ma tę samą regulację z suwakiem i wpisem liczby.
 - Android: klasyczna lista bez opisów położenia klawiszy, opisy metod dla początkujących oraz czarne klawisze strzałkami lewo/prawo. Wyniki i samouczek czyta syntezator aplikacji także przy TalkBack, aby znać koniec mowy; TalkBack nadal obsługuje nawigację.
 
-Aktualne zmiany Windows 1.22 opisano poniżej; starsze sekcje wersji są historyczne.
+Aktualne zmiany Windows 1.23 opisano powyżej; starsze sekcje wersji są historyczne.
 
 [Natywna wersja Android 1.10](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.10) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 

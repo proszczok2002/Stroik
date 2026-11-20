@@ -34,6 +34,7 @@
     <Compile Include="../DoubleStrikeNavigator.cs" Link="DoubleStrikeNavigator.cs" />
     <Compile Include="../VisualControls.cs" Link="VisualControls.cs" />
     <Compile Include="../Preferences.cs" Link="Preferences.cs" />
+    <Compile Include="../PreferencesStore.cs" Link="PreferencesStore.cs" />
     <Compile Include="../TuningFork.cs" Link="TuningFork.cs" />
     <Compile Include="../WindowsAudioStream.cs" Link="WindowsAudioStream.cs" />
     <Compile Include="../TuningFiles.cs" Link="TuningFiles.cs" />

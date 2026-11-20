@@ -1,5 +1,19 @@
 # Changelog / Historia zmian
 
+## 1.0.23 (Stroik 1.23) — 2026-11-20
+
+PL:
+
+- Stroik zapisuje ustawienia w pliku `Stroik.settings.json` obok `Stroik.exe`. Aby przenieść ustawienia na inny komputer lub pendrive, skopiuj oba pliki.
+- Jeśli przy pierwszym uruchomieniu obok programu brakuje pliku ustawień, Stroik kopiuje aktualny profil z `%LOCALAPPDATA%\Stroik\settings.json`, w tym aktywną mapę instrumentu i kalibrację kamertonu. Zachowuje oryginał. Istniejący plik obok programu ma pierwszeństwo.
+- Jeśli folder programu nie pozwala utworzyć pliku, Stroik korzysta z ustawień w profilu Windows. Do przenośnego zapisu uruchamiaj `Stroik.exe` z folderu, do którego masz prawo zapisu.
+
+EN:
+
+- Stroik saves its preferences to `Stroik.settings.json` next to `Stroik.exe`. Copy both files when moving the program and its settings to another PC or USB drive.
+- On first launch, if there is no settings file next to the program, Stroik copies the current profile from `%LOCALAPPDATA%\Stroik\settings.json`, including the active instrument map and fork calibration. It preserves the original. An existing file next to the program takes priority.
+- If the program folder does not allow a new file, Stroik uses the Windows user profile. Run `Stroik.exe` from a writable folder to use portable settings.
+
 ## 1.0.22 (Stroik 1.22) — 2026-11-18
 
 PL:

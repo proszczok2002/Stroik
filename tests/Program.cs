@@ -389,15 +389,14 @@ foreach(int midi in new[]{36,48,60,72,84}) {
         throw new Exception("Fork fifth missing expected pitch or contains suboctave MIDI "+midi);
 }
 Console.WriteLine("Fifths C2/C3/C4/C5/C6: both expected components, no half-frequency component: OK");
+PortablePreferencesChecks.Run();
 Exception? uiError = null;
-// UI regression checks exercise persistence; restore the user's exact file even on failure.
-string preferencesFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroik", "settings.json");
-byte[]? preferencesBefore = File.Exists(preferencesFile) ? File.ReadAllBytes(preferencesFile) : null;
+using var uiSettings = new PortablePreferencesChecks.Fixture();
 var uiThread = new Thread(() =>
 {
     try
     {
-        using var form = new TunerForm();
+        using var form = new TunerForm(uiSettings.Store());
         var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
         var method = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_method", flags)!.GetValue(form)!;
         var instrument = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_instrument", flags)!.GetValue(form)!;
@@ -682,11 +681,6 @@ var uiThread = new Thread(() =>
         if (networkCalledAfterClose) throw new Exception("Sprawdzanie ruszyło po zamknięciu programu.");
     }
     catch (Exception error) { uiError = error; }
-    finally
-    {
-        if (preferencesBefore is not null) File.WriteAllBytes(preferencesFile, preferencesBefore);
-        else if (File.Exists(preferencesFile)) File.Delete(preferencesFile);
-    }
 });
 uiThread.SetApartmentState(ApartmentState.STA);
 uiThread.Start();

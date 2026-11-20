@@ -1,4 +1,8 @@
-# Stroik 1.22 — Guide
+# Stroik 1.23 — Guide
+
+- Stroik enregistre ses réglages dans `Stroik.settings.json`, à côté de `Stroik.exe`. Copiez les deux fichiers pour déplacer le logiciel et ses réglages sur un autre PC ou une clé USB.
+- Au premier lancement, si le fichier manque à côté du programme, Stroik copie le profil depuis `%LOCALAPPDATA%\Stroik\settings.json`, y compris le relevé actif et le calibrage du diapason. L’original est conservé. Un fichier existant à côté du programme est prioritaire.
+- Si le dossier du programme ne permet pas de créer un fichier, Stroik utilise le profil Windows. Pour les réglages portables, lancez Stroik depuis un dossier accessible en écriture.
 
 - En hybride haut-parleurs, activez l’option des deux frappes. Après un résultat juste, la référence reste silencieuse pour le geste. Sans geste, elle répète la même note. Si la note est fausse, la pause configurée de 0–60 secondes s’applique.
 - La4 = 440 Hz est la référence habituelle des pianos d’après-guerre. Les instruments d’avant-guerre peuvent être conçus pour un diapason plus bas. Faites examiner un vieux piano avant de relever son diapason.

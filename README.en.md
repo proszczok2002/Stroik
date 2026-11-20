@@ -1,4 +1,8 @@
-# Stroik 1.22
+# Stroik 1.23
+
+- Stroik saves its preferences to `Stroik.settings.json` next to `Stroik.exe`. Copy both files when moving the program and its settings to another PC or USB drive.
+- On first launch, if there is no settings file next to the program, Stroik copies the current profile from `%LOCALAPPDATA%\Stroik\settings.json`, including the active instrument map and fork calibration. It preserves the original. An existing file next to the program takes priority.
+- If the program folder does not allow a new file, Stroik uses the Windows user profile. Run `Stroik.exe` from a writable folder to use portable settings.
 
 - In speaker hybrid, enable the two-tap checkbox. After an in-tune announcement, the reference stays silent while you tap twice. The taps can be unpitched. With no gesture, the reference repeats the same note. A detuned reading uses the configured 0–60 second pause.
 - A4 = 440 Hz is the usual reference for postwar pianos. Prewar instruments may have been built for lower pitch. Have a technician assess an old piano before raising its pitch.
@@ -11,7 +15,7 @@
 - The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
 - Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
 
-Current Windows 1.22 changes are described below; older version sections are historical.
+Current Windows 1.23 changes are described above; older version sections are historical.
 
 [Native Android 1.10](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.10) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 

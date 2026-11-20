@@ -111,9 +111,12 @@ internal sealed partial class TunerForm : Form
     private InstrumentKind _lastInstrument;
     private UkuleleTuning _lastUkulele;
 
-    internal TunerForm()
+    private readonly PreferencesStore _preferencesStore;
+
+    internal TunerForm(PreferencesStore? preferencesStore = null)
     {
-        Preferences settings = Preferences.Load();
+        _preferencesStore = preferencesStore ?? PreferencesStore.ForApplication();
+        Preferences settings = _preferencesStore.Load();
         _languageCode = string.IsNullOrEmpty(settings.Language) ? (settings.English ? "en" : "pl") : settings.Language;
         _english = _languageCode != "pl";
         MinimumSize = new Size(540, 700);
@@ -731,7 +734,7 @@ internal sealed partial class TunerForm : Form
         InstrumentMap = _instrumentMap,
         ForkCalibration = _forkCalibration
     };
-    private void Persist() { if (!_initializing) Preferences.Save(ReadSettings()); }
+    private void Persist() { if (!_initializing) _preferencesStore.Save(ReadSettings()); }
     private void ApplySettings(Preferences settings)
     {
         StopMicrophone(false);
