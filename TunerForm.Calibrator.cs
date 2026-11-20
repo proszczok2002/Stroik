@@ -15,7 +15,6 @@ internal sealed partial class TunerForm
         Add(panel, _checkCalibratorOnStartup);
         Add(panel, _checkCalibrator);
         Add(panel, _calibratorStatus);
-        _checkCalibratorOnStartup.CheckedChanged += (_, _) => Persist();
         _checkCalibratorOnStartup.Click += (_, _) => AnnounceCheckBoxState(_checkCalibratorOnStartup);
         _checkCalibrator.Click += async (_, _) => await CheckCalibratorAsync(startup: false);
     }

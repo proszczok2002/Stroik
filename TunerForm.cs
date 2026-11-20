@@ -271,6 +271,7 @@ internal sealed partial class TunerForm : Form
         };
         _monitor.CheckedChanged += (_, _) => { _monitorEnabled = _monitor.Checked; if (!_monitor.Checked) { _audioMonitor?.Dispose(); _audioMonitor = null; } else if (_microphone is not null && _activeMethod == TuningMethod.HybridHeadphones) _audioMonitor = CreateMonitor(); Persist(); };
         _automaticUpdates.CheckedChanged += (_, _) => { ConfigureUpdateTimer(); Persist(); };
+        _checkCalibratorOnStartup.CheckedChanged += (_, _) => Persist();
         _updateMinutes.ValueChanged += (_, _) => { ConfigureUpdateTimer(); Persist(); };
         _practiceTimer.Tick += (_, _) =>
         {

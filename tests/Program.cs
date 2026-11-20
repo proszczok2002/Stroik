@@ -402,7 +402,12 @@ var uiThread = new Thread(() =>
 {
     try
     {
+        const string legacyJson = "{\"ProfileVersion\":1,\"Language\":\"pl\",\"ForkVolume\":44}";
+        Directory.CreateDirectory(Path.GetDirectoryName(uiSettings.LegacyFile)!);
+        File.WriteAllText(uiSettings.LegacyFile, legacyJson);
         using var form = new TunerForm(uiSettings.Store());
+        if (File.ReadAllText(uiSettings.PortableFile) != legacyJson)
+            throw new Exception("Loading startup controls rewrote the migrated portable settings.");
         CalibratorChecks.CheckSettingsControls(form, uiSettings);
         var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
         var method = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_method", flags)!.GetValue(form)!;
