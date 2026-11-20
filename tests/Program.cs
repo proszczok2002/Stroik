@@ -597,12 +597,15 @@ var uiThread = new Thread(() =>
         typeof(TunerForm).GetField("_microphone", flags)!.SetValue(form, inactiveCapture);
         var practiceTimer = (System.Windows.Forms.Timer)typeof(TunerForm).GetField("_practiceTimer", flags)!.GetValue(form)!;
         practiceTimer.Start();
-        applySettings.Invoke(form, [new Preferences { Method = TuningMethod.HybridSpeakers, AutomaticUpdates = false }]);
+        applySettings.Invoke(form, [new Preferences { Method = TuningMethod.HybridSpeakers, AutomaticUpdates = false,
+            CheckCalibratorOnStartup = false }]);
         if (practiceTimer.Enabled || typeof(TunerForm).GetField("_microphone", flags)!.GetValue(form) is not null)
             throw new Exception("Profil pozostawił aktywny poprzedni cykl mikrofonu.");
         method.SelectedIndex = 1;
         autoStrike.Checked = false;
         form.Show();
+        // Process the queued Shown event before other test profiles replace the startup options.
+        Application.DoEvents();
         tabs.SelectedIndex = 0;
         instrument.SelectedIndex = 0;
         typeof(TunerForm).GetMethod("SelectTarget", flags)!.Invoke(form, [67]);

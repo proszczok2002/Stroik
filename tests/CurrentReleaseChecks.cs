@@ -10,7 +10,7 @@ internal static class CurrentReleaseChecks
         var thread=new Thread(()=> {
             using var form=new TunerForm();
             var saved=(Preferences)Call(form,"ReadSettings")!;
-            Call(form,"ApplySettings",new Preferences {Method=TuningMethod.HybridSpeakers,View=TunerView.Classic,AutomaticUpdates=false,VisualMode=true,VoiceInVisualMode=true,Language="pl"});
+            Call(form,"ApplySettings",new Preferences {Method=TuningMethod.HybridSpeakers,View=TunerView.Classic,AutomaticUpdates=false,CheckCalibratorOnStartup=false,VisualMode=true,VoiceInVisualMode=true,Language="pl"});
             form.Shown+=async (_,_)=> {
                 bool ForkPlaying()=>typeof(TuningFork).GetField("_wave",Hidden)!.GetValue(Get<TuningFork>(form,"_fork")) is not null;
                 try {
@@ -55,7 +55,7 @@ internal static class CurrentReleaseChecks
         var thread=new Thread(()=> {
             using var form=new TunerForm();
             var saved=(Preferences)Call(form,"ReadSettings")!;
-            Call(form,"ApplySettings",new Preferences {Method=TuningMethod.HybridSpeakers,View=TunerView.Beginner,AutomaticUpdates=false,VisualMode=true,VoiceInVisualMode=false,Language="pl"});
+            Call(form,"ApplySettings",new Preferences {Method=TuningMethod.HybridSpeakers,View=TunerView.Beginner,AutomaticUpdates=false,CheckCalibratorOnStartup=false,VisualMode=true,VoiceInVisualMode=false,Language="pl"});
             form.Shown+=async (_,_)=> {
                 try {
                     if(!NvdaReader.Available)throw new Exception("NVDA not available");
