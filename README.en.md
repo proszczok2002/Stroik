@@ -1,4 +1,8 @@
-# Stroik 1.23
+# Stroik 1.24
+
+- For a first download, use the complete Windows ZIP. Extract it to one folder to get Stroik.exe, Stroik-Kalibrator.exe, guides and checksums together.
+- If the calibrator is missing or out of date, Stroik asks at startup whether to download it. Declining skips further offers for the missing program or the same version. Disable **Check for the calibrator at startup** at any time, or use **Check calibrator now** in Settings.
+- After you confirm, Stroik verifies size, SHA-256 and version before saving the calibrator next to the tuner EXE. Calibrator 1.0.1 shows its version in the window title.
 
 - Stroik saves its preferences to `Stroik.settings.json` next to `Stroik.exe`. Copy both files when moving the program and its settings to another PC or USB drive.
 - On first launch, if there is no settings file next to the program, Stroik copies the current profile from `%LOCALAPPDATA%\Stroik\settings.json`, including the active instrument map and fork calibration. It preserves the original. An existing file next to the program takes priority.
@@ -15,7 +19,7 @@
 - The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
 - Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
 
-Current Windows 1.23 changes are described above; older version sections are historical.
+Current Windows 1.24 changes are described above; older version sections are historical.
 
 [Native Android 1.10](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.10) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 

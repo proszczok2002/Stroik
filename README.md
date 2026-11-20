@@ -1,4 +1,8 @@
-# Stroik 1.23
+# Stroik 1.24
+
+- Przy pierwszym pobraniu wybierz pełny ZIP Windows. Rozpakuj go do jednego folderu, aby od razu mieć Stroik.exe, Stroik-Kalibrator.exe, instrukcje i sumy kontrolne.
+- Jeśli kalibratora brakuje lub jest starszy, Stroik przy uruchomieniu pyta o pobranie. Po odmowie nie ponawia pytania o brakujący program ani o tę samą wersję. Możesz wyłączyć **Sprawdzaj kalibrator przy uruchomieniu** i zawsze użyć **Sprawdź kalibrator teraz** w Ustawieniach.
+- Po potwierdzeniu Stroik sprawdza rozmiar, SHA-256 i wersję, po czym zapisuje kalibrator obok swojego EXE. Kalibrator 1.0.1 pokazuje własną wersję w tytule okna.
 
 - Stroik zapisuje ustawienia w pliku `Stroik.settings.json` obok `Stroik.exe`. Aby przenieść ustawienia na inny komputer lub pendrive, skopiuj oba pliki.
 - Jeśli przy pierwszym uruchomieniu obok programu brakuje pliku ustawień, Stroik kopiuje aktualny profil z `%LOCALAPPDATA%\Stroik\settings.json`, w tym aktywną mapę instrumentu i kalibrację kamertonu. Zachowuje oryginał. Istniejący plik obok programu ma pierwszeństwo.
@@ -15,7 +19,7 @@
 - Przerwa po wyniku wynosi 0–60 sekund, także 1 lub 2. Zero oznacza powrót wzorca od razu po zakończeniu mowy i jest nowym ustawieniem domyślnym. Zapisane przerwy Windows są zachowane. Android ma tę samą regulację z suwakiem i wpisem liczby.
 - Android: klasyczna lista bez opisów położenia klawiszy, opisy metod dla początkujących oraz czarne klawisze strzałkami lewo/prawo. Wyniki i samouczek czyta syntezator aplikacji także przy TalkBack, aby znać koniec mowy; TalkBack nadal obsługuje nawigację.
 
-Aktualne zmiany Windows 1.23 opisano powyżej; starsze sekcje wersji są historyczne.
+Aktualne zmiany Windows 1.24 opisano powyżej; starsze sekcje wersji są historyczne.
 
 [Natywna wersja Android 1.10](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.10) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 

@@ -90,7 +90,7 @@ try {
         Copy-Item -LiteralPath (Join-Path $repoRoot $name) -Destination (Join-Path $stage $name)
     }
     $zipName = "Stroik-$version-Windows-x64.zip"
-    Compress-Archive -LiteralPath $newExe, (Join-Path $stage 'Stroik.exe.sha256'),
+    Compress-Archive -LiteralPath $newExe, (Join-Path $stage 'Stroik.exe.sha256'), $calibrator, (Join-Path $stage 'Stroik-Kalibrator.exe.sha256'),
         (Join-Path $stage 'README.md'), (Join-Path $stage 'README.en.md'), (Join-Path $stage 'README.de.md'), (Join-Path $stage 'README.ru.md'), (Join-Path $stage 'README.fr.md'), (Join-Path $stage 'README.es.md'), (Join-Path $stage 'THIRD_PARTY_NOTICES.md'), (Join-Path $stage 'NVDA-LGPL-2.1.txt'),
         (Join-Path $stage 'LICENSE') -DestinationPath (Join-Path $stage $zipName)
     if ((Get-FileHash -LiteralPath $newExe -Algorithm SHA256).Hash.ToLowerInvariant() -ne $newHash) {

@@ -31,6 +31,9 @@ internal sealed class Preferences
     public bool ShowOctaveInClassic { get; set; }
     public bool AutoStrike { get; set; }
     public bool AutomaticUpdates { get; set; } = true;
+    public bool CheckCalibratorOnStartup { get; set; } = true;
+    public bool CalibratorInstallOffered { get; set; }
+    public string? CalibratorUpdateOffered { get; set; }
     public int UpdateMinutes { get; set; } = 5;
     public Consonance Consonance { get; set; }
     public bool SimultaneousInterval { get; set; }

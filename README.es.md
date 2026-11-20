@@ -1,4 +1,8 @@
-# Stroik 1.23 — Guía
+# Stroik 1.24 — Guía
+
+- Para la primera descarga, usa el ZIP completo de Windows. Extráelo en una carpeta para tener juntos Stroik.exe, Stroik-Kalibrator.exe, las guías y las sumas de verificación.
+- Si el calibrador falta o está desactualizado, Stroik ofrece descargarlo al iniciar. Tras rechazar, no se repite la misma oferta. En Ajustes puedes desactivar la comprobación al iniciar y seguir comprobándolo manualmente.
+- Tras confirmar, Stroik verifica tamaño, SHA-256 y versión, y guarda el calibrador junto a su EXE. El calibrador 1.0.1 muestra su versión en el título de la ventana.
 
 - Stroik guarda los ajustes en `Stroik.settings.json`, junto a `Stroik.exe`. Copie ambos archivos para trasladar el programa con sus ajustes a otro equipo o a una memoria USB.
 - Si el archivo falta junto al programa en el primer inicio, Stroik copia el perfil desde `%LOCALAPPDATA%\Stroik\settings.json`, con el mapa activo y la calibración del diapasón. Conserva el original. Un archivo existente junto al programa tiene prioridad.

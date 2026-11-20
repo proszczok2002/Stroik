@@ -35,6 +35,8 @@
     <Compile Include="../VisualControls.cs" Link="VisualControls.cs" />
     <Compile Include="../Preferences.cs" Link="Preferences.cs" />
     <Compile Include="../PreferencesStore.cs" Link="PreferencesStore.cs" />
+    <Compile Include="../CalibratorUpdater.cs" Link="CalibratorUpdater.cs" />
+    <Compile Include="../TunerForm.Calibrator.cs" Link="TunerForm.Calibrator.cs" />
     <Compile Include="../TuningFork.cs" Link="TuningFork.cs" />
     <Compile Include="../WindowsAudioStream.cs" Link="WindowsAudioStream.cs" />
     <Compile Include="../TuningFiles.cs" Link="TuningFiles.cs" />

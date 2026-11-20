@@ -6,6 +6,7 @@ internal sealed class UpdateCheckState
     internal const int IntervalMilliseconds = 5 * 60 * 1000;
     private bool _running;
     private Version? _lastPrompted;
+    internal bool IsRunning => _running;
 
     internal bool TryBegin()
     {

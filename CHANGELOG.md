@@ -1,5 +1,19 @@
 # Changelog / Historia zmian
 
+## 1.0.24 (Stroik 1.24)
+
+PL:
+
+- Przy pierwszym pobraniu wybierz pełny ZIP Windows. Rozpakuj go do jednego folderu, aby od razu mieć Stroik.exe, Stroik-Kalibrator.exe, instrukcje i sumy kontrolne.
+- Jeśli kalibratora brakuje lub jest starszy, Stroik przy uruchomieniu pyta o pobranie. Po odmowie nie ponawia pytania o brakujący program ani o tę samą wersję. Możesz wyłączyć **Sprawdzaj kalibrator przy uruchomieniu** i zawsze użyć **Sprawdź kalibrator teraz** w Ustawieniach.
+- Po potwierdzeniu Stroik sprawdza rozmiar, SHA-256 i wersję, po czym zapisuje kalibrator obok swojego EXE. Kalibrator 1.0.1 pokazuje własną wersję w tytule okna.
+
+EN:
+
+- For a first download, use the complete Windows ZIP. Extract it to one folder to get Stroik.exe, Stroik-Kalibrator.exe, guides and checksums together.
+- If the calibrator is missing or out of date, Stroik asks at startup whether to download it. Declining skips further offers for the missing program or the same version. Disable **Check for the calibrator at startup** at any time, or use **Check calibrator now** in Settings.
+- After you confirm, Stroik verifies size, SHA-256 and version before saving the calibrator next to the tuner EXE. Calibrator 1.0.1 shows its version in the window title.
+
 ## 1.0.23 (Stroik 1.23) — 2026-11-20
 
 PL:

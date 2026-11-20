@@ -156,7 +156,7 @@ internal static class Updater
     }
 
     // ResponseHeadersRead does not apply HttpClient.Timeout to the response body.
-    internal static async Task<long> CopyWithDeadlineAsync(Stream source, Stream target, TimeSpan? idleTimeout = null)
+    internal static async Task<long> CopyWithDeadlineAsync(Stream source, Stream target, TimeSpan? idleTimeout = null, long maxBytes = long.MaxValue)
     {
         using var overall = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         var buffer = new byte[81920];
@@ -167,6 +167,7 @@ internal static class Updater
             readTimeout.CancelAfter(idleTimeout ?? TimeSpan.FromSeconds(45));
             int read = await source.ReadAsync(buffer.AsMemory(), readTimeout.Token);
             if (read == 0) return total;
+            if (read > maxBytes - total) throw new InvalidDataException("Download exceeds the expected size.");
             await target.WriteAsync(buffer.AsMemory(0, read), overall.Token);
             total += read;
         }

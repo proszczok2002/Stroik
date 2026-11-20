@@ -37,6 +37,11 @@ if(args.Contains("--nvda-probe")) {
 }
 if(args.Contains("--guidance-probe")) {CurrentReleaseChecks.GuidanceProbe();return;}
 if(args.Contains("--hybrid-probe")) {CurrentReleaseChecks.HybridProbe();return;}
+if (args is ["--calibrator-probe", var previousCalibrator])
+{
+    await CalibratorChecks.CheckPublicInstallation(previousCalibrator);
+    return;
+}
 if (args.Contains("--mixer-probe"))
 {
     using var forkSession = new WindowsAudioStream(44100, WindowsAudioStream.Fork, "Stroik — tuning fork");
@@ -390,6 +395,7 @@ foreach(int midi in new[]{36,48,60,72,84}) {
 }
 Console.WriteLine("Fifths C2/C3/C4/C5/C6: both expected components, no half-frequency component: OK");
 PortablePreferencesChecks.Run();
+await CalibratorChecks.CheckPolicyAndVerification();
 Exception? uiError = null;
 using var uiSettings = new PortablePreferencesChecks.Fixture();
 var uiThread = new Thread(() =>
@@ -397,6 +403,7 @@ var uiThread = new Thread(() =>
     try
     {
         using var form = new TunerForm(uiSettings.Store());
+        CalibratorChecks.CheckSettingsControls(form, uiSettings);
         var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
         var method = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_method", flags)!.GetValue(form)!;
         var instrument = (System.Windows.Forms.ComboBox)typeof(TunerForm).GetField("_instrument", flags)!.GetValue(form)!;

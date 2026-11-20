@@ -62,7 +62,8 @@ internal sealed class CalibratorForm : Form
 
     private void Translate()
     {
-        Text = T("Stroik — kalibrator kamertonu", "Stroik — fork calibrator");
+        string? version = typeof(CalibratorForm).Assembly.GetName().Version?.ToString(3);
+        Text = T("Stroik — kalibrator kamertonu", "Stroik — fork calibrator") + " " + version;
         _languageLabel.Text = _language.AccessibleName = T("Język", "Language");
         _noteLabel.Text = _notes.AccessibleName = T("Dźwięk docelowy", "Target note");
         _harmonicsLabel.Text = _harmonics.AccessibleName = T("Harmoniczne wybranej nuty, procent", "Selected note harmonics, percent");

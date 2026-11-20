@@ -170,6 +170,7 @@ internal sealed partial class TunerForm : Form
         Add(settingsContent, _calibrationTitle); Add(settingsContent, _calibration); Add(settingsContent, _calibrationHelp);
         Add(settingsContent, _automaticUpdates); Add(settingsContent, _updateMinutesTitle); Add(settingsContent, _updateMinutes);
         Add(settingsContent, _updates); Add(settingsContent, _updateStatus);
+        AddCalibratorSettings(settingsContent);
         Add(settingsContent, _recentChanges); Add(settingsContent, _about); Add(settingsContent, _licenses); Add(settingsContent, _website);
         Add(settingsContent, _supportTitle);
         var supportButtons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true };
@@ -200,6 +201,7 @@ internal sealed partial class TunerForm : Form
         _forkTap.Checked = settings.ForkTapAdvance;
         _monitor.Checked = settings.MicrophoneMonitor;
         _automaticUpdates.Checked = settings.AutomaticUpdates;
+        ApplyCalibratorPreferences(settings);
         _updateMinutes.Value = settings.UpdateMinutes;
         _automaticStrikesRunning = settings.AutoStrike;
         _reference = (double)_concertA.Value;
@@ -283,7 +285,13 @@ internal sealed partial class TunerForm : Form
         _strikeTimer.Tick += (_, _) => Strike();
         KeyDown += (_, e) => { if (e.Control && e.KeyCode == Keys.S) { SaveProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.O) { LoadProfile(); e.SuppressKeyPress = true; } else if (e.Control && e.KeyCode == Keys.N) { AdvanceTarget(_targetMidi < 0 ? _lastResolvedTarget : _targetMidi); e.SuppressKeyPress = true; } };
         _updateTimer.Tick += async (_, _) => await CheckUpdatesAsync(true);
-        Shown += async (_, _) => { if (_activeMethod == TuningMethod.TuningFork && _forkTap.Checked) StartMicrophone(); ConfigureUpdateTimer(); if (_automaticUpdates.Checked) await CheckUpdatesAsync(true); };
+        Shown += async (_, _) =>
+        {
+            if (_activeMethod == TuningMethod.TuningFork && _forkTap.Checked) StartMicrophone();
+            ConfigureUpdateTimer();
+            if (_automaticUpdates.Checked) await CheckUpdatesAsync(true);
+            await CheckCalibratorAsync(startup: true);
+        };
         FormClosing += (_, _) => { _closing = true; StopMapping(false); _updateTimer.Stop(); StopMicrophone(false); _strikeTimer.Stop(); _fork.Dispose(); };
         AcceptButton = _method.SelectedIndex == 0 ? _strike : _start;
     }
@@ -617,6 +625,7 @@ internal sealed partial class TunerForm : Form
         _repeat.Text = T("&Powtórz wynik", "&Repeat result");
         _test.Text = T("Sprawdź komunikat &NVDA", "&Test screen reader announcement");
         _updates.Text = T("Sprawdź &aktualizacje", "Check for &updates");
+        ApplyCalibratorLanguage();
         _consonanceTitle.Text = T("Sprawdź współbrzmienie:", "Check consonance:");
         _consonance.AccessibleName = _consonanceTitle.Text;
         _intervalInput.AccessibleName = T("Sposób pomiaru współbrzmienia", "Consonance measurement method");
@@ -720,6 +729,9 @@ internal sealed partial class TunerForm : Form
         TargetMidi = _targetMidi,
         StartOctave = Math.Max(0, _octave.SelectedIndex),
         AutomaticUpdates = _automaticUpdates.Checked,
+        CheckCalibratorOnStartup = _checkCalibratorOnStartup.Checked,
+        CalibratorInstallOffered = _calibratorInstallOffered,
+        CalibratorUpdateOffered = _calibratorUpdateOffered?.ToString(),
         UpdateMinutes = (int)_updateMinutes.Value,
         Consonance = _consonanceKind,
         SimultaneousInterval = _together,
@@ -764,6 +776,7 @@ internal sealed partial class TunerForm : Form
         _forkTap.Checked = settings.ForkTapAdvance;
         _monitor.Checked = settings.MicrophoneMonitor;
         _automaticUpdates.Checked = settings.AutomaticUpdates;
+        ApplyCalibratorPreferences(settings);
         _updateMinutes.Value = settings.UpdateMinutes;
         _automaticStrikesRunning = settings.AutoStrike;
         PopulateChoices(settings);
@@ -1238,7 +1251,7 @@ internal sealed partial class TunerForm : Form
     }
     internal async Task CheckUpdatesAsync(bool quiet, Func<Task<ReleaseInfo?>>? findRelease = null)
     {
-        if (_closing || IsDisposed || (quiet && !_automaticUpdates.Checked) || !_updateChecks.TryBegin()) return;
+        if (_closing || IsDisposed || _calibratorBusy || (quiet && !_automaticUpdates.Checked) || !_updateChecks.TryBegin()) return;
         bool prompted = false;
         if (!quiet)
         {
