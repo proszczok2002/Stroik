@@ -22,11 +22,17 @@ internal static class NvdaReader
             if (!string.IsNullOrWhiteSpace(replacement)) file = Path.GetFullPath(replacement);
             else
             {
-                file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroik", "nvda-client", "2026.3.1", "nvdaControllerClient.dll");
+                string dataDirectory = PortableData.DataDirectory(PortableData.ProgramDirectory);
+                string clientDirectory = Path.Combine(dataDirectory, "nvda-client");
+                string versionDirectory = Path.Combine(clientDirectory, "2026.3.1");
+                file = Path.Combine(versionDirectory, "nvdaControllerClient.dll");
                 using var embedded = typeof(NvdaReader).Assembly.GetManifestResourceStream("Stroik.nvdaControllerClient.dll")!;
                 using var memory = new MemoryStream(); embedded.CopyTo(memory); byte[] data = memory.ToArray();
                 if (Convert.ToHexString(SHA256.HashData(data)) != Digest) throw new InvalidDataException("NVDA client checksum");
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+                PortableData.EnsureDataDirectory(dataDirectory);
+                PortableData.EnsureDataDirectory(clientDirectory);
+                PortableData.EnsureDataDirectory(versionDirectory);
+                if (File.Exists(file)) PortableData.RejectLink(file);
                 if (!File.Exists(file) || Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file))) != Digest)
                 {
                     string temporary = file + "." + Guid.NewGuid().ToString("N"); File.WriteAllBytes(temporary, data); File.Move(temporary, file, true);

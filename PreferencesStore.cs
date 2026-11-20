@@ -2,49 +2,63 @@ using System.Text.Json;
 
 namespace Stroik;
 
-internal sealed class PreferencesStore(string programDirectory, string legacyFile)
+internal sealed class PreferencesStore(string programDirectory, string legacyFile, bool migrateOnLoad = true)
 {
     private readonly string _portableFile = Path.Combine(programDirectory, "Stroik.settings.json");
-    private string? _savePath;
+    private readonly string _legacyRoot = Path.GetDirectoryName(legacyFile)!;
+    internal bool CanSave { get; private set; }
+    internal bool MigrationPending { get; private set; }
 
-    internal static PreferencesStore ForApplication() => new(AppContext.BaseDirectory,
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroik", "settings.json"));
+    internal static PreferencesStore ForApplication(bool migrateOnLoad = true) => new(PortableData.ProgramDirectory,
+        Path.Combine(PortableData.LegacyDirectory, "settings.json"), migrateOnLoad);
 
     internal Preferences Load()
     {
+        if (!Path.IsPathFullyQualified(_legacyRoot) || PortableData.Contains(_legacyRoot, programDirectory))
+            return Read(_portableFile).Settings ?? new Preferences();
+
         var portable = Read(_portableFile);
         if (portable.Exists)
         {
             // A damaged or unreadable file stays available for manual recovery.
-            _savePath = portable.Settings is not null ? _portableFile : null;
-            return portable.Settings ?? Read(legacyFile).Settings ?? new Preferences();
+            CanSave = portable.Settings is not null;
+            if (migrateOnLoad) CompleteMigration();
+            return portable.Settings ?? ReadLegacy().Settings ?? new Preferences();
         }
 
-        var legacy = Read(legacyFile);
+        var legacy = ReadLegacy();
         Preferences settings = legacy.Settings ?? new Preferences();
         if (TryWrite(_portableFile, legacy.Json ?? settings.Serialize(), overwrite: false))
         {
-            _savePath = _portableFile;
+            CanSave = true;
+            if (migrateOnLoad) CompleteMigration();
             return settings;
         }
 
         // Another instance may have created the portable file while this one was starting.
         portable = Read(_portableFile);
-        _savePath = portable.Exists
-            ? (portable.Settings is not null ? _portableFile : null)
-            : (legacy.Settings is not null || !legacy.Exists ? legacyFile : null);
+        CanSave = portable.Settings is not null;
+        if (migrateOnLoad) CompleteMigration();
         return portable.Settings ?? settings;
     }
 
-    internal void Save(Preferences settings)
+    internal bool Save(Preferences settings) => CanSave && TryWrite(_portableFile, settings.Serialize(), overwrite: true);
+
+    internal void CompleteMigration()
     {
-        if (_savePath is not null) TryWrite(_savePath, settings.Serialize(), overwrite: true);
+        MigrationPending = CanSave ? !LegacyDataMigration.TryMove(_legacyRoot, programDirectory) : Directory.Exists(_legacyRoot);
     }
 
-    private static (bool Exists, Preferences? Settings, string? Json) Read(string path)
+    internal void DeferMigration() => MigrationPending = Directory.Exists(_legacyRoot);
+
+    private (bool Exists, Preferences? Settings, string? Json) ReadLegacy() => Read(legacyFile, _legacyRoot);
+
+    private static (bool Exists, Preferences? Settings, string? Json) Read(string path, string? root = null)
     {
         try
         {
+            if (root is null) PortableData.RejectLink(path);
+            else PortableData.RejectLinksUnder(root, path);
             string json = File.ReadAllText(path);
             return (true, Preferences.Parse(json), json);
         }
@@ -60,8 +74,12 @@ internal sealed class PreferencesStore(string programDirectory, string legacyFil
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-            using (var writer = new StreamWriter(stream))
+            using (var writer = new StreamWriter(stream, leaveOpen: true))
+            {
                 writer.Write(json);
+                writer.Flush();
+                stream.Flush(flushToDisk: true);
+            }
             File.Move(temporary, path, overwrite);
             return true;
         }

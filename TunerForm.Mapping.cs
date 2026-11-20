@@ -274,14 +274,16 @@ internal sealed partial class TunerForm
 
     private void SaveMapping()
     {
-        using var dialog = new SaveFileDialog { Title = _mapSave.Text, Filter = "JSON (*.json)|*.json", FileName = "stroik-instrument-map.json" };
+        using var dialog = new SaveFileDialog { Title = _mapSave.Text, Filter = "JSON (*.json)|*.json", FileName = "stroik-instrument-map.json",
+            InitialDirectory = PortableData.ProgramDirectory, RestoreDirectory = true };
         try { if (dialog.ShowDialog(this) == DialogResult.OK) TuningFiles.Write(dialog.FileName, _mapDraft); }
         catch (Exception error) { MappingStatus(error.Message); }
     }
 
     private void OpenTuningFile(bool calibration)
     {
-        using var dialog = new OpenFileDialog { Filter = "JSON (*.json)|*.json", Title = calibration ? _calibrationLoad.Text : _mapLoad.Text };
+        using var dialog = new OpenFileDialog { Filter = "JSON (*.json)|*.json", Title = calibration ? _calibrationLoad.Text : _mapLoad.Text,
+            InitialDirectory = PortableData.ProgramDirectory, RestoreDirectory = true };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         try
         {

@@ -1,5 +1,19 @@
 # Changelog / Historia zmian
 
+## 1.0.25 (Stroik 1.25)
+
+PL:
+
+- Stroik zapisuje ustawienia w `Stroik.settings.json` obok `Stroik.exe`. Logi, pliki aktualizatora i biblioteka NVDA trafiają do `Stroik-data`. Aby przenieść program i dane, skopiuj cały folder.
+- Przy pierwszym uruchomieniu Stroik zachowuje dotychczasowy profil, mapę instrumentu i kalibrację. Zawartość `%LOCALAPPDATA%\Stroik` trafia do kopii w `Stroik-data\migracja-*`. Jeśli ustawienia są już obok EXE, zachowują pierwszeństwo. Stroik usuwa stary katalog dopiero po sprawdzeniu kopii.
+- Rozpakuj ZIP do zapisywalnego folderu. Jeśli migrację przerwie brak dostępu lub blokada pliku, Stroik zachowa dane źródłowe wymagające dokończenia migracji i ponowi próbę przy następnym starcie.
+
+EN:
+
+- Stroik saves preferences to `Stroik.settings.json` next to `Stroik.exe`. Logs, updater files and the NVDA library are under `Stroik-data`. Copy the whole folder to move the program and its data.
+- On first launch Stroik preserves the profile, instrument map and fork calibration. It copies `%LOCALAPPDATA%\Stroik` to a backup under `Stroik-data\migracja-*`. Existing settings next to the EXE take priority. Stroik removes the old directory once it has verified the copy.
+- Extract the ZIP to a writable folder. If a file is locked or access is denied, Stroik keeps the source data that still needs migrating and retries on the next launch.
+
 ## 1.0.24 (Stroik 1.24)
 
 PL:

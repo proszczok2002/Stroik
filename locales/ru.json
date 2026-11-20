@@ -358,5 +358,7 @@
   "The calibrator is optional.": "Калибратор необязателен.",
   "The optional fork calibrator is missing. Download version {0} from GitHub and save it next to Stroik.exe?": "Необязательный калибратор камертона отсутствует. Загрузить версию {0} с GitHub и сохранить рядом со Stroik.exe?",
   "Yes, download the calibrator": "Да, загрузить калибратор",
-  "You have calibrator {0}. Download version {1} from GitHub and replace the file next to Stroik.exe?": "Установлен калибратор {0}. Загрузить версию {1} с GitHub и заменить файл рядом со Stroik.exe?"
+  "You have calibrator {0}. Download version {1} from GitHub and replace the file next to Stroik.exe?": "Установлен калибратор {0}. Загрузить версию {1} с GitHub и заменить файл рядом со Stroik.exe?",
+  "Could not save settings beside Stroik.exe. Check the program folder permissions and the Stroik.settings.json file.": "Не удалось сохранить настройки рядом со Stroik.exe. Проверьте разрешения папки программы и файл Stroik.settings.json.",
+  "Migration from AppData is incomplete. Close older copies of Stroik and check that the program folder is writable. Migration will retry on the next launch.": "Перенос данных из AppData не завершён. Закройте старые копии Stroik и проверьте право записи в папку программы. Перенос повторится при следующем запуске."
 }

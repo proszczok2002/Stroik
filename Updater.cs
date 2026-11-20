@@ -108,8 +108,11 @@ internal static class Updater
 
     internal static async Task<string> DownloadVerifiedAsync(ReleaseInfo release)
     {
-        string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Stroik", "updates", Guid.NewGuid().ToString("N"));
+        string programDirectory = PortableData.ProgramDirectory;
+        string updateRoot = PortableData.UpdatesDirectory(programDirectory);
+        PortableData.EnsureDataDirectory(PortableData.DataDirectory(programDirectory));
+        PortableData.EnsureDataDirectory(updateRoot);
+        string directory = Path.Combine(updateRoot, Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         string destination = Path.Combine(directory, ExecutableName);
         try
@@ -189,7 +192,7 @@ internal static class Updater
 
     internal static void ApplyReplacement(string current, int oldProcessId, string? ready = null) => UpdateInstaller.Apply(current, oldProcessId, ready);
 
-    internal static void CleanupAfterUpdate(string directory, int helperProcessId, string? backup = null) => UpdateInstaller.InstalledWindowReady(directory, helperProcessId, backup);
+    internal static Task<bool> CleanupAfterUpdate(string directory, int helperProcessId, string? backup = null) => UpdateInstaller.InstalledWindowReady(directory, helperProcessId, backup);
     internal static bool IsOwnedBackup(string current, string backup)
     {
         if (!Path.GetFileName(current).Equals(ExecutableName, StringComparison.OrdinalIgnoreCase)) return false;

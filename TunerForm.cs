@@ -113,9 +113,9 @@ internal sealed partial class TunerForm : Form
 
     private readonly PreferencesStore _preferencesStore;
 
-    internal TunerForm(PreferencesStore? preferencesStore = null)
+    internal TunerForm(PreferencesStore preferencesStore)
     {
-        _preferencesStore = preferencesStore ?? PreferencesStore.ForApplication();
+        _preferencesStore = preferencesStore;
         Preferences settings = _preferencesStore.Load();
         _languageCode = string.IsNullOrEmpty(settings.Language) ? (settings.English ? "en" : "pl") : settings.Language;
         _english = _languageCode != "pl";
@@ -747,7 +747,26 @@ internal sealed partial class TunerForm : Form
         InstrumentMap = _instrumentMap,
         ForkCalibration = _forkCalibration
     };
-    private void Persist() { if (!_initializing) _preferencesStore.Save(ReadSettings()); }
+    private bool _storageWarningShown;
+
+    private void Persist()
+    {
+        if (!_initializing && !_preferencesStore.Save(ReadSettings()) && Visible && !_closing)
+            WarnPortableStorage(saveFailed: true);
+    }
+
+    internal void WarnPortableStorage(bool saveFailed = false)
+    {
+        if (_storageWarningShown || _closing || IsDisposed || !Visible) return;
+        if (!saveFailed && _preferencesStore.CanSave && !_preferencesStore.MigrationPending) return;
+        _storageWarningShown = true;
+        string message = saveFailed || !_preferencesStore.CanSave
+            ? T("Nie można zapisać ustawień obok Stroik.exe. Sprawdź uprawnienia folderu programu i stan pliku Stroik.settings.json.",
+                "Could not save settings beside Stroik.exe. Check the program folder permissions and the Stroik.settings.json file.")
+            : T("Migracja z AppData nie została ukończona. Zamknij starsze kopie Stroika i sprawdź, czy folder programu jest zapisywalny. Migracja zostanie ponowiona przy następnym uruchomieniu.",
+                "Migration from AppData is incomplete. Close older copies of Stroik and check that the program folder is writable. Migration will retry on the next launch.");
+        MessageBox.Show(this, message, Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+    }
     private void ApplySettings(Preferences settings)
     {
         StopMicrophone(false);
@@ -801,6 +820,8 @@ internal sealed partial class TunerForm : Form
     {
         using var dialog = new SaveFileDialog
         {
+            InitialDirectory = PortableData.ProgramDirectory,
+            RestoreDirectory = true,
             Filter = T("Profil Stroika (*.json)|*.json", "Stroik profile (*.json)|*.json"),
             DefaultExt = "json",
             AddExtension = true,
@@ -816,6 +837,8 @@ internal sealed partial class TunerForm : Form
     {
         using var dialog = new OpenFileDialog
         {
+            InitialDirectory = PortableData.ProgramDirectory,
+            RestoreDirectory = true,
             Filter = T("Profil Stroika (*.json)|*.json", "Stroik profile (*.json)|*.json"),
             Title = T("Wczytaj plik ustawień", "Open settings file")
         };

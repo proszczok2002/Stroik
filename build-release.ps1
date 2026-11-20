@@ -73,10 +73,12 @@ try {
     & $dotnet run --project (Join-Path $repoRoot 'tests/PitchChecks.csproj') -c Release
     if ($LASTEXITCODE -ne 0) { throw 'Pitch checks failed.' }
     New-Item -ItemType Directory -Force -Path $stage | Out-Null
-    & $dotnet publish (Join-Path $repoRoot 'Stroik.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $stage
+    & $dotnet publish (Join-Path $repoRoot 'Stroik.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=false -o $stage
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
-    & $dotnet publish (Join-Path $repoRoot 'tools/ForkCalibrator/ForkCalibrator.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o $stage
+    & $dotnet publish (Join-Path $repoRoot 'tools/ForkCalibrator/ForkCalibrator.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=false -p:EnableCompressionInSingleFile=true -o $stage
     if ($LASTEXITCODE -ne 0) { throw 'Calibrator publish failed.' }
+    $extraBinaries = Get-ChildItem -LiteralPath $stage -File | Where-Object { $_.Name -notin @('Stroik.exe', 'Stroik-Kalibrator.exe', 'Stroik.pdb', 'Stroik-Kalibrator.pdb') }
+    if ($extraBinaries) { throw 'The Windows builds require extra runtime files. Check the portable packaging.' }
 
     $newExe = Join-Path $stage 'Stroik.exe'
     $newHash = (Get-FileHash -LiteralPath $newExe -Algorithm SHA256).Hash.ToLowerInvariant()

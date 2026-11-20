@@ -8,7 +8,8 @@ internal static class CurrentReleaseChecks
     {
         Exception? failure=null;
         var thread=new Thread(()=> {
-            using var form=new TunerForm();
+            using var fixture = new PortablePreferencesChecks.Fixture();
+            using var form=new TunerForm(fixture.Store());
             var saved=(Preferences)Call(form,"ReadSettings")!;
             Call(form,"ApplySettings",new Preferences {Method=TuningMethod.HybridSpeakers,View=TunerView.Classic,AutomaticUpdates=false,CheckCalibratorOnStartup=false,VisualMode=true,VoiceInVisualMode=true,Language="pl"});
             form.Shown+=async (_,_)=> {
@@ -53,7 +54,8 @@ internal static class CurrentReleaseChecks
     {
         Exception? failure=null;
         var thread=new Thread(()=> {
-            using var form=new TunerForm();
+            using var fixture = new PortablePreferencesChecks.Fixture();
+            using var form=new TunerForm(fixture.Store());
             var saved=(Preferences)Call(form,"ReadSettings")!;
             Call(form,"ApplySettings",new Preferences {Method=TuningMethod.HybridSpeakers,View=TunerView.Beginner,AutomaticUpdates=false,CheckCalibratorOnStartup=false,VisualMode=true,VoiceInVisualMode=false,Language="pl"});
             form.Shown+=async (_,_)=> {

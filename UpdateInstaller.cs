@@ -5,7 +5,8 @@ namespace Stroik;
 
 internal static class UpdateInstaller
 {
-    internal static string LogPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroik", "update.log");
+    private static string? _installationDirectory;
+    internal static string LogPath => Path.Combine(PortableData.DataDirectory(_installationDirectory ?? PortableData.ProgramDirectory), "update.log");
     private static readonly object LogLock = new();
 
     internal static void Log(string stage, Exception? error = null)
@@ -14,9 +15,14 @@ internal static class UpdateInstaller
         {
             lock (LogLock)
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
-                if (File.Exists(LogPath) && new FileInfo(LogPath).Length > 1_000_000) File.Move(LogPath, LogPath + ".previous", true);
-                using var file = new FileStream(LogPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                string path = LogPath;
+                PortableData.EnsureDataDirectory(Path.GetDirectoryName(path)!);
+                if (File.Exists(path))
+                {
+                    PortableData.RejectLink(path);
+                    if (new FileInfo(path).Length > 1_000_000) File.Move(path, path + ".previous", true);
+                }
+                using var file = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
                 using var writer = new StreamWriter(file);
                 writer.WriteLine($"{DateTimeOffset.Now:O} [{Environment.ProcessId}] {stage}{(error is null ? "" : $": {error.GetType().Name} 0x{error.HResult:X8}: {error.Message}")}");
             }
@@ -83,6 +89,7 @@ internal static class UpdateInstaller
     {
         string helper = Environment.ProcessPath ?? throw new InvalidOperationException("Cannot locate update helper.");
         ValidatePaths(current, helper);
+        _installationDirectory = Path.GetDirectoryName(Path.GetFullPath(current))!;
         ProbeDirectory(current);
         string helperDirectory = Path.GetDirectoryName(helper)!;
         string staged = current + ".new-" + Guid.NewGuid().ToString("N");
@@ -169,33 +176,55 @@ internal static class UpdateInstaller
         }
     }
 
-    internal static void InstalledWindowReady(string directory, int helperPid, string? backup)
+    internal static Task<bool> InstalledWindowReady(string directory, int helperPid, string? backup)
     {
-        if (!IsUpdateDirectory(directory)) return;
+        if (!IsUpdateDirectory(directory)) return Task.FromResult(false);
         try { File.WriteAllText(Path.Combine(directory, "app.ready"), Environment.ProcessId.ToString()); }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException) { Log("Could not write window-ready marker", error); }
-        Cleanup(directory, helperPid, backup);
+        return Cleanup(directory, helperPid, backup);
     }
+
+    internal static bool IsLegacyUpdateDirectory(string directory) => IsDownloadDirectory(directory, Path.Combine(PortableData.LegacyDirectory, "updates"));
 
     private static bool IsUpdateDirectory(string directory)
     {
-        string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Stroik", "updates");
-        return Path.GetDirectoryName(Path.GetFullPath(directory))?.Equals(Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase) == true;
+        return IsDownloadDirectory(directory, PortableData.UpdatesDirectory(PortableData.ProgramDirectory)) || IsLegacyUpdateDirectory(directory);
     }
 
-    internal static void Cleanup(string directory, int helperPid, string? backup)
+    internal static bool IsDownloadDirectory(string directory, string root)
     {
-        _ = Task.Run(() =>
+        if (!Path.IsPathFullyQualified(directory) || !Path.IsPathFullyQualified(root)) return false;
+        string full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
+        if (!Guid.TryParseExact(Path.GetFileName(full), "N", out _) ||
+            Path.GetDirectoryName(full)?.Equals(Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase) != true) return false;
+        try
+        {
+            PortableData.RejectLink(Path.GetDirectoryName(root)!);
+            PortableData.RejectLinksUnder(root, full);
+            return true;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return false; }
+    }
+
+    private static Task<bool> Cleanup(string directory, int helperPid, string? backup)
+    {
+        return Task.Run(() =>
         {
             try
             {
-                try { using var helper = Process.GetProcessById(helperPid); if (!helper.WaitForExit(60000)) { Log("Cleanup deferred: helper still running"); return; } }
+                try { using var helper = Process.GetProcessById(helperPid); if (!helper.WaitForExit(60000)) { Log("Cleanup deferred: helper still running"); return false; } }
                 catch (ArgumentException) { }
                 if (backup is not null && Updater.IsOwnedBackup(Environment.ProcessPath ?? "", backup)) RetryFile(() => File.Delete(backup));
-                if (IsUpdateDirectory(directory)) RetryFile(() => { if (Directory.Exists(directory)) Directory.Delete(directory, true); });
+                if (IsUpdateDirectory(directory))
+                {
+                    foreach (string name in new[] { "Stroik.exe", "helper.ready", "app.ready" })
+                        RetryFile(() => File.Delete(Path.Combine(directory, name)));
+                    Directory.Delete(directory);
+                }
                 Log("Old EXE and download cleanup completed");
+                return true;
             }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { Log("Cleanup incomplete; recovery files kept", error); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { Log("Cleanup incomplete; recovery files kept", error); return false; }
         });
     }
 

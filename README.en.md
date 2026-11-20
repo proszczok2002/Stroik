@@ -1,12 +1,12 @@
-# Stroik 1.24
+# Stroik 1.25
 
 - For a first download, use the complete Windows ZIP. Extract it to one folder to get Stroik.exe, Stroik-Kalibrator.exe, guides and checksums together.
 - If the calibrator is missing or out of date, Stroik asks at startup whether to download it. Declining skips further offers for the missing program or the same version. Disable **Check for the calibrator at startup** at any time, or use **Check calibrator now** in Settings.
 - After you confirm, Stroik verifies size, SHA-256 and version before saving the calibrator next to the tuner EXE. Calibrator 1.0.1 shows its version in the window title.
 
-- Stroik saves its preferences to `Stroik.settings.json` next to `Stroik.exe`. Copy both files when moving the program and its settings to another PC or USB drive.
-- On first launch, if there is no settings file next to the program, Stroik copies the current profile from `%LOCALAPPDATA%\Stroik\settings.json`, including the active instrument map and fork calibration. It preserves the original. An existing file next to the program takes priority.
-- If the program folder does not allow a new file, Stroik uses the Windows user profile. Run `Stroik.exe` from a writable folder to use portable settings.
+- Stroik saves preferences to `Stroik.settings.json` next to `Stroik.exe`. Logs, updater files and the NVDA library are under `Stroik-data`. Copy the whole folder to move the program and its data.
+- On first launch Stroik preserves the profile, instrument map and fork calibration. It copies `%LOCALAPPDATA%\Stroik` to a backup under `Stroik-data\migracja-*`. Existing settings next to the EXE take priority. Stroik removes the old directory once it has verified the copy.
+- Extract the ZIP to a writable folder. If a file is locked or access is denied, Stroik keeps the source data that still needs migrating and retries on the next launch.
 
 - In speaker hybrid, enable the two-tap checkbox. After an in-tune announcement, the reference stays silent while you tap twice. The taps can be unpitched. With no gesture, the reference repeats the same note. A detuned reading uses the configured 0–60 second pause.
 - A4 = 440 Hz is the usual reference for postwar pianos. Prewar instruments may have been built for lower pitch. Have a technician assess an old piano before raising its pitch.
@@ -19,7 +19,7 @@
 - The result pause accepts 0–60 seconds, including 1 and 2. Zero resumes the reference immediately after actual speech completion and is the new default. Saved Windows delays are retained. Android offers the same setting with a slider and numeric entry.
 - Android Classic note lists omit key positions. Added beginner method descriptions and black-key selection with Left/Right arrows. App TTS reads results and tutorials even with TalkBack so completion can be observed; TalkBack still handles navigation.
 
-Current Windows 1.24 changes are described above; older version sections are historical.
+Current Windows 1.25 changes are described above; older version sections are historical.
 
 [Native Android 1.10](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.10) is available. See the [Android guide](android/README.en.md) and [device report](android/DEVICE_TESTS.md). Windows updates use a separate release channel.
 
@@ -31,7 +31,7 @@ Current Windows 1.24 changes are described above; older version sections are his
 
 ## Download
 
-Download `Stroik.exe` from GitHub Releases. It is self-contained and needs no .NET installation. Keep it in a writable folder for automatic updates. The EXE is unsigned, so Windows may display a SmartScreen warning. Compare its SHA-256 with `Stroik.exe.sha256` using `Get-FileHash .\Stroik.exe -Algorithm SHA256`.
+For a first download, choose the complete ZIP in GitHub Releases. You can also download `Stroik.exe` separately. It is self-contained and needs no .NET installation. Keep it in a writable folder for automatic updates. The EXE is unsigned, so Windows may display a SmartScreen warning. Compare its SHA-256 with `Stroik.exe.sha256` using `Get-FileHash .\Stroik.exe -Algorithm SHA256`.
 
 ## Tuning methods
 
@@ -108,7 +108,7 @@ When checked, the fork strikes repeatedly at the selected interval. **Alt+U** pa
 
 Version 1.05 introduced Alt+U for the tuning fork. Its current behavior is described in the 1.06 section above. The automatic-mode choice is saved in settings and profiles.
 
-The updater retries transient network errors and interrupted EXE downloads. Startup and periodic checks do not show connection errors; **Check for updates** retries manually. Before closing the app, it checks write access to the EXE folder. After a successful replacement, the new version retries removing the old copy if it was briefly locked. SHA-256 verification remains mandatory. Since 1.16 diagnostics are stored in `%LOCALAPPDATA%\Stroik\update.log`.
+The updater retries transient network errors and interrupted EXE downloads. Startup and periodic checks do not show connection errors; **Check for updates** retries manually. Before closing the app, it checks write access to the EXE folder. After a successful replacement, the new version retries removing the old copy if it was briefly locked. SHA-256 verification remains mandatory. Diagnostics are stored in `Stroik-data\update.log` beside the EXE.
 ## New in 1.04
 
 **Hands-free navigation.** In electronic mode, after an in-tune result, wait for the announcement to finish. Two distinct strikes of the same string or key, each recognized at the target pitch, select the next note. Their allowed time can be changed as described in the 1.07 section above. **Ctrl+N** or **Next note** advances manually. Detection depends on the microphone, playing level and instrument; check the selected note before moving a tuning lever.

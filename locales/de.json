@@ -358,5 +358,7 @@
   "The calibrator is optional.": "Der Kalibrator ist optional.",
   "The optional fork calibrator is missing. Download version {0} from GitHub and save it next to Stroik.exe?": "Der optionale Stimmgabelkalibrator fehlt. Version {0} von GitHub herunterladen und neben Stroik.exe speichern?",
   "Yes, download the calibrator": "Ja, Kalibrator herunterladen",
-  "You have calibrator {0}. Download version {1} from GitHub and replace the file next to Stroik.exe?": "Kalibrator {0} ist vorhanden. Version {1} von GitHub herunterladen und die Datei neben Stroik.exe ersetzen?"
+  "You have calibrator {0}. Download version {1} from GitHub and replace the file next to Stroik.exe?": "Kalibrator {0} ist vorhanden. Version {1} von GitHub herunterladen und die Datei neben Stroik.exe ersetzen?",
+  "Could not save settings beside Stroik.exe. Check the program folder permissions and the Stroik.settings.json file.": "Die Einstellungen konnten nicht neben Stroik.exe gespeichert werden. Prüfen Sie die Berechtigungen des Programmordners und die Datei Stroik.settings.json.",
+  "Migration from AppData is incomplete. Close older copies of Stroik and check that the program folder is writable. Migration will retry on the next launch.": "Die Migration aus AppData ist unvollständig. Schließen Sie ältere Stroik-Versionen und prüfen Sie, ob der Programmordner beschreibbar ist. Beim nächsten Start wird die Migration erneut versucht."
 }

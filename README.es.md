@@ -1,12 +1,12 @@
-# Stroik 1.24 — Guía
+# Stroik 1.25 — Guía
 
 - Para la primera descarga, usa el ZIP completo de Windows. Extráelo en una carpeta para tener juntos Stroik.exe, Stroik-Kalibrator.exe, las guías y las sumas de verificación.
 - Si el calibrador falta o está desactualizado, Stroik ofrece descargarlo al iniciar. Tras rechazar, no se repite la misma oferta. En Ajustes puedes desactivar la comprobación al iniciar y seguir comprobándolo manualmente.
 - Tras confirmar, Stroik verifica tamaño, SHA-256 y versión, y guarda el calibrador junto a su EXE. El calibrador 1.0.1 muestra su versión en el título de la ventana.
 
-- Stroik guarda los ajustes en `Stroik.settings.json`, junto a `Stroik.exe`. Copie ambos archivos para trasladar el programa con sus ajustes a otro equipo o a una memoria USB.
-- Si el archivo falta junto al programa en el primer inicio, Stroik copia el perfil desde `%LOCALAPPDATA%\Stroik\settings.json`, con el mapa activo y la calibración del diapasón. Conserva el original. Un archivo existente junto al programa tiene prioridad.
-- Si la carpeta del programa no permite crear el archivo, Stroik usa el perfil de Windows. Para llevarse los ajustes, ejecute Stroik desde una carpeta con permiso de escritura.
+- Stroik guarda los ajustes en `Stroik.settings.json`, junto a `Stroik.exe`. Los registros, los archivos de actualización y la biblioteca de NVDA están en `Stroik-data`. Para trasladar el programa con sus datos, copia toda la carpeta.
+- En el primer inicio, Stroik conserva el perfil, el mapa del instrumento y la calibración del diapasón. Hace una copia de `%LOCALAPPDATA%\Stroik` en `Stroik-data\migracja-*`. Los ajustes junto al EXE tienen prioridad. Solo borra la carpeta antigua tras comprobar la copia.
+- Extrae el ZIP en una carpeta con permiso de escritura. Si hay un archivo bloqueado o se deniega el acceso, Stroik conserva los datos de origen pendientes y vuelve a intentarlo en el próximo inicio.
 
 - En el híbrido con altavoces, active la opción de dos golpes. Tras un resultado afinado, la referencia queda en silencio para el gesto. Sin gesto se repite la misma nota. Si está desafinada, se respeta la pausa elegida de 0–60 segundos.
 - La4 = 440 Hz es la referencia habitual para pianos de posguerra. Los de preguerra podían estar diseñados para un tono más bajo. Consulte a un técnico antes de subir el tono de un piano antiguo.

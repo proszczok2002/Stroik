@@ -1,12 +1,12 @@
-# Stroik 1.24 — Guide
+# Stroik 1.25 — Guide
 
 - Pour un premier téléchargement, choisissez le ZIP Windows complet. Extrayez-le dans un dossier pour obtenir ensemble Stroik.exe, Stroik-Kalibrator.exe, les guides et les sommes de contrôle.
 - Si le calibrateur manque ou doit être mis à jour, Stroik propose son téléchargement au démarrage. Après un refus, la même proposition ne revient pas. Dans les paramètres, vous pouvez désactiver la vérification au démarrage et la lancer manuellement.
 - Après confirmation, Stroik contrôle la taille, le SHA-256 et la version, puis enregistre le calibrateur à côté de son EXE. Le calibrateur 1.0.1 affiche sa version dans le titre de la fenêtre.
 
-- Stroik enregistre ses réglages dans `Stroik.settings.json`, à côté de `Stroik.exe`. Copiez les deux fichiers pour déplacer le logiciel et ses réglages sur un autre PC ou une clé USB.
-- Au premier lancement, si le fichier manque à côté du programme, Stroik copie le profil depuis `%LOCALAPPDATA%\Stroik\settings.json`, y compris le relevé actif et le calibrage du diapason. L’original est conservé. Un fichier existant à côté du programme est prioritaire.
-- Si le dossier du programme ne permet pas de créer un fichier, Stroik utilise le profil Windows. Pour les réglages portables, lancez Stroik depuis un dossier accessible en écriture.
+- Stroik enregistre ses réglages dans `Stroik.settings.json`, à côté de `Stroik.exe`. Les journaux, les fichiers de mise à jour et la bibliothèque NVDA sont dans `Stroik-data`. Copiez tout le dossier pour déplacer le logiciel avec ses données.
+- Au premier lancement, Stroik conserve le profil, le relevé de l’instrument et le calibrage du diapason. Il sauvegarde `%LOCALAPPDATA%\Stroik` dans `Stroik-data\migracja-*`. Les réglages présents à côté de l’EXE sont prioritaires. Une fois la copie vérifiée, Stroik supprime l’ancien dossier.
+- Extrayez le ZIP dans un dossier accessible en écriture. Si un fichier est verrouillé ou que l’accès est refusé, Stroik conserve les données sources restantes et réessaie au prochain lancement.
 
 - En hybride haut-parleurs, activez l’option des deux frappes. Après un résultat juste, la référence reste silencieuse pour le geste. Sans geste, elle répète la même note. Si la note est fausse, la pause configurée de 0–60 secondes s’applique.
 - La4 = 440 Hz est la référence habituelle des pianos d’après-guerre. Les instruments d’avant-guerre peuvent être conçus pour un diapason plus bas. Faites examiner un vieux piano avant de relever son diapason.

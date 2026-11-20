@@ -1,12 +1,12 @@
-# Stroik 1.24
+# Stroik 1.25
 
 - Przy pierwszym pobraniu wybierz pełny ZIP Windows. Rozpakuj go do jednego folderu, aby od razu mieć Stroik.exe, Stroik-Kalibrator.exe, instrukcje i sumy kontrolne.
 - Jeśli kalibratora brakuje lub jest starszy, Stroik przy uruchomieniu pyta o pobranie. Po odmowie nie ponawia pytania o brakujący program ani o tę samą wersję. Możesz wyłączyć **Sprawdzaj kalibrator przy uruchomieniu** i zawsze użyć **Sprawdź kalibrator teraz** w Ustawieniach.
 - Po potwierdzeniu Stroik sprawdza rozmiar, SHA-256 i wersję, po czym zapisuje kalibrator obok swojego EXE. Kalibrator 1.0.1 pokazuje własną wersję w tytule okna.
 
-- Stroik zapisuje ustawienia w pliku `Stroik.settings.json` obok `Stroik.exe`. Aby przenieść ustawienia na inny komputer lub pendrive, skopiuj oba pliki.
-- Jeśli przy pierwszym uruchomieniu obok programu brakuje pliku ustawień, Stroik kopiuje aktualny profil z `%LOCALAPPDATA%\Stroik\settings.json`, w tym aktywną mapę instrumentu i kalibrację kamertonu. Zachowuje oryginał. Istniejący plik obok programu ma pierwszeństwo.
-- Jeśli folder programu nie pozwala utworzyć pliku, Stroik korzysta z ustawień w profilu Windows. Do przenośnego zapisu uruchamiaj `Stroik.exe` z folderu, do którego masz prawo zapisu.
+- Stroik zapisuje ustawienia w `Stroik.settings.json` obok `Stroik.exe`. Logi, pliki aktualizatora i biblioteka NVDA trafiają do `Stroik-data`. Aby przenieść program i dane, skopiuj cały folder.
+- Przy pierwszym uruchomieniu Stroik zachowuje dotychczasowy profil, mapę instrumentu i kalibrację. Zawartość `%LOCALAPPDATA%\Stroik` trafia do kopii w `Stroik-data\migracja-*`. Jeśli ustawienia są już obok EXE, zachowują pierwszeństwo. Stroik usuwa stary katalog dopiero po sprawdzeniu kopii.
+- Rozpakuj ZIP do zapisywalnego folderu. Jeśli migrację przerwie brak dostępu lub blokada pliku, Stroik zachowa dane źródłowe wymagające dokończenia migracji i ponowi próbę przy następnym starcie.
 
 - W hybrydzie głośnikowej włącz opcję dwóch stuknięć. Po komunikacie o dobrym stroju kamerton pozostawia ciche okno na dwa krótkie stuknięcia. Nie trzeba dwukrotnie zagrać czystej nuty. Bez gestu kamerton powtarza ten sam wzorzec. Po złym wyniku obowiązuje ustawiona przerwa od 0 do 60 sekund.
 - Dla pianin powojennych A4 = 440 Hz to zwykły punkt odniesienia. Przedwojenne instrumenty mogły być przewidziane do niższego stroju. Przed podnoszeniem stroju starego pianina warto uzyskać ocenę technika.
@@ -19,7 +19,7 @@
 - Przerwa po wyniku wynosi 0–60 sekund, także 1 lub 2. Zero oznacza powrót wzorca od razu po zakończeniu mowy i jest nowym ustawieniem domyślnym. Zapisane przerwy Windows są zachowane. Android ma tę samą regulację z suwakiem i wpisem liczby.
 - Android: klasyczna lista bez opisów położenia klawiszy, opisy metod dla początkujących oraz czarne klawisze strzałkami lewo/prawo. Wyniki i samouczek czyta syntezator aplikacji także przy TalkBack, aby znać koniec mowy; TalkBack nadal obsługuje nawigację.
 
-Aktualne zmiany Windows 1.24 opisano powyżej; starsze sekcje wersji są historyczne.
+Aktualne zmiany Windows 1.25 opisano powyżej; starsze sekcje wersji są historyczne.
 
 [Natywna wersja Android 1.10](https://github.com/proszczok2002/Stroik/releases/tag/android-v1.10) jest dostępna. Zobacz [instrukcję Android](android/README.md) i [raport prób urządzenia](android/DEVICE_TESTS.md). Kanał aktualizacji Windows pozostaje oddzielny.
 
@@ -31,7 +31,7 @@ Aktualne zmiany Windows 1.24 opisano powyżej; starsze sekcje wersji są history
 
 ## Pobieranie
 
-Pobierz `Stroik.exe` z GitHub Releases. Jest to samodzielny plik, który nie wymaga instalacji .NET. Umieść go w folderze z prawem zapisu, aby działała automatyczna aktualizacja. Plik nie jest podpisany cyfrowo, więc Windows może wyświetlić ostrzeżenie SmartScreen. Sumę SHA-256 można porównać z `Stroik.exe.sha256` poleceniem `Get-FileHash .\Stroik.exe -Algorithm SHA256`.
+Przy pierwszym pobraniu wybierz pełny ZIP w GitHub Releases. Jeśli potrzebujesz samego stroika, możesz pobrać `Stroik.exe` osobno. Jest to samodzielny plik, który nie wymaga instalacji .NET. Umieść go w folderze z prawem zapisu, aby działała automatyczna aktualizacja. Plik nie jest podpisany cyfrowo, więc Windows może wyświetlić ostrzeżenie SmartScreen. Sumę SHA-256 można porównać z `Stroik.exe.sha256` poleceniem `Get-FileHash .\Stroik.exe -Algorithm SHA256`.
 
 ## Metody strojenia
 
@@ -108,7 +108,7 @@ Gdy pole jest zaznaczone, kamerton uderza cyklicznie w ustawionym odstępie. **A
 
 W wersji 1.05 dodano skrót Alt+U do kamertonu. Jego obecne działanie opisuje sekcja 1.06 powyżej. Wybór trybu automatycznego jest zapisywany w ustawieniach i profilach.
 
-Aktualizator ponawia chwilowe błędy połączenia i pobieranie przerwane w trakcie przesyłania. Sprawdzenia startowe i okresowe nie pokazują błędów połączenia; przycisk **Sprawdź aktualizacje** pozwala ponowić próbę ręcznie. Przed zamknięciem programu sprawdza prawo zapisu w folderze EXE. Po udanej podmianie nowa wersja ponawia usunięcie starej kopii, jeśli plik był chwilowo zablokowany. Weryfikacja SHA-256 pozostaje obowiązkowa. Od 1.16 szczegóły błędów zapisywane są w `%LOCALAPPDATA%\Stroik\update.log`.
+Aktualizator ponawia chwilowe błędy połączenia i pobieranie przerwane w trakcie przesyłania. Sprawdzenia startowe i okresowe nie pokazują błędów połączenia; przycisk **Sprawdź aktualizacje** pozwala ponowić próbę ręcznie. Przed zamknięciem programu sprawdza prawo zapisu w folderze EXE. Po udanej podmianie nowa wersja ponawia usunięcie starej kopii, jeśli plik był chwilowo zablokowany. Weryfikacja SHA-256 pozostaje obowiązkowa. Szczegóły błędów są w `Stroik-data\update.log` obok EXE.
 ## Nowości w 1.04
 
 **Sterowanie bez dotykania komputera.** W stroiku elektronicznym, po uzyskaniu wyniku „dobrze”, odczekaj aż komunikat się skończy. Dwa osobne uderzenia w tę samą strunę lub klawisz, rozpoznane jako ten sam dźwięk, wybierają następny cel. Czas pomiędzy nimi można ustawić zgodnie z opisem wersji 1.07 powyżej. **Ctrl+N** lub przycisk **Następny dźwięk** działa ręcznie. Rozpoznawanie zależy od mikrofonu, głośności i charakteru instrumentu; nie przestawiaj klucza stroikowego bez sprawdzenia wybranej nuty.
