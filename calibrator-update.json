@@ -1,7 +1,7 @@
 {
-    "schema":  1,
-    "version":  "1.0.1",
-    "releaseTag":  "v1.0.24",
-    "sha256":  "911d40ed63b434974c07ab7749d17507fc3e0527f5f7c00264e839fb9339428f",
-    "size":  51717358
+  "schema": 1,
+  "version": "1.0.2",
+  "releaseTag": "v1.0.27",
+  "sha256": "b2773d4d545a7477b139a754c2b76704e9b9e62aba0c142f252733181d1d390e",
+  "size": 51724397
 }
