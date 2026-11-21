@@ -1,3 +1,5 @@
+- Der Tonregler bewegt sich mit Bedienungshilfen oder Pfeiltasten in beide Richtungen jeweils um einen Ton. Die gewählte Stimmreihenfolge bleibt erhalten.
+
 - Neue Profile starten im Lautsprecher-Hybridmodus. Ein aufsteigender Klavierplan beginnt bei A0. Bestehende Einstellungen bleiben erhalten.
 - Ansagen können Cent, Hertz oder beide Einheiten in beliebiger Reihenfolge enthalten. An jeder fünften Position lässt sich eine Quinte prüfen.
 - Für 71 Töne gibt es eine Werkskalibrierung. Hohe Bass-Obertöne sind gedämpft. Im Stimmgabelmodus wechseln zwei kurze, durch Stille getrennte Klopfzeichen zum nächsten Ton.

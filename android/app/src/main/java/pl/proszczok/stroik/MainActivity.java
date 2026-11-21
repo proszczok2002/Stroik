@@ -1020,9 +1020,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     if (!model.strings()) setTarget(Math.max(21, Math.min(108, model.base() + 12 * direction)), true);
   }
 
-  void stepTarget(int direction) {
+  boolean stepTarget(int direction) {
     int next = model.move(direction);
-    if (next != model.base()) setTarget(next, false);
+    return next != model.base() && setTarget(next, false);
   }
 
   private void syncTarget() {

@@ -1,4 +1,6 @@
-# Stroik Android 1.11
+# Stroik Android 1.12
+
+- Suwak dźwięku przesuwa się o jedną nutę w obie strony przy korzystaniu z akcji dostępności lub strzałek klawiatury. Wybrana kolejność strojenia zostaje zachowana.
 
 - Nowe profile zaczynają od hybrydy głośnikowej. Rosnący plan pianina zaczyna się od A subkontra (A0). Stroik zachowuje zapisane ustawienia.
 - W ustawieniach wybierz komunikaty w centach, hercach lub w obu jednostkach w wybranej kolejności. Co piąta pozycja planu może uruchamiać kontrolę kwinty.

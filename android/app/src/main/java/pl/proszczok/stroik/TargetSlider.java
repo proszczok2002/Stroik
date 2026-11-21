@@ -22,7 +22,6 @@ final class TargetSlider extends SeekBar {
     gestureDistance = Math.round(24 * getResources().getDisplayMetrics().density);
     setMinimumHeight(gestureDistance * 3);
     setContentDescription(owner.t("Poprzedni lub następny dźwięk", "Previous or next note"));
-    setKeyProgressIncrement(1);
     setOnClickListener(view -> edit());
     setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
       public void onStartTrackingTouch(SeekBar bar) {}
@@ -36,6 +35,8 @@ final class TargetSlider extends SeekBar {
   void sync() {
     notes = owner.model.navigableNotes();
     setMax(Math.max(0, notes.size() - 1));
+    // SeekBar recalculates the keyboard increment when its range changes.
+    setKeyProgressIncrement(1);
     setProgress(Math.max(0, notes.indexOf(owner.model.base())));
     setStateDescription(owner.model.spokenNote(owner.model.base()));
   }
@@ -53,6 +54,10 @@ final class TargetSlider extends SeekBar {
   }
 
   @Override public boolean performAccessibilityAction(int action, Bundle arguments) {
+    if (action == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+        || action == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) {
+      return isEnabled() && owner.stepTarget(action == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD ? 1 : -1);
+    }
     if (action == PREVIOUS_OCTAVE || action == NEXT_OCTAVE) {
       owner.changeOctave(action == PREVIOUS_OCTAVE ? -1 : 1);
       return true;

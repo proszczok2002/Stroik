@@ -1,5 +1,9 @@
 # Android changelog / Historia zmian Android
 
+## 1.12
+
+- Suwak dźwięku przesuwa się o jedną nutę w obie strony przy korzystaniu z akcji dostępności lub strzałek klawiatury. Wybrana kolejność strojenia zostaje zachowana.
+
 ## 1.11
 
 - Nowe profile zaczynają od hybrydy głośnikowej. Rosnący plan pianina zaczyna się od A subkontra (A0). Stroik zachowuje zapisane ustawienia.

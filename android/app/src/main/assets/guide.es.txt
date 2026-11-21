@@ -1,3 +1,5 @@
+- Las acciones de accesibilidad y las flechas del teclado mueven el control una nota en cada dirección, siguiendo el orden de afinación seleccionado.
+
 - Los perfiles nuevos arrancan en el modo híbrido con altavoces. Un plan ascendente de piano empieza en A0. Stroik conserva los ajustes guardados.
 - Elige cents, hercios o ambas unidades en el orden deseado. Puedes comprobar una quinta en cada quinta posición del plan.
 - El diapasón incluye calibración de fábrica para 71 notas y armónicos superiores más suaves en los graves. Para avanzar en el modo diapasón se requieren dos golpes breves separados por silencio.

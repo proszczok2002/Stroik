@@ -1,3 +1,5 @@
+- The note slider moves one note at a time in either direction with accessibility actions or the arrow keys. It follows the selected tuning order.
+
 - New profiles start in speaker hybrid. An ascending piano plan starts at A0. Stroik keeps existing settings.
 - Choose cents, hertz, or both in either order for announcements. You can check a fifth at every fifth position in the tuning plan.
 - The fork has factory calibration for 71 notes and softer upper bass partials. Fork-mode navigation requires two short taps separated by silence.

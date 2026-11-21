@@ -1,4 +1,6 @@
-# Stroik Android 1.11
+# Stroik Android 1.12
+
+- Las acciones de accesibilidad y las flechas del teclado mueven el control una nota en cada dirección, siguiendo el orden de afinación seleccionado.
 
 - Los perfiles nuevos arrancan en el modo híbrido con altavoces. Un plan ascendente de piano empieza en A0. Stroik conserva los ajustes guardados.
 - Elige cents, hercios o ambas unidades en el orden deseado. Puedes comprobar una quinta en cada quinta posición del plan.

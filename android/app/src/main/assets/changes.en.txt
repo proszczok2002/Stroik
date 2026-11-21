@@ -1,8 +1,3 @@
-Stroik Android 1.11
+Stroik Android 1.12
 
-- New profiles start in speaker hybrid. An ascending piano plan starts at A0. Stroik keeps existing settings.
-- Choose cents, hertz, or both in either order for announcements. You can check a fifth at every fifth position in the tuning plan.
-- The fork has factory calibration for 71 notes and softer upper bass partials. Fork-mode navigation requires two short taps separated by silence.
-- The switch in Instrument Mapping shows whether map or standard tuning is active. Switching to standard keeps the map readings.
-- Windows Calibrator 1.0.2 has automatic preview and an upper-bass-harmonics slider. Ctrl+O opens a JSON file and Ctrl+S saves changes to the same file. The first save lets you pick its name and location. Both Stroik editions can read older and newer calibration files.
-- The note slider lets you enter names such as C4 and offers TalkBack actions to change octave. When Keep screen awake is on, pressing the power button to turn off the screen mutes result speech. With it off, results can be spoken with the screen off.
+- The note slider moves one note at a time in either direction with accessibility actions or the arrow keys. It follows the selected tuning order.

@@ -1,8 +1,3 @@
-Stroik Android 1.11
+Stroik Android 1.12
 
-- Los perfiles nuevos arrancan en el modo híbrido con altavoces. Un plan ascendente de piano empieza en A0. Stroik conserva los ajustes guardados.
-- Elige cents, hercios o ambas unidades en el orden deseado. Puedes comprobar una quinta en cada quinta posición del plan.
-- El diapasón incluye calibración de fábrica para 71 notas y armónicos superiores más suaves en los graves. Para avanzar en el modo diapasón se requieren dos golpes breves separados por silencio.
-- El interruptor indica si el mapa está activo. Volver a la afinación estándar conserva las mediciones.
-- El calibrador 1.0.2 para Windows incluye reproducción automática y regulación de armónicos superiores de graves. Ctrl+O abre el JSON y Ctrl+S guarda en el mismo archivo. Ambas ediciones leen los archivos de calibración antiguos y nuevos.
-- El control permite escribir una nota como C4 y cambiar de octava con acciones de TalkBack. Con «Mantener la pantalla activa», apagar la pantalla manualmente silencia los resultados. Si se desactiva la opción, los resultados se anuncian con la pantalla apagada.
+- Las acciones de accesibilidad y las flechas del teclado mueven el control una nota en cada dirección, siguiendo el orden de afinación seleccionado.

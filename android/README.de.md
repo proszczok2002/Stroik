@@ -1,4 +1,6 @@
-# Stroik Android 1.11
+# Stroik Android 1.12
+
+- Der Tonregler bewegt sich mit Bedienungshilfen oder Pfeiltasten in beide Richtungen jeweils um einen Ton. Die gewählte Stimmreihenfolge bleibt erhalten.
 
 - Neue Profile starten im Lautsprecher-Hybridmodus. Ein aufsteigender Klavierplan beginnt bei A0. Bestehende Einstellungen bleiben erhalten.
 - Ansagen können Cent, Hertz oder beide Einheiten in beliebiger Reihenfolge enthalten. An jeder fünften Position lässt sich eine Quinte prüfen.

@@ -1,4 +1,6 @@
-# Stroik Android 1.11
+# Stroik Android 1.12
+
+- The note slider moves one note at a time in either direction with accessibility actions or the arrow keys. It follows the selected tuning order.
 
 - New profiles start in speaker hybrid. An ascending piano plan starts at A0. Stroik keeps existing settings.
 - Choose cents, hertz, or both in either order for announcements. You can check a fifth at every fifth position in the tuning plan.

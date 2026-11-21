@@ -17,8 +17,8 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
-  private int expectedCode = 111;
-  private String expectedName = "1.11";
+  private int expectedCode = 112;
+  private String expectedName = "1.12";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
@@ -26,8 +26,8 @@ public final class DeviceTests extends Instrumentation {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
     if (args != null) {
-      expectedCode = args.getInt("expectedCode", 111);
-      expectedName = args.getString("expectedName", "1.11");
+      expectedCode = args.getInt("expectedCode", 112);
+      expectedName = args.getString("expectedName", "1.12");
     }
     start();
   }
@@ -2447,18 +2447,32 @@ public final class DeviceTests extends Instrumentation {
             !announcements.toString().contains("suppressed automatic reading"),
             "Visual voice option did not suppress automatic reading");
         announcements.clear();
-        View slider = findTargetSlider();
-        int expected = activity.model.move(1);
-        main(() -> slider.performAccessibilityAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, null));
-        SystemClock.sleep(300);
-        String note = activity.model.spokenNote(activity.model.base());
-        require(activity.model.base() == expected && note.contentEquals(slider.getStateDescription()),
-            "Note slider did not expose the selected note");
+        TargetSlider slider = findTargetSlider();
+        int first = activity.model.base(), anchor = activity.model.anchor;
+        require(slider.getMax() >= 80 && slider.getKeyProgressIncrement() == 1,
+            "A full piano range must keep a single-note keyboard increment");
+        main(() -> require(!slider.performAccessibilityAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD, null),
+            "The first position should decline a backward action"));
+        for (int direction : new int[] {1, 1, -1, -1}) {
+          int from = activity.model.base(), expected = activity.model.move(direction);
+          int action = direction > 0 ? AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+              : AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD;
+          require(expected == from + direction, "Test must begin with adjacent piano notes");
+          main(() -> require(slider.performAccessibilityAction(action, null),
+              "Available step was refused"));
+          String note = activity.model.spokenNote(expected);
+          require(activity.model.base() == expected && note.contentEquals(slider.getStateDescription()),
+              "Expected MIDI " + expected + " after one accessibility action from " + from
+                  + ", actual MIDI " + activity.model.base());
+          require(activity.model.anchor == anchor, "Accessibility step reset the tuning plan");
+        }
+        require(activity.model.base() == first && findTargetSlider() == slider,
+            "Round trip must return to the first note without replacing the slider");
       }
       log(
           "State/voice event assertions="
               + assertions
-              + "; explicit microphone off and note slider state with muted visual results"
+              + "; microphone on/off, muted visual results and single-note forward/back accessibility actions"
               + " PASS.");
       output.putString("result", "PASS");
     } catch (Throwable error) {

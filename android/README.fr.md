@@ -1,4 +1,6 @@
-# Stroik Android 1.11
+# Stroik Android 1.12
+
+- Les actions d’accessibilité et les touches fléchées déplacent le curseur d’une seule note dans les deux sens, suivant l’ordre d’accord choisi.
 
 - Les nouveaux profils démarrent en mode hybride avec haut-parleurs. Un plan de piano ascendant commence à A0. Stroik conserve les réglages précédents.
 - Choisissez les cents, les hertz ou les deux dans l’ordre voulu. La quinte peut être vérifiée à chaque cinquième position du plan.
