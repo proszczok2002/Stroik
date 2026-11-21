@@ -32,6 +32,14 @@ final class TuningSession implements AudioEngine.Listener {
 
   private TuningSession(Context context) {
     this.context = context;
+    try (java.io.BufferedReader input = new java.io.BufferedReader(new java.io.InputStreamReader(
+        context.getAssets().open("fork-calibration.json"), java.nio.charset.StandardCharsets.UTF_8))) {
+      StringBuilder json = new StringBuilder();
+      for (String line; (line = input.readLine()) != null;) json.append(line);
+      Model.loadFactoryCalibration(json.toString());
+    } catch (java.io.IOException | org.json.JSONException error) {
+      throw new IllegalStateException("Invalid factory calibration", error);
+    }
     audio =
         new AudioEngine(
             model, this, (AudioManager) context.getSystemService(Context.AUDIO_SERVICE));
@@ -187,7 +195,7 @@ final class TuningSession implements AudioEngine.Listener {
     if (activity != null && activity.active && !screenOff()) activity.displayResult(text);
     // TalkBack announcements have no completion callback. Use the app's TTS
     // for measurement speech so playback and navigation wait for the real end.
-    if (screenOff() || !model.graphics || model.voiceInVisual) speak(text, true);
+    if (screenOff() ? !model.keepScreenOn : !model.graphics || model.voiceInVisual) speak(text, true);
     else audio.speechFinished();
   }
 

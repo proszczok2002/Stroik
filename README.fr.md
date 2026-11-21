@@ -1,5 +1,12 @@
 # Stroik 1.26 — Guide
 
+- Les nouveaux profils démarrent en mode hybride avec haut-parleurs. Un plan de piano ascendant commence à A0. Stroik conserve les réglages précédents.
+- Choisissez les cents, les hertz ou les deux dans l’ordre voulu. La quinte peut être vérifiée à chaque cinquième position du plan.
+- Le diapason dispose d’un étalonnage d’usine pour 71 notes et d’harmoniques supérieures plus douces dans les graves. Deux coups brefs séparés par un silence font avancer en mode diapason.
+- Le commutateur indique si le profil mesuré est actif. Le retour à l’accord standard conserve les mesures.
+- L’étalonneur Windows 1.0.2 propose une lecture automatique et un réglage des harmoniques supérieures des graves. Ctrl+O ouvre le JSON et Ctrl+S enregistre dans le même fichier. Les deux éditions lisent les anciens et les nouveaux fichiers.
+- Saisissez une note comme C4 dans la liste. Ctrl+Haut/Bas change d’octave. Alt+M commande le microphone.
+
 - Pour un premier téléchargement, choisissez le ZIP Windows complet. Extrayez-le dans un dossier pour obtenir ensemble Stroik.exe, Stroik-Kalibrator.exe, les guides et les sommes de contrôle.
 - Si le calibrateur manque ou doit être mis à jour, Stroik propose son téléchargement au démarrage. Après un refus, la même proposition ne revient pas. Dans les paramètres, vous pouvez désactiver la vérification au démarrage et la lancer manuellement.
 - Après confirmation, Stroik contrôle la taille, le SHA-256 et la version, puis enregistre le calibrateur à côté de son EXE. Le calibrateur 1.0.1 affiche sa version dans le titre de la fenêtre.

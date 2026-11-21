@@ -17,6 +17,11 @@ internal sealed class CalibratorForm : Form
     private readonly ListBox _notes = new() { Height = 150 };
     private readonly TrackBar _harmonics = new() { Maximum = 200, Value = 100, TickFrequency = 25, LargeChange = 10 };
     private readonly TrackBar _volume = new() { Maximum = 150, Value = 100, TickFrequency = 25, LargeChange = 10 };
+    private readonly TrackBar _upperPartials = new() { Maximum = 100, Value = 100, TickFrequency = 10, LargeChange = 10 };
+    private readonly CheckBox _autoStrike = new() { AutoSize = true };
+    private readonly System.Windows.Forms.Timer _repeat = new() { Interval = 3000 };
+    private readonly Label _upperPartialsLabel = new();
+    private string? _path;
     private readonly Label _languageLabel = new(), _noteLabel = new(), _harmonicsLabel = new(), _volumeLabel = new(), _help = new();
     private readonly Button _play = new(), _stop = new(), _save = new(), _open = new(), _reset = new();
     private ForkCalibration _calibration = new();
@@ -35,7 +40,7 @@ internal sealed class CalibratorForm : Form
         var panel = new TableLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, ColumnCount = 1, Padding = new Padding(16) };
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         Controls.Add(panel);
-        foreach (Control item in new Control[] { _languageLabel, _language, _help, _noteLabel, _notes, _harmonicsLabel, _harmonics, _volumeLabel, _volume })
+        foreach (Control item in new Control[] { _languageLabel, _language, _help, _noteLabel, _notes, _harmonicsLabel, _harmonics, _volumeLabel, _volume, _upperPartialsLabel, _upperPartials, _autoStrike })
         {
             item.Dock = DockStyle.Top;
             if (item is Label label) label.AutoSize = true;
@@ -47,15 +52,18 @@ internal sealed class CalibratorForm : Form
         _language.Items.AddRange(UiLanguages.Names);
         _language.SelectedIndex = Array.IndexOf(UiLanguages.Codes, _locale);
         _language.SelectedIndexChanged += (_, _) => { _locale = UiLanguages.Codes[_language.SelectedIndex]; Translate(); };
-        _notes.SelectedIndexChanged += (_, _) => { if (!_loading) { _fork.Stop(); LoadTone(); } };
+        _notes.SelectedIndexChanged += (_, _) => { if (!_loading) { _fork.Stop(); LoadTone(); if (_autoStrike.Checked) RestartPreview(); } };
         _harmonics.ValueChanged += (_, _) => StoreTone();
         _volume.ValueChanged += (_, _) => StoreTone();
         _play.Click += (_, _) => Play();
-        _stop.Click += (_, _) => _fork.Stop();
+        _stop.Click += (_, _) => StopPreview();
+        _upperPartials.ValueChanged += (_, _) => StoreTone();
+        _repeat.Tick += (_, _) => Play();
+        _autoStrike.CheckedChanged += (_, _) => { if (_autoStrike.Checked) RestartPreview(); else StopPreview(); };
         _save.Click += (_, _) => Save();
         _open.Click += (_, _) => Open();
-        _reset.Click += (_, _) => { _calibration.Notes.Remove(Midi); _dirty = true; LoadTone(); };
-        FormClosing += (_, eventArgs) => { if (!CanDiscard()) eventArgs.Cancel = true; else _fork.Dispose(); };
+        _reset.Click += (_, _) => { _calibration.Notes.Remove(Midi); _dirty = true; LoadTone(); if (_autoStrike.Checked) RestartPreview(); };
+        FormClosing += (_, eventArgs) => { if (!CanDiscard()) eventArgs.Cancel = true; else { StopPreview(); _repeat.Dispose(); _fork.Dispose(); } };
         Translate();
         _notes.SelectedIndex = NoteCatalog.DefaultMidi - 21;
     }
@@ -68,6 +76,8 @@ internal sealed class CalibratorForm : Form
         _noteLabel.Text = _notes.AccessibleName = T("Dźwięk docelowy", "Target note");
         _harmonicsLabel.Text = _harmonics.AccessibleName = T("Harmoniczne wybranej nuty, procent", "Selected note harmonics, percent");
         _volumeLabel.Text = _volume.AccessibleName = T("Głośność wybranej nuty, procent", "Selected note volume, percent");
+        _upperPartialsLabel.Text = _upperPartials.AccessibleName = T("Wyższe harmoniczne basu, procent", "Upper bass harmonics, percent");
+        _autoStrike.Text = T("Uderzaj kamerton automatycznie", "Strike tuning fork automatically");
         _help.Text = T("Wybierz nutę. Zmień suwaki strzałkami i naciśnij Alt+U, aby odsłuchać. 100 to barwa i poziom Stroika. Ctrl+S zapisuje całą kalibrację.",
             "Select a note. Adjust the sliders with the arrows and press Alt+U to listen. 100 is the Stroik baseline for timbre and volume. Ctrl+S saves the entire calibration.");
         _play.Text = T("Uderz kamerton", "Strike tuning fork");
@@ -86,30 +96,51 @@ internal sealed class CalibratorForm : Form
     private void LoadTone()
     {
         _loading = true;
-        ForkTone tone = _calibration.Tone(Midi);
+        ForkTone tone = ForkCalibration.Effective(_calibration, Midi);
         _harmonics.Value = tone.Harmonics;
         _volume.Value = tone.Volume;
+        _upperPartials.Value = tone.UpperPartials ?? 100;
         _loading = false;
     }
 
     private void StoreTone()
     {
         if (_loading) return;
-        _calibration.Notes[Midi] = new ForkTone(_harmonics.Value, _volume.Value);
+        _calibration.Notes[Midi] = new ForkTone(_harmonics.Value, _volume.Value, _upperPartials.Value);
+        _calibration.Version = 2;
         _dirty = true;
+    }
+
+    private void RestartPreview()
+    {
+        _repeat.Stop();
+        Play();
+        if (_autoStrike.Checked) _repeat.Start();
+    }
+
+    private void StopPreview()
+    {
+        _repeat.Stop();
+        _fork.Stop();
+        _autoStrike.Checked = false;
     }
 
     private void Play()
     {
-        try { _fork.Strike(PitchDetector.NoteFromMidi(Midi, 440).Frequency, lowerTone: _calibration.Tone(Midi), label: Text); }
-        catch (Exception error) { MessageBox.Show(this, error.Message, Text); }
+        try { _fork.Strike(PitchDetector.NoteFromMidi(Midi, 440).Frequency, lowerTone: ForkCalibration.Effective(_calibration, Midi), label: Text); }
+        catch (Exception error) { StopPreview(); MessageBox.Show(this, error.Message, Text); }
     }
 
     private bool Save()
     {
-        using var dialog = new SaveFileDialog { Title = _save.Text, Filter = "JSON (*.json)|*.json", FileName = "stroik-fork-calibration.json" };
-        if (dialog.ShowDialog(this) != DialogResult.OK) return false;
-        try { TuningFiles.Write(dialog.FileName, _calibration); _dirty = false; return true; }
+        string? path = _path;
+        if (path is null)
+        {
+            using var dialog = new SaveFileDialog { Title = _save.Text, Filter = "JSON (*.json)|*.json", FileName = "stroik-fork-calibration.json" };
+            if (dialog.ShowDialog(this) != DialogResult.OK) return false;
+            path = dialog.FileName;
+        }
+        try { TuningFiles.Write(path, _calibration); _path = path; _dirty = false; return true; }
         catch (Exception error) { MessageBox.Show(this, error.Message, Text); return false; }
     }
 
@@ -123,8 +154,10 @@ internal sealed class CalibratorForm : Form
             var file = TuningFiles.Read<ForkCalibration>(dialog.FileName, "stroik-fork-calibration");
             file.Validate();
             _calibration = file;
+            _path = dialog.FileName;
             _dirty = false;
             LoadTone();
+            if (_autoStrike.Checked) RestartPreview();
         }
         catch (Exception error) { MessageBox.Show(this, error.Message, Text); }
     }
@@ -142,7 +175,7 @@ internal sealed class CalibratorForm : Form
         if (keyData == (Keys.Control | Keys.S)) { Save(); return true; }
         if (keyData == (Keys.Control | Keys.O)) { Open(); return true; }
         if (keyData == (Keys.Alt | Keys.U)) { Play(); return true; }
-        if (keyData == Keys.Escape) { _fork.Stop(); return true; }
+        if (keyData == Keys.Escape) { StopPreview(); return true; }
         return base.ProcessCmdKey(ref msg, keyData);
     }
 }

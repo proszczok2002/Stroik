@@ -18,7 +18,8 @@ final class TuningFiles {
   static JSONObject parse(String json, String format) throws JSONException {
     if (json.length() > 100000) throw new JSONException("JSON exceeds 100 KB");
     JSONObject file = new JSONObject(json);
-    if (!format.equals(file.getString("format")) || file.getInt("version") != 1)
+    int version = file.getInt("version");
+    if (!format.equals(file.getString("format")) || (version != 1 && !(CALIBRATION.equals(format) && version == 2)))
       throw new JSONException("Invalid Stroik format");
     JSONObject notes = file.getJSONObject("notes");
     if (notes.length() > 88) throw new JSONException("Too many notes");
@@ -32,7 +33,8 @@ final class TuningFiles {
       } else {
         JSONObject tone = notes.getJSONObject(key);
         double harmonics = tone.getDouble("harmonics"), volume = tone.getDouble("volume");
-        if (!Double.isFinite(harmonics) || !Double.isFinite(volume) || harmonics != (int)harmonics || volume != (int)volume ||
+        double upper = tone.has("upperPartials") ? tone.getDouble("upperPartials") : 100;
+        if (upper != (int) upper || upper < 0 || upper > 100 || !Double.isFinite(harmonics) || !Double.isFinite(volume) || harmonics != (int)harmonics || volume != (int)volume ||
             harmonics < 0 || harmonics > 200 || volume < 0 || volume > 150) throw new JSONException("Invalid fork tone");
       }
     }

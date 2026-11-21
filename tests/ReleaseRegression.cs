@@ -32,7 +32,7 @@ internal static class ReleaseRegression
                 Field<ComboBox>(form, "_octave").SelectedIndex++;
                 CheckPair(midi + 14, Consonance.Octave, 435);
                 Field<ComboBox>(form, "_consonance").SelectedIndex = (int)Consonance.Off;
-                using var single = TuningFork.BuildWave(PitchDetector.NoteFromMidi(midi + 14, 435).Frequency);
+                using var single = TuningFork.BuildWave(PitchDetector.NoteFromMidi(midi + 14, 435).Frequency, lowerTone: ForkCalibration.Effective(null, midi + 14));
                 var actual = (MemoryStream)typeof(TuningFork).GetField("_wave", Hidden)!.GetValue(Field<TuningFork>(form, "_fork"))!;
                 if (!actual.ToArray().SequenceEqual(single.ToArray())) throw new Exception("Off left the previous interval playing.");
             }
@@ -139,7 +139,10 @@ internal static class ReleaseRegression
             var unrelated = Message.Create(Field<ComboBox>(form, "_method").Handle, 0x100, (IntPtr)Keys.Down, IntPtr.Zero);
             if (Application.FilterMessage(ref unrelated)) throw new Exception("Note navigation intercepted another control.");
             var modified = Message.Create(target.Handle, 0x100, (IntPtr)Keys.Down, IntPtr.Zero);
-            if (Field<NoteKeyFilter>(form, "_noteKeyFilter").FilterKey(ref modified, Keys.Control)) throw new Exception("Note navigation intercepted Ctrl+Down.");
+            Call(form, "SelectTarget", 60);
+            if (!Field<NoteKeyFilter>(form, "_noteKeyFilter").FilterKey(ref modified, Keys.Control)
+                || Field<int>(form, "_targetMidi") != 48)
+                throw new Exception("Ctrl+Down did not move an octave from the native note list.");
         }
         finally { target.DroppedDown = false; Call(form, "ApplySettings", saved); }
         Console.WriteLine("Native note-list arrows, PL/EN, open/closed, manual/automatic fork, ascending wave frequencies and interval bounds: OK");

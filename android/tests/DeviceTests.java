@@ -17,8 +17,8 @@ public final class DeviceTests extends Instrumentation {
   private UiAutomation automation;
   private int assertions;
   private String scenario = "";
-  private int expectedCode = 110;
-  private String expectedName = "1.10";
+  private int expectedCode = 111;
+  private String expectedName = "1.11";
   private final AtomicInteger focused = new AtomicInteger(), clicked = new AtomicInteger();
 
   @Override
@@ -26,8 +26,8 @@ public final class DeviceTests extends Instrumentation {
     super.onCreate(args);
     scenario = args == null ? "" : args.getString("scenario", "");
     if (args != null) {
-      expectedCode = args.getInt("expectedCode", 110);
-      expectedName = args.getString("expectedName", "1.10");
+      expectedCode = args.getInt("expectedCode", 111);
+      expectedName = args.getString("expectedName", "1.11");
     }
     start();
   }
@@ -73,6 +73,11 @@ public final class DeviceTests extends Instrumentation {
     for (View v : views())
       if (v instanceof Button && ((Button) v).getText().toString().equals(text)) return (Button) v;
     throw new AssertionError("Missing button: " + text);
+  }
+
+  private TargetSlider findTargetSlider() {
+    for (View view : views()) if (view instanceof TargetSlider) return (TargetSlider)view;
+    throw new AssertionError("Missing target slider");
   }
 
   private Spinner findSpinner(String label) {
@@ -704,8 +709,9 @@ public final class DeviceTests extends Instrumentation {
           note.setSelection(boundaryNote);
         });
         int anchor = activity.model.anchor;
-        Button next = findButton(english ? "Next note" : "Następny dźwięk");
-        keepsFocus(next, next::performClick, "Next note across octave");
+        View next = findTargetSlider();
+        keepsFocus(next, () -> next.performAccessibilityAction(
+            AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, null), "Next note across octave");
         require(activity.model.target == 72, "Next note did not cross octave");
         require(
             activity.model.anchor == anchor,
@@ -2441,19 +2447,18 @@ public final class DeviceTests extends Instrumentation {
             !announcements.toString().contains("suppressed automatic reading"),
             "Visual voice option did not suppress automatic reading");
         announcements.clear();
-        main(() -> findButton(english ? "Next note" : "Następny dźwięk").performClick());
+        View slider = findTargetSlider();
+        int expected = activity.model.move(1);
+        main(() -> slider.performAccessibilityAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, null));
         SystemClock.sleep(300);
         String note = activity.model.spokenNote(activity.model.base());
-        require(
-            announcements.toString().contains(note), "Next note omitted its concise announcement");
-        require(
-            !announcements.toString().contains(english ? "Next note" : "Następny dźwięk"),
-            "App announcement includes button label");
+        require(activity.model.base() == expected && note.contentEquals(slider.getStateDescription()),
+            "Note slider did not expose the selected note");
       }
       log(
           "State/voice event assertions="
               + assertions
-              + "; explicit microphone off and concise Next announcements with muted visual results"
+              + "; explicit microphone off and note slider state with muted visual results"
               + " PASS.");
       output.putString("result", "PASS");
     } catch (Throwable error) {

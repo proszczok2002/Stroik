@@ -14,7 +14,9 @@ internal sealed class NoteKeyFilter(ComboBox target, Func<Keys, bool> navigate) 
     {
         if (message.Msg != 0x0100 || !target.IsHandleCreated || target.IsDisposed) return false;
         Keys key = (Keys)message.WParam.ToInt32() | modifiers;
-        if (key is not (Keys.Up or Keys.Down or Keys.Left or Keys.Right)) return false;
+        if (key is not (Keys.Up or Keys.Down or Keys.Left or Keys.Right or (Keys.Control | Keys.Up) or (Keys.Control | Keys.Down)
+            or Keys.A or Keys.B or Keys.C or Keys.D or Keys.E or Keys.F or Keys.G or Keys.H)
+            && (key < Keys.D0 || key > Keys.D8) && (key < Keys.NumPad0 || key > Keys.NumPad8)) return false;
         var info = new ComboBoxInfo { Size = Marshal.SizeOf<ComboBoxInfo>() };
         if (!GetComboBoxInfo(target.Handle, ref info)) return false;
         if (message.HWnd != target.Handle && message.HWnd != info.Item && message.HWnd != info.List) return false;

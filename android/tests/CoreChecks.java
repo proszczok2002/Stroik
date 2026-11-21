@@ -191,6 +191,38 @@ public final class CoreChecks {
     taps.observe(.03, .008, 1000, .5);
     taps.observe(0, .008, 1200, .5);
     require(!taps.observe(.02, .008, 1800, .5), "Overdue strikes");
+    Model settings = new Model();
+    require(settings.method == 2 && settings.target == 21, "Fresh piano defaults");
+    require(Model.parseNote("C4") == 60 && Model.parseNote("  f#3 ") == 54
+        && Model.parseNote("A0") == 21 && Model.parseNote("B8") == -1, "Named note parser");
+    settings.interval = 3;
+    for (int i = 0; i < 11; i++) {
+      settings.target = 21 + i;
+      require(settings.effectiveInterval() == ((i + 1) % 5 == 0 ? 1 : 0), "Periodic fifth at " + i);
+    }
+    settings.english = true;
+    for (int i = 0; i < 4; i++) {
+      settings.resultUnits = i;
+      String text = settings.resultDeviation(1.2, 2.3);
+      require(text.contains("cents") == (i != 1) && text.contains("hertz") == (i != 0), "Spoken units");
+      if (i >= 2) require((text.indexOf("cents") < text.indexOf("hertz")) == (i == 2), "Spoken unit order");
+    }
+    short[] capture = new short[96000];
+    for (int i = 4800; i < 17000; i++) capture[i] = (short) (8000 * Math.sin(i * .32));
+    for (int i = 24000; i < 27840; i++) capture[i] = (short) (8000 * Math.sin(i * .17));
+    taps.reset();
+    require(!taps.observeImpulses(capture, capture.length, 48000, .008, 3000, 1.2), "Sustained note and swell");
+    Arrays.fill(capture, (short) 0);
+    for (int i = 4800; i < 5200; i++) capture[i] = (short)(i % 2 == 0 ? 8000 : -8000);
+    require(!taps.observeImpulses(capture, capture.length, 48000, .008, 5000, 1.2), "Single acoustic tap");
+    taps.reset();
+    for (int i = 24000; i < 24500; i++) capture[i] = (short)(i % 2 == 0 ? 8000 : -8000);
+    require(taps.observeImpulses(capture, capture.length, 48000, .008, 7000, 1.2), "Two acoustic taps");
+    double bass = Model.hz(33, 440);
+    short[] fullBass = Dsp.fork(bass, 0, 44100, 100, 100, 100, 100, 100, 100, 100);
+    short[] reducedBass = Dsp.fork(bass, 0, 44100, 100, 100, 100, 100, 100, 0, 100);
+    require(projection(reducedBass, bass * 6) < projection(fullBass, bass * 6) * .05
+        && Math.abs(projection(fullBass, bass) - projection(reducedBass, bass)) < 5, "Bass upper partial attenuation");
     System.out.println(
         "Core checks PASS: "
             + count

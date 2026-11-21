@@ -115,6 +115,7 @@ public final class AudioEngine implements AutoCloseable {
             || previous.base() != m.base()
             || previous.reference != m.reference
             || previous.interval != m.interval
+            || previous.useInstrumentMap != m.useInstrumentMap
             || !previous.instrumentMap.equals(m.instrumentMap)
             || !previous.forkCalibration.equals(m.forkCalibration);
     boolean measurementChanged =
@@ -300,12 +301,13 @@ public final class AudioEngine implements AutoCloseable {
       state.confirmed.arm(navigationAfterSpeech, navigationTolerance, now);
       navigationAfterSpeech = 0;
     }
-    if (m.forkTap && m.method == 0 && state.taps.observe(rms, threshold, now, m.gap)) {
+    if (m.forkTap && m.method == 0 && state.taps.observeImpulses(frame, n, rate, threshold, now, m.gap)) {
       muteUntil = now + 2000;
       post(state.g, listener::advance);
       return;
     }
-    if (m.interval != 0 && m.method != 0 && m.pairMode == 1) {
+    int interval = m.effectiveInterval();
+    if (interval != 0 && m.method != 0 && m.pairMode == 1) {
       if (rms < threshold) {
         state.pairCount = 0;
         return;
@@ -323,7 +325,7 @@ public final class AudioEngine implements AutoCloseable {
                     state.pair,
                     rate,
                     m.targetHz(m.base()) / Math.pow(2, m.correction / 1200),
-                    m.interval)
+                    interval)
                 : null;
         if (v == null) {
           post(
@@ -336,7 +338,7 @@ public final class AudioEngine implements AutoCloseable {
         } else {
           double correction = Math.pow(2, m.correction / 1200);
           reportInterval(
-              m, Dsp.compare(v[0] * correction, v[1] * correction, m.interval), true, state.g);
+              m, Dsp.compare(v[0] * correction, v[1] * correction, interval), true, state.g);
         }
         muteUntil = now + 4000;
       }
@@ -362,7 +364,7 @@ public final class AudioEngine implements AutoCloseable {
     }
     if (m.method == 0) return;
     if ((m.method == 1 ? m.advance : m.method == 3 && m.forkTap)
-        && m.interval == 0
+        && interval == 0
         && state.confirmed.observe(rms, threshold, frequency, now, m.gap)) {
       muteUntil = now + 2000;
       state.session.reset();
@@ -372,7 +374,7 @@ public final class AudioEngine implements AutoCloseable {
     }
     double done = state.session.observe(frequency, now);
     if (done <= 0) return;
-    if (m.interval != 0) {
+    if (interval != 0) {
       int wanted = m.base() + (state.storedLower > 0 ? m.semitones() : 0);
       if (wanted > 108) {
         post(state.g, () -> listener.result(m.t("Wybierz niższą nutę.", "Choose a lower note.")));
@@ -399,7 +401,7 @@ public final class AudioEngine implements AutoCloseable {
                         "Lower stored. Play upper and mute.")));
         muteUntil = now + 2000;
       } else {
-        reportInterval(m, Dsp.compare(state.storedLower, done, m.interval), false, state.g);
+        reportInterval(m, Dsp.compare(state.storedLower, done, interval), false, state.g);
         state.storedLower = 0;
         muteUntil = now + 4000;
       }
@@ -417,12 +419,11 @@ public final class AudioEngine implements AutoCloseable {
             + ", "
             + direction
             + ", "
-            + String.format(m.locale(), "%+.1f Hz; %+.1f ", done - expected, cents)
-            + m.t("centów.", "cents.");
+            + m.resultDeviation(done - expected, cents) + ".";
     if (Math.abs(cents) <= m.tolerance && (m.method == 1 ? m.advance : m.forkTap)) {
       navigationTolerance = m.tolerance;
       navigationAfterSpeech = expected;
-      if (m.method == 2) text += " " + m.t("Stuknij dwa razy, aby przejść dalej.", "Tap twice to advance.");
+      if (m.method == 2 && m.beginner) text += " " + m.t("Stuknij dwa razy, aby przejść dalej.", "Tap twice to advance.");
     } else navigationAfterSpeech = 0;
     if (m.method == 2) state.taps.reset();
     deliverResult(text, messageGeneration);
@@ -499,7 +500,7 @@ public final class AudioEngine implements AutoCloseable {
     repeatAt = 0;
     speakerAdvanceUntil = 0;
     int base = m.base();
-    if (m.interval != 0 && base + m.semitones() > 108) {
+    if (m.effectiveInterval() != 0 && base + m.semitones() > 108) {
       setPaused(true);
       post(
           generation,
@@ -520,9 +521,10 @@ public final class AudioEngine implements AutoCloseable {
         short[] data =
             Dsp.fork(
                 m.targetHz(base),
-                m.interval == 0 ? 0 : m.targetHz(base + m.semitones()),
+                m.effectiveInterval() == 0 ? 0 : m.targetHz(base + m.semitones()),
                 44100, m.tone(base, "harmonics"), m.tone(base, "volume"),
-                m.tone(base + m.semitones(), "harmonics"), m.tone(base + m.semitones(), "volume"), m.forkVolume);
+                m.tone(base + m.semitones(), "harmonics"), m.tone(base + m.semitones(), "volume"), m.forkVolume,
+                m.tone(base, "upperPartials"), m.tone(base + m.semitones(), "upperPartials"));
         synchronized (this) {
           if (closed || generation != playbackGeneration || request != playbackEpoch.get()) return;
           releaseFork();

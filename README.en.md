@@ -1,5 +1,12 @@
 # Stroik 1.26
 
+- New profiles start in speaker hybrid. An ascending piano plan starts at A0. Stroik keeps existing settings.
+- Choose cents, hertz, or both in either order for announcements. You can check a fifth at every fifth position in the tuning plan.
+- The fork has factory calibration for 71 notes and softer upper bass partials. Fork-mode navigation requires two short taps separated by silence.
+- The switch in Instrument Mapping shows whether map or standard tuning is active. Switching to standard keeps the map readings.
+- Windows Calibrator 1.0.2 has automatic preview and an upper-bass-harmonics slider. Ctrl+O opens a JSON file and Ctrl+S saves changes to the same file. The first save lets you pick its name and location. Both Stroik editions can read older and newer calibration files.
+- Type a note such as C4 in the target list. Ctrl+Up/Down changes octave. Alt+M toggles the microphone.
+
 - For a first download, use the complete Windows ZIP. Extract it to one folder to get Stroik.exe, Stroik-Kalibrator.exe, guides and checksums together.
 - If the calibrator is missing or out of date, Stroik asks at startup whether to download it. Declining skips further offers for the missing program or the same version. Disable **Check for the calibrator at startup** at any time, or use **Check calibrator now** in Settings.
 - After you confirm, Stroik verifies size, SHA-256 and version before saving the calibrator next to the tuner EXE. Calibrator 1.0.1 shows its version in the window title.
@@ -64,7 +71,7 @@ An equal-tempered fifth may correctly have slow beats. Piano partials are inharm
 
 **Beginner view** provides guidance for the selected instrument. **Classic view** uses a compact layout. Tab and Shift+Tab move between controls. Piano and chromatic modes have an octave selector and the full note list: arrows cross octave boundaries, and **I** or **S** selects the next sharp note. For string instruments, arrows move through open strings and the octave selector is hidden.
 
-Piano and chromatic modes cover the 88-key piano range, A0–C8. The defaults are **piano and G in the one-line octave** (G4). Microphone measurement at the extremes depends heavily on hardware and harmonics; synthetic tones have been tested, not every real instrument.
+Piano and chromatic modes cover the 88-key piano range, A0–C8. The defaults are **piano and A0**. Microphone measurement at the extremes depends heavily on hardware and harmonics; synthetic tones have been tested, not every real instrument.
 
 ## Instruments
 

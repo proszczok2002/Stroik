@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../android/app/src/main/assets/fork-calibration.json" LogicalName="Stroik.fork-calibration.json" />
     <EmbeddedResource Include="../THIRD_PARTY_NOTICES.md" LogicalName="Stroik.THIRD_PARTY_NOTICES.md" />
     <EmbeddedResource Include="../NVDA-LGPL-2.1.txt" LogicalName="Stroik.NVDA-LGPL-2.1.txt" />
     <Compile Include="../NvdaReader.cs" Link="NvdaReader.cs" />

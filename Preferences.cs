@@ -3,7 +3,8 @@ using System.Text.Json;
 namespace Stroik;
 
 internal enum TuningMethod { TuningFork, Electronic, HybridSpeakers, HybridHeadphones }
-internal enum Consonance { Off, Fifth, Octave }
+internal enum Consonance { Off, Fifth, Octave, PeriodicFifth }
+internal enum ResultUnits { Cents, Hertz, CentsThenHertz, HertzThenCents }
 internal enum TunerView { Classic, Beginner }
 
 internal sealed class Preferences
@@ -12,12 +13,12 @@ internal sealed class Preferences
     public bool English { get; set; } = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName != "pl";
     public string? Language { get; set; }
     public bool DarkTheme { get; set; }
-    public TuningMethod Method { get; set; } = TuningMethod.TuningFork;
+    public TuningMethod Method { get; set; } = TuningMethod.HybridSpeakers;
     public TunerView View { get; set; } = TunerView.Beginner;
     public InstrumentKind Instrument { get; set; } = InstrumentKind.Piano;
     public UkuleleTuning UkuleleTuning { get; set; } = UkuleleTuning.Standard;
     public PianoOrder PianoOrder { get; set; } = PianoOrder.Ascending;
-    public int PlanAnchorMidi { get; set; } = NoteCatalog.DefaultMidi;
+    public int PlanAnchorMidi { get; set; } = NoteCatalog.LowestMidi;
     public bool DoubleStrikeAdvance { get; set; } = true;
     public int DoubleStrikeWindowMilliseconds { get; set; } = 1200;
     public decimal MicrophoneCorrectionCents { get; set; }
@@ -26,7 +27,7 @@ internal sealed class Preferences
     public double ConcertA { get; set; } = 440;
     public int SensitivityIndex { get; set; } = 1;
     public int ToleranceCents { get; set; } = 5;
-    public int TargetMidi { get; set; } = NoteCatalog.DefaultMidi;
+    public int TargetMidi { get; set; } = NoteCatalog.LowestMidi;
     public int StartOctave { get; set; } = 4;
     public bool ShowOctaveInClassic { get; set; }
     public bool AutoStrike { get; set; }
@@ -43,6 +44,8 @@ internal sealed class Preferences
     public int HybridPauseSeconds { get; set; }
     public int ForkVolume { get; set; } = 100;
     public int MonitorVolume { get; set; } = 100;
+    public ResultUnits ResultUnits { get; set; } = ResultUnits.Hertz;
+    public bool UseInstrumentMap { get; set; } = true;
     public InstrumentMap? InstrumentMap { get; set; }
     public ForkCalibration? ForkCalibration { get; set; }
 
@@ -51,8 +54,13 @@ internal sealed class Preferences
 
     internal static Preferences Parse(string json)
     {
-        var settings = JsonSerializer.Deserialize<Preferences>(json)
+        using var document = JsonDocument.Parse(json);
+        var settings = document.RootElement.Deserialize<Preferences>()
             ?? throw new InvalidDataException("The settings file is empty.");
+        // Settings from before the new defaults can omit these fields.
+        if (!document.RootElement.TryGetProperty(nameof(Method), out _)) settings.Method = TuningMethod.TuningFork;
+        if (!document.RootElement.TryGetProperty(nameof(TargetMidi), out _)) settings.TargetMidi = NoteCatalog.DefaultMidi;
+        if (!document.RootElement.TryGetProperty(nameof(PlanAnchorMidi), out _)) settings.PlanAnchorMidi = NoteCatalog.DefaultMidi;
         settings.Validate();
         return settings;
     }
@@ -62,7 +70,7 @@ internal sealed class Preferences
         InstrumentMap?.Validate();
         ForkCalibration?.Validate();
         if (ForkVolume is < 0 or > 100 || MonitorVolume is < 0 or > 100) throw new InvalidDataException("Invalid volume");
-        if ((!string.IsNullOrEmpty(Language) && !UiLanguages.Codes.Contains(Language)) || ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) || !Enum.IsDefined(UkuleleTuning) || !Enum.IsDefined(PianoOrder) || !Enum.IsDefined(Consonance) || UpdateMinutes is < 1 or > 1440 ||
+        if ((!string.IsNullOrEmpty(Language) && !UiLanguages.Codes.Contains(Language)) || ProfileVersion != 1 || !Enum.IsDefined(Method) || !Enum.IsDefined(View) || !Enum.IsDefined(Instrument) || !Enum.IsDefined(UkuleleTuning) || !Enum.IsDefined(PianoOrder) || !Enum.IsDefined(Consonance) || !Enum.IsDefined(ResultUnits) || UpdateMinutes is < 1 or > 1440 ||
             PlanAnchorMidi is < NoteCatalog.LowestMidi or > NoteCatalog.HighestMidi ||
             MicrophoneCorrectionCents is < -100 or > 100 ||
             DoubleStrikeWindowMilliseconds is < 500 or > 2500 ||

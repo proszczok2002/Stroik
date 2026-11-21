@@ -1,0 +1,313 @@
+{
+    "format":  "stroik-fork-calibration",
+    "version":  2,
+    "notes":  {
+                  "108":  {
+                              "harmonics":  100,
+                              "volume":  41
+                          },
+                  "107":  {
+                              "harmonics":  100,
+                              "volume":  46
+                          },
+                  "106":  {
+                              "harmonics":  100,
+                              "volume":  40
+                          },
+                  "105":  {
+                              "harmonics":  100,
+                              "volume":  45
+                          },
+                  "104":  {
+                              "harmonics":  100,
+                              "volume":  43
+                          },
+                  "103":  {
+                              "harmonics":  100,
+                              "volume":  58
+                          },
+                  "102":  {
+                              "harmonics":  100,
+                              "volume":  73
+                          },
+                  "101":  {
+                              "harmonics":  100,
+                              "volume":  58
+                          },
+                  "100":  {
+                              "harmonics":  100,
+                              "volume":  60
+                          },
+                  "99":  {
+                             "harmonics":  100,
+                             "volume":  63
+                         },
+                  "98":  {
+                             "harmonics":  100,
+                             "volume":  66
+                         },
+                  "97":  {
+                             "harmonics":  100,
+                             "volume":  68
+                         },
+                  "96":  {
+                             "harmonics":  100,
+                             "volume":  65
+                         },
+                  "95":  {
+                             "harmonics":  100,
+                             "volume":  66
+                         },
+                  "94":  {
+                             "harmonics":  100,
+                             "volume":  71
+                         },
+                  "93":  {
+                             "harmonics":  100,
+                             "volume":  69
+                         },
+                  "88":  {
+                             "harmonics":  100,
+                             "volume":  106
+                         },
+                  "87":  {
+                             "harmonics":  100,
+                             "volume":  52
+                         },
+                  "85":  {
+                             "harmonics":  100,
+                             "volume":  30
+                         },
+                  "92":  {
+                             "harmonics":  100,
+                             "volume":  77
+                         },
+                  "86":  {
+                             "harmonics":  100,
+                             "volume":  53
+                         },
+                  "84":  {
+                             "harmonics":  100,
+                             "volume":  33
+                         },
+                  "83":  {
+                             "harmonics":  100,
+                             "volume":  30
+                         },
+                  "82":  {
+                             "harmonics":  100,
+                             "volume":  30
+                         },
+                  "81":  {
+                             "harmonics":  100,
+                             "volume":  49
+                         },
+                  "80":  {
+                             "harmonics":  100,
+                             "volume":  52
+                         },
+                  "79":  {
+                             "harmonics":  100,
+                             "volume":  51
+                         },
+                  "78":  {
+                             "harmonics":  89,
+                             "volume":  40
+                         },
+                  "76":  {
+                             "harmonics":  100,
+                             "volume":  72
+                         },
+                  "75":  {
+                             "harmonics":  100,
+                             "volume":  86
+                         },
+                  "77":  {
+                             "harmonics":  100,
+                             "volume":  64
+                         },
+                  "64":  {
+                             "harmonics":  100,
+                             "volume":  104
+                         },
+                  "63":  {
+                             "harmonics":  100,
+                             "volume":  104
+                         },
+                  "62":  {
+                             "harmonics":  102,
+                             "volume":  104
+                         },
+                  "61":  {
+                             "harmonics":  104,
+                             "volume":  113
+                         },
+                  "60":  {
+                             "harmonics":  104,
+                             "volume":  101
+                         },
+                  "59":  {
+                             "harmonics":  101,
+                             "volume":  102
+                         },
+                  "58":  {
+                             "harmonics":  106,
+                             "volume":  110
+                         },
+                  "57":  {
+                             "harmonics":  111,
+                             "volume":  118
+                         },
+                  "56":  {
+                             "harmonics":  108,
+                             "volume":  115
+                         },
+                  "55":  {
+                             "harmonics":  112,
+                             "volume":  123
+                         },
+                  "54":  {
+                             "harmonics":  132,
+                             "volume":  119
+                         },
+                  "53":  {
+                             "harmonics":  138,
+                             "volume":  120
+                         },
+                  "52":  {
+                             "harmonics":  149,
+                             "volume":  132
+                         },
+                  "51":  {
+                             "harmonics":  133,
+                             "volume":  118
+                         },
+                  "50":  {
+                             "harmonics":  137,
+                             "volume":  125
+                         },
+                  "49":  {
+                             "harmonics":  133,
+                             "volume":  114
+                         },
+                  "48":  {
+                             "harmonics":  137,
+                             "volume":  120
+                         },
+                  "21":  {
+                             "harmonics":  200,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "22":  {
+                             "harmonics":  199,
+                             "volume":  137,
+                             "upperPartials":  50
+                         },
+                  "23":  {
+                             "harmonics":  200,
+                             "volume":  134,
+                             "upperPartials":  50
+                         },
+                  "24":  {
+                             "harmonics":  139,
+                             "volume":  139,
+                             "upperPartials":  50
+                         },
+                  "25":  {
+                             "harmonics":  137,
+                             "volume":  137,
+                             "upperPartials":  50
+                         },
+                  "26":  {
+                             "harmonics":  160,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "27":  {
+                             "harmonics":  122,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "28":  {
+                             "harmonics":  101,
+                             "volume":  148,
+                             "upperPartials":  50
+                         },
+                  "29":  {
+                             "harmonics":  100,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "31":  {
+                             "harmonics":  68,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "32":  {
+                             "harmonics":  65,
+                             "volume":  145,
+                             "upperPartials":  50
+                         },
+                  "33":  {
+                             "harmonics":  65,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "30":  {
+                             "harmonics":  104,
+                             "volume":  121,
+                             "upperPartials":  50
+                         },
+                  "34":  {
+                             "harmonics":  41,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "37":  {
+                             "harmonics":  35,
+                             "volume":  147,
+                             "upperPartials":  50
+                         },
+                  "36":  {
+                             "harmonics":  87,
+                             "volume":  100,
+                             "upperPartials":  50
+                         },
+                  "38":  {
+                             "harmonics":  44,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "39":  {
+                             "harmonics":  40,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "40":  {
+                             "harmonics":  29,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "41":  {
+                             "harmonics":  47,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "42":  {
+                             "harmonics":  31,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "43":  {
+                             "harmonics":  43,
+                             "volume":  150,
+                             "upperPartials":  50
+                         },
+                  "44":  {
+                             "harmonics":  37,
+                             "volume":  150,
+                             "upperPartials":  50
+                         }
+              }
+}

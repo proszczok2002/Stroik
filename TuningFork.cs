@@ -102,8 +102,8 @@ internal sealed class TuningFork : IDisposable
                 double time = (double)i / rate;
                 double attack = Math.Min(1, time / 0.012);
                 double envelope = attack * Math.Min(1, (seconds - time) / 0.08) * Math.Exp(-1.2 * time);
-                double sample = lowerLevel * Oscillator(frequency, time, lower.Harmonics);
-                if (upper is double second) sample = (sample + upperLevel * Oscillator(second, time, higher.Harmonics)) / 1.55;
+                double sample = lowerLevel * Oscillator(frequency, time, lower.Harmonics, lower.UpperPartials ?? 100);
+                if (upper is double second) sample = (sample + upperLevel * Oscillator(second, time, higher.Harmonics, higher.UpperPartials ?? 100)) / 1.55;
                 sample *= envelope * volume / 100;
                 writer.Write((short)Math.Round(Math.Clamp(sample, -1, 1) * short.MaxValue));
             }
@@ -113,18 +113,20 @@ internal sealed class TuningFork : IDisposable
     }
 
     internal static double Level(double frequency) => Math.Clamp(0.18 * Math.Pow(440 / frequency, 0.65), 0.045, 0.6);
-    internal static double Oscillator(double frequency, double time, int harmonics = 100)
+    internal static double Oscillator(double frequency, double time, int harmonics = 100, int upperPartials = 100)
     {
         double phase = 2 * Math.PI * frequency * time;
         // Quiet upper partials help small speakers reproduce bass identity without transposition.
         double support = Math.Clamp(Math.Log2(110 / frequency), 0, 1);
-        double second = (frequency < 130 ? .12 : .015) + .18 * support;
-        double third = (frequency < 130 ? .06 : 0) + .16 * support;
+        double bass = Math.Clamp(Math.Log2(160 / frequency), 0, 1);
+        bass = bass * bass * (3 - 2 * bass);
+        double second = .015 + .105 * bass + .18 * support;
+        double third = .06 * bass + .16 * support;
         double strength = harmonics / 100.0;
         double extra = Math.Max(0, strength - 1) * (1 - support);
         return (Math.Sin(phase) + (strength * second + .18 * extra) * Math.Sin(2 * phase)
             + (strength * third + .10 * extra) * Math.Sin(3 * phase)
-            + strength * support * (.26 * Math.Sin(4 * phase) + .14 * Math.Sin(5 * phase) + .20 * Math.Sin(6 * phase) + .12 * Math.Sin(8 * phase)))
+            + strength * support * (.26 * Math.Sin(4 * phase) + upperPartials / 100.0 * (.14 * Math.Sin(5 * phase) + .20 * Math.Sin(6 * phase) + .12 * Math.Sin(8 * phase))))
             / (1 + .62 * support * strength);
 
     }

@@ -15,7 +15,51 @@ internal sealed class TapNavigator
     private DateTime _lastAttack, _first;
     private bool _sound, _ready;
     private DateTime _quietSince;
-    internal void Reset() { _envelope = 0; _first = _lastAttack = DateTime.MinValue; _sound = false; _ready = false; _quietSince = DateTime.MinValue; }
+    private int _quietBlocks, _attackBlocks;
+    private bool _impulse;
+    private DateTime _firstImpulse;
+
+    internal void Reset()
+    {
+        _envelope = 0;
+        _first = _lastAttack = _quietSince = _firstImpulse = DateTime.MinValue;
+        _sound = _ready = _impulse = false;
+        _quietBlocks = _attackBlocks = 0;
+    }
+
+    // Confirm a short transient followed by silence before counting it as a tap.
+    internal bool ObserveImpulses(ReadOnlySpan<short> samples, int rate, double threshold, DateTime end, int gap)
+    {
+        int block = rate / 250;
+        for (int i = 0; i + block <= samples.Length; i += block)
+        {
+            var now = end.AddSeconds((i + block - samples.Length) / (double)rate);
+            bool active = PitchDetector.Rms(samples.Slice(i, block)) >= threshold;
+            if (active)
+            {
+                if (_quietBlocks >= 5)
+                {
+                    _impulse = _quietBlocks >= 18;
+                    _attackBlocks = 0;
+                    if (!_impulse) _firstImpulse = DateTime.MinValue;
+                }
+                _quietBlocks = 0;
+                if (++_attackBlocks > 9)
+                {
+                    _impulse = false;
+                    _firstImpulse = DateTime.MinValue;
+                }
+            }
+            else if (++_quietBlocks == 5 && _impulse)
+            {
+                _impulse = false;
+                double elapsed = (now - _firstImpulse).TotalMilliseconds;
+                if (elapsed >= 180 && elapsed <= gap) { Reset(); return true; }
+                if (elapsed >= 180) _firstImpulse = now;
+            }
+        }
+        return false;
+    }
     internal bool Observe(double rms, double threshold, DateTime now, int gap)
     {
         if (!_ready)

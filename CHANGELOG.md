@@ -1,5 +1,14 @@
 # Changelog / Historia zmian
 
+## 1.27
+
+- Nowe profile zaczynają od hybrydy głośnikowej. Rosnący plan pianina zaczyna się od A subkontra (A0). Stroik zachowuje zapisane ustawienia.
+- W ustawieniach wybierz komunikaty w centach, hercach lub w obu jednostkach w wybranej kolejności. Co piąta pozycja planu może uruchamiać kontrolę kwinty.
+- Kamerton ma fabryczną kalibrację dla 71 nut i łagodniejsze wyższe składowe basu. Przejście w trybie kamertonu wymaga dwóch krótkich stuknięć rozdzielonych ciszą.
+- Przełącznik w zakładce mapowania pokazuje, czy używasz mapy, czy stroju standardowego. Wyłączenie mapy zachowuje jej pomiary.
+- Kalibrator 1.0.2 dla Windows ma automatyczne uderzanie kamertonu i suwak wyższych harmonicznych basu. Ctrl+O otwiera JSON, a Ctrl+S zapisuje zmiany do tego samego pliku. Pierwszy zapis pozwala wybrać nazwę i folder. Oba wydania Stroika czytają stary i nowy format kalibracji.
+- Na liście dźwięków wpisz np. C4. Ctrl+góra/dół zmienia oktawę. Alt+M włącza i wyłącza mikrofon.
+
 ## 1.0.26 (Stroik 1.26)
 
 PL:

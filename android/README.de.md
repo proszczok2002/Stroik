@@ -1,4 +1,11 @@
-# Stroik Android 1.10 — Anleitung
+# Stroik Android 1.11
+
+- Neue Profile starten im Lautsprecher-Hybridmodus. Ein aufsteigender Klavierplan beginnt bei A0. Bestehende Einstellungen bleiben erhalten.
+- Ansagen können Cent, Hertz oder beide Einheiten in beliebiger Reihenfolge enthalten. An jeder fünften Position lässt sich eine Quinte prüfen.
+- Für 71 Töne gibt es eine Werkskalibrierung. Hohe Bass-Obertöne sind gedämpft. Im Stimmgabelmodus wechseln zwei kurze, durch Stille getrennte Klopfzeichen zum nächsten Ton.
+- Der Schalter zeigt, ob Instrumentenkarte oder Standardstimmung aktiv ist. Messwerte bleiben beim Wechsel erhalten.
+- Der Windows-Kalibrator 1.0.2 bietet automatische Wiedergabe und einen Regler für hohe Bass-Obertöne. Strg+O öffnet eine JSON-Datei, Strg+S speichert Änderungen in derselben Datei. Beide Stroik-Versionen lesen alte und neue Kalibrierdateien.
+- Im Tonregler können Sie etwa C4 eingeben oder TalkBack-Aktionen zum Oktavwechsel verwenden. Bei aktiviertem Wachhalten verstummt die Ergebnisansage nach manuellem Ausschalten des Displays. Andernfalls sind Ansagen auch bei ausgeschaltetem Display möglich.
 
 - Aktivieren Sie im Lautsprecher-Hybrid die Zwei-Klopfzeichen-Option. Nach einem korrekt gestimmten Ergebnis bleibt die Referenz kurz stumm. Zwei Klopfzeichen genügen. Ohne Geste wird derselbe Ton wiederholt. Bei verstimmtem Ton gilt die eingestellte Pause von 0–60 Sekunden.
 - Für Nachkriegsklaviere ist A4 = 440 Hz üblich. Vorkriegsinstrumente können für niedrigere Stimmung gebaut sein. Vor einer Erhöhung ein altes Klavier von einem Techniker beurteilen lassen.

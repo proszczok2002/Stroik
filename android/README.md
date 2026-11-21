@@ -1,4 +1,11 @@
-# Stroik Android 1.10
+# Stroik Android 1.11
+
+- Nowe profile zaczynają od hybrydy głośnikowej. Rosnący plan pianina zaczyna się od A subkontra (A0). Stroik zachowuje zapisane ustawienia.
+- W ustawieniach wybierz komunikaty w centach, hercach lub w obu jednostkach w wybranej kolejności. Co piąta pozycja planu może uruchamiać kontrolę kwinty.
+- Kamerton ma fabryczną kalibrację dla 71 nut i łagodniejsze wyższe składowe basu. Przejście w trybie kamertonu wymaga dwóch krótkich stuknięć rozdzielonych ciszą.
+- Przełącznik w zakładce mapowania pokazuje, czy używasz mapy, czy stroju standardowego. Wyłączenie mapy zachowuje jej pomiary.
+- Kalibrator 1.0.2 dla Windows ma automatyczne uderzanie kamertonu i suwak wyższych harmonicznych basu. Ctrl+O otwiera JSON, a Ctrl+S zapisuje zmiany do tego samego pliku. Pierwszy zapis pozwala wybrać nazwę i folder. Oba wydania Stroika czytają stary i nowy format kalibracji.
+- Suwak dźwięku ma wpis nazwy (np. C4) i akcje zmiany oktawy dla TalkBacka. Gdy opcja „Nie pozwalaj na autoblokadę ekranu” jest zaznaczona, zgaszenie ekranu przyciskiem wycisza odczyt wyników. Przy odznaczonej opcji wyniki są odczytywane także na zgaszonym ekranie.
 
 - W hybrydzie głośnikowej włącz opcję dwóch stuknięć. Po komunikacie o dobrym stroju kamerton pozostawia ciche okno na dwa krótkie stuknięcia. Nie trzeba dwukrotnie zagrać czystej nuty. Bez gestu kamerton powtarza ten sam wzorzec. Po złym wyniku obowiązuje ustawiona przerwa od 0 do 60 sekund.
 - Dla pianin powojennych A4 = 440 Hz to zwykły punkt odniesienia. Przedwojenne instrumenty mogły być przewidziane do niższego stroju. Przed podnoszeniem stroju starego pianina warto uzyskać ocenę technika.

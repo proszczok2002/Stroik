@@ -93,28 +93,64 @@ public final class Dsp {
       double level = 0;
       for (int from = 0; from < length; from += 192) {
         int end = Math.min(from + 192, length);
-        double sum = 0, squares = 0;
-        for (int i = from; i < end; i++) {
-          double sample = samples[i] / 32768.0;
-          sum += sample;
-          squares += sample * sample;
-        }
-        int count = end - from;
-        double mean = sum / count;
-        level = Math.max(level, Math.sqrt(Math.max(0, squares / count - mean * mean)));
+        level = Math.max(level, transientLevel(samples, from, end));
       }
       return level;
+    }
+
+    private static double transientLevel(short[] samples, int from, int end) {
+      double sum = 0, squares = 0;
+      for (int i = from; i < end; i++) {
+        double sample = samples[i] / 32768.0;
+        sum += sample;
+        squares += sample * sample;
+      }
+      int count = end - from;
+      double mean = sum / count;
+      return Math.sqrt(Math.max(0, squares / count - mean * mean));
     }
 
     double envelope;
     long first = -1, last = -1000;
     boolean sound;
+    private int quietBlocks, attackBlocks;
+    private boolean impulse;
+    private long firstImpulse = -1;
+
+    boolean observeImpulses(short[] samples, int length, int rate, double threshold, long end, double gap) {
+      int block = rate / 250;
+      for (int offset = 0; offset + block <= length; offset += block) {
+        long now = end + (offset + block - length) * 1000L / rate;
+        boolean active = transientLevel(samples, offset, offset + block) >= threshold;
+        if (active) {
+          if (quietBlocks >= 5) {
+            impulse = quietBlocks >= 18;
+            attackBlocks = 0;
+            if (!impulse) firstImpulse = -1;
+          }
+          quietBlocks = 0;
+          if (++attackBlocks > 9) {
+            impulse = false;
+            firstImpulse = -1;
+          }
+        } else if (++quietBlocks == 5 && impulse) {
+          impulse = false;
+          long elapsed = firstImpulse < 0 ? Long.MAX_VALUE : now - firstImpulse;
+          if (elapsed >= 180 && elapsed <= gap * 1000) { reset(); return true; }
+          if (elapsed >= 180) firstImpulse = now;
+        }
+      }
+      return false;
+    }
 
     public void reset() {
       first = -1;
       last = -1000;
       sound = false;
       envelope = 0;
+      quietBlocks = attackBlocks = 0;
+      impulse = false;
+      firstImpulse = -1;
     }
 
     public boolean observe(double rms, double threshold, long now, double gap) {
@@ -206,13 +242,20 @@ public final class Dsp {
 
   public static short[] fork(double lower, double upper, int rate, int lowerHarmonics,
       int lowerVolume, int upperHarmonics, int upperVolume, int volume) {
+    return fork(lower, upper, rate, lowerHarmonics, lowerVolume, upperHarmonics, upperVolume,
+        volume, 100, 100);
+  }
+
+  static short[] fork(double lower, double upper, int rate, int lowerHarmonics,
+      int lowerVolume, int upperHarmonics, int upperVolume, int volume,
+      int lowerPartials, int upperPartials) {
     short[] samples = new short[rate * 3];
     double lowerLevel = level(lower) * lowerVolume / 100, upperLevel = upper > 0 ? level(upper) * upperVolume / 100 : 0;
     for (int i = 0; i < samples.length; i++) {
       double t = i / (double) rate,
           env = Math.min(1, t / .012) * Math.min(1, (3 - t) / .08) * Math.exp(-1.2 * t),
-          v = lowerLevel * oscillator(lower, t, lowerHarmonics);
-      if (upper > 0) v = (v + upperLevel * oscillator(upper, t, upperHarmonics)) / 1.55;
+          v = lowerLevel * oscillator(lower, t, lowerHarmonics, lowerPartials);
+      if (upper > 0) v = (v + upperLevel * oscillator(upper, t, upperHarmonics, upperPartials)) / 1.55;
       v *= env * volume / 100;
       samples[i] = (short) Math.round(Math.max(-1, Math.min(1, v)) * 32767);
     }
@@ -223,17 +266,19 @@ public final class Dsp {
     return Math.max(.045, Math.min(.6, .18 * Math.pow(440 / frequency, .65)));
   }
 
-  private static double oscillator(double frequency, double t, int harmonics) {
+  private static double oscillator(double frequency, double t, int harmonics, int upperPartials) {
     double phase = 2 * Math.PI * frequency * t;
     double support = Math.max(0, Math.min(1, Math.log(110 / frequency) / Math.log(2)));
-    double second = (frequency < 130 ? .12 : .015) + .18 * support;
-    double third = (frequency < 130 ? .06 : 0) + .16 * support;
+    double bass = Math.max(0, Math.min(1, Math.log(160 / frequency) / Math.log(2)));
+    bass = bass * bass * (3 - 2 * bass);
+    double second = .015 + .105 * bass + .18 * support;
+    double third = .06 * bass + .16 * support;
     double strength = harmonics / 100.0;
     double extra = Math.max(0, strength - 1) * (1 - support);
     return (Math.sin(phase) + (strength * second + .18 * extra) * Math.sin(2 * phase)
         + (strength * third + .10 * extra) * Math.sin(3 * phase)
-        + strength * support * (.26 * Math.sin(4 * phase) + .14 * Math.sin(5 * phase)
-            + .20 * Math.sin(6 * phase) + .12 * Math.sin(8 * phase))) / (1 + .62 * support * strength);
+        + strength * support * (.26 * Math.sin(4 * phase) + upperPartials / 100.0 * (.14 * Math.sin(5 * phase)
+            + .20 * Math.sin(6 * phase) + .12 * Math.sin(8 * phase)))) / (1 + .62 * support * strength);
   }
 
   // Targeted FFT for two expected spectral components. Not proof of two independent strings.

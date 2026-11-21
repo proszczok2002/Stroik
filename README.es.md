@@ -1,5 +1,12 @@
 # Stroik 1.26 — Guía
 
+- Los perfiles nuevos arrancan en el modo híbrido con altavoces. Un plan ascendente de piano empieza en A0. Stroik conserva los ajustes guardados.
+- Elige cents, hercios o ambas unidades en el orden deseado. Puedes comprobar una quinta en cada quinta posición del plan.
+- El diapasón incluye calibración de fábrica para 71 notas y armónicos superiores más suaves en los graves. Para avanzar en el modo diapasón se requieren dos golpes breves separados por silencio.
+- El interruptor indica si el mapa está activo. Volver a la afinación estándar conserva las mediciones.
+- El calibrador 1.0.2 para Windows incluye reproducción automática y regulación de armónicos superiores de graves. Ctrl+O abre el JSON y Ctrl+S guarda en el mismo archivo. Ambas ediciones leen los archivos de calibración antiguos y nuevos.
+- Escribe una nota como C4 en la lista. Ctrl+Arriba/Abajo cambia de octava. Alt+M activa o desactiva el micrófono.
+
 - Para la primera descarga, usa el ZIP completo de Windows. Extráelo en una carpeta para tener juntos Stroik.exe, Stroik-Kalibrator.exe, las guías y las sumas de verificación.
 - Si el calibrador falta o está desactualizado, Stroik ofrece descargarlo al iniciar. Tras rechazar, no se repite la misma oferta. En Ajustes puedes desactivar la comprobación al iniciar y seguir comprobándolo manualmente.
 - Tras confirmar, Stroik verifica tamaño, SHA-256 y versión, y guarda el calibrador junto a su EXE. El calibrador 1.0.1 muestra su versión en el título de la ventana.

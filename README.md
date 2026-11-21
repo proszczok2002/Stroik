@@ -1,5 +1,12 @@
 # Stroik 1.26
 
+- Nowe profile zaczynają od hybrydy głośnikowej. Rosnący plan pianina zaczyna się od A subkontra (A0). Stroik zachowuje zapisane ustawienia.
+- W ustawieniach wybierz komunikaty w centach, hercach lub w obu jednostkach w wybranej kolejności. Co piąta pozycja planu może uruchamiać kontrolę kwinty.
+- Kamerton ma fabryczną kalibrację dla 71 nut i łagodniejsze wyższe składowe basu. Przejście w trybie kamertonu wymaga dwóch krótkich stuknięć rozdzielonych ciszą.
+- Przełącznik w zakładce mapowania pokazuje, czy używasz mapy, czy stroju standardowego. Wyłączenie mapy zachowuje jej pomiary.
+- Kalibrator 1.0.2 dla Windows ma automatyczne uderzanie kamertonu i suwak wyższych harmonicznych basu. Ctrl+O otwiera JSON, a Ctrl+S zapisuje zmiany do tego samego pliku. Pierwszy zapis pozwala wybrać nazwę i folder. Oba wydania Stroika czytają stary i nowy format kalibracji.
+- Na liście dźwięków wpisz np. C4. Ctrl+góra/dół zmienia oktawę. Alt+M włącza i wyłącza mikrofon.
+
 - Przy pierwszym pobraniu wybierz pełny ZIP Windows. Rozpakuj go do jednego folderu, aby od razu mieć Stroik.exe, Stroik-Kalibrator.exe, instrukcje i sumy kontrolne.
 - Jeśli kalibratora brakuje lub jest starszy, Stroik przy uruchomieniu pyta o pobranie. Po odmowie nie ponawia pytania o brakujący program ani o tę samą wersję. Możesz wyłączyć **Sprawdzaj kalibrator przy uruchomieniu** i zawsze użyć **Sprawdź kalibrator teraz** w Ustawieniach.
 - Po potwierdzeniu Stroik sprawdza rozmiar, SHA-256 i wersję, po czym zapisuje kalibrator obok swojego EXE. Kalibrator 1.0.1 pokazuje własną wersję w tytule okna.
@@ -64,7 +71,7 @@ Kwinta równomiernie temperowana może prawidłowo dawać wolne dudnienia; piani
 
 **Widok dla początkujących** pokazuje wskazówki właściwe dla wybranego instrumentu. **Widok klasyczny** zachowuje zwięzły układ. Tab przechodzi do następnej kontrolki, Shift+Tab wraca do poprzedniej. Przy pianinie i w trybie chromatycznym dostępny jest wybór oktawy oraz pełna lista dźwięków; strzałki przechodzą przez granice oktaw, a **I** lub **S** wybiera kolejny dźwięk z krzyżykiem. Przy instrumentach strunowych strzałki przechodzą po pustych strunach, a wybór oktawy jest ukryty.
 
-Pianino i tryb chromatyczny obejmują 88 dźwięków od A subkontra do c pięciokreślnego. Domyślnie wybrane jest **pianino i g w oktawie razkreślnej** (G4). Przy wysokich i bardzo niskich dźwiękach wynik mikrofonu zależy szczególnie od sprzętu i harmonicznych; sprawdzono tony syntetyczne, nie każdy instrument.
+Pianino i tryb chromatyczny obejmują 88 dźwięków od A subkontra do c pięciokreślnego. Domyślnie wybrane jest **pianino i A subkontra** (A0). Przy wysokich i bardzo niskich dźwiękach wynik mikrofonu zależy szczególnie od sprzętu i harmonicznych; sprawdzono tony syntetyczne, nie każdy instrument.
 
 ## Wybór instrumentu
 
@@ -87,7 +94,7 @@ W trybie elektronicznym można wybrać ręcznie strunę albo **Automatycznie**. 
 
 **Ctrl+Q** zamyka program, zatrzymując mikrofon, kamerton i sprawdzanie aktualizacji. Polecenie **Zamknij program (Ctrl+Q)** jest również w menu kontekstowym.
 
-Po metodzie strojenia wybiera się instrument i widok. Dalej są częstotliwość odniesienia A, czułość mikrofonu, próg oceny w centach oraz dźwięk lub struna docelowa. Oktawa jest dostępna dla pianina i trybu chromatycznego. Standard wynosi **A=440 Hz**. Przy starym instrumencie czasem właściwy jest niższy strój, np. 430–435 Hz, ale sama epoka nie wyznacza bezpiecznej wartości. **Przed podniesieniem naciągu starego pianina do 440 Hz poproś technika o ocenę jego konstrukcji, stanu i właściwego stroju.** Nie zakładaj, że każdy instrument z XIX wieku powinien być strojony do 430–435 Hz. [Piano Technicians Guild: zmiana wysokości stroju](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising) · [PTG: stan starszego instrumentu](https://my.ptg.org/ptgmain/piano/care/care-faqs)
+Najpierw wybierz widok, instrument, częstotliwość odniesienia A i kolejność, potem dźwięk docelowy i metodę strojenia. Oktawa jest dostępna dla pianina i trybu chromatycznego. Standard wynosi **A=440 Hz**. Przy starym instrumencie czasem właściwy jest niższy strój, np. 430–435 Hz, ale sama epoka nie wyznacza bezpiecznej wartości. **Przed podniesieniem naciągu starego pianina do 440 Hz poproś technika o ocenę jego konstrukcji, stanu i właściwego stroju.** Nie zakładaj, że każdy instrument z XIX wieku powinien być strojony do 430–435 Hz. [Piano Technicians Guild: zmiana wysokości stroju](https://www.ptg.org/teacher-resources/caring-for-a-piano/pitch-raising) · [PTG: stan starszego instrumentu](https://my.ptg.org/ptgmain/piano/care/care-faqs)
 
 Czułość jest opisana według warunków (cichy instrument, normalna, hałas w tle). Próg „dobrze” jest podawany w centach, a odchyłka także w hercach. Ustawienia są zapisywane lokalnie, w tym język, motyw, metoda, instrument, widok, dźwięk i odstęp kamertonu.
 

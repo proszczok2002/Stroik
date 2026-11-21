@@ -1,7 +1,8 @@
-Stroik Android 1.10
+Stroik Android 1.11
 
-- In speaker hybrid, enable the two-tap checkbox. After an in-tune announcement, the reference stays silent while you tap twice. The taps can be unpitched. With no gesture, the reference repeats the same note. A detuned reading uses the configured 0–60 second pause.
-- A4 = 440 Hz is the usual reference for postwar pianos. Prewar instruments may have been built for lower pitch. Have a technician assess an old piano before raising its pitch.
-- In Instrument mapping, choose octave, note and 1–10 strikes. Select Start mapping, let each strike decay and wait for its announcement. Stroik assigns the average frequency in hertz to the selected note. A complete series is stored automatically. Pick the next note in the list, use the button, or tap twice after saving the reading. Finish mapping stops capture. Save mapping file (Ctrl+S) exports JSON. Use map for tuning makes the readings the targets for the tuner and fork. Unmapped notes use standard tuning. Both platforms read the same file.
-- Stroik-Kalibrator.exe has one list of 88 notes. Set harmonics (0–200% of the Stroik baseline) and volume (0–150%) per note. 100% is the baseline and 0% harmonics yields a pure tone. Alt+U plays the selected note. Ctrl+S saves JSON. In Stroik, use Settings → Open fork calibration on either platform. Calibration affects timbre and level, while mapping sets pitch.
-- Settings provide separate fork and microphone-monitoring volume sliders. Windows also exposes separate mixer sessions for the active streams. Both apps use the default audio output. Use headphones for microphone monitoring.
+- New profiles start in speaker hybrid. An ascending piano plan starts at A0. Stroik keeps existing settings.
+- Choose cents, hertz, or both in either order for announcements. You can check a fifth at every fifth position in the tuning plan.
+- The fork has factory calibration for 71 notes and softer upper bass partials. Fork-mode navigation requires two short taps separated by silence.
+- The switch in Instrument Mapping shows whether map or standard tuning is active. Switching to standard keeps the map readings.
+- Windows Calibrator 1.0.2 has automatic preview and an upper-bass-harmonics slider. Ctrl+O opens a JSON file and Ctrl+S saves changes to the same file. The first save lets you pick its name and location. Both Stroik editions can read older and newer calibration files.
+- The note slider lets you enter names such as C4 and offers TalkBack actions to change octave. When Keep screen awake is on, pressing the power button to turn off the screen mutes result speech. With it off, results can be spoken with the screen off.

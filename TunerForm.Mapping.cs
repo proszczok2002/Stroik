@@ -6,7 +6,10 @@ internal sealed partial class TunerForm
     private readonly ComboBox _mapOctave = new() { DropDownStyle = ComboBoxStyle.DropDownList }, _mapNote = new() { DropDownStyle = ComboBoxStyle.DropDownList }, _mapCount = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly Label _mapOctaveLabel = MakeLabel(), _mapNoteLabel = MakeLabel(), _mapCountLabel = MakeLabel(), _mapStatus = MakeLabel();
     private readonly Button _mapStart = MakeButton(), _mapStop = MakeButton(), _mapNext = MakeButton(), _mapSave = MakeButton(),
-        _mapLoad = MakeButton(), _mapUse = MakeButton(), _mapClear = MakeButton(), _calibrationLoad = MakeButton(), _calibrationClear = MakeButton();
+        _mapLoad = MakeButton(), _calibrationLoad = MakeButton(), _calibrationClear = MakeButton();
+    private readonly RadioButton _mapUse = new() { AutoSize = true }, _mapClear = new() { AutoSize = true };
+    private bool _useMap;
+    private volatile bool _mappingActiveForTuning;
     private readonly CheckBox _mapTap = new() { AutoSize = true, Checked = true };
     private readonly TrackBar _forkVolume = new() { Minimum = 0, Maximum = 100, Value = 100, TickStyle = TickStyle.None, SmallChange = 1, LargeChange = 10 };
     private readonly TrackBar _monitorVolume = new() { Minimum = 0, Maximum = 100, Value = 100, TickStyle = TickStyle.None, SmallChange = 1, LargeChange = 10 };
@@ -56,8 +59,8 @@ internal sealed partial class TunerForm
         _mapNext.Click += (_, _) => NextMappingNote();
         _mapSave.Click += (_, _) => SaveMapping();
         _mapLoad.Click += (_, _) => OpenTuningFile(false);
-        _mapUse.Click += (_, _) => { _instrumentMap = new InstrumentMap { Notes = new(_mapDraft.Notes) }; ResetResult(); Persist(); MappingStatus(T("Mapa aktywna.", "Instrument map active.")); };
-        _mapClear.Click += (_, _) => { _instrumentMap = null; ResetResult(); Persist(); MappingStatus(T("Przywrócono strój standardowy.", "Standard tuning restored.")); };
+        _mapUse.Click += (_, _) => SetMappingMode(true);
+        _mapClear.Click += (_, _) => SetMappingMode(false);
         _tabs.SelectedIndexChanged += (_, _) =>
         {
             if (_tabs.SelectedTab == _mappingTab) { StopMicrophone(false); _strikeTimer.Stop(); _fork.Stop(); AcceptButton = null; }
@@ -69,6 +72,31 @@ internal sealed partial class TunerForm
         _monitorVolume.ValueChanged += (_, _) => { _monitorLevel = _monitorVolume.Value; UpdateVolumeLabels(); Persist(); };
         _calibrationLoad.Click += (_, _) => OpenTuningFile(true);
         _calibrationClear.Click += (_, _) => { _forkCalibration = null; Persist(); Announce(T("Przywrócono fabryczną barwę kamertonu.", "Default fork calibration restored.")); };
+    }
+
+    private void SetMappingMode(bool useMap)
+    {
+        if (useMap && _mapDraft.Notes.Count == 0)
+        {
+            UpdateMappingMode();
+            return;
+        }
+        _useMap = useMap;
+        if (useMap) _instrumentMap = new InstrumentMap { Notes = new(_mapDraft.Notes) };
+        UpdateMappingMode();
+        ResetResult();
+        RefreshForkAfterSelection();
+        Persist();
+        MappingStatus(useMap ? T("Mapa aktywna.", "Instrument map active.")
+            : T("Przywrócono strój standardowy.", "Standard tuning restored."));
+    }
+
+    private void UpdateMappingMode()
+    {
+        _mappingActiveForTuning = _useMap && _instrumentMap?.Notes.Count > 0;
+        _mapUse.Enabled = _mapDraft.Notes.Count > 0;
+        _mapUse.Checked = _mappingActiveForTuning;
+        _mapClear.Checked = !_mappingActiveForTuning;
     }
 
     private void UpdateVolumeLabels()
@@ -84,8 +112,10 @@ internal sealed partial class TunerForm
         _forkVolume.Value = settings.ForkVolume;
         _monitorLevel = _monitorVolume.Value = settings.MonitorVolume;
         _instrumentMap = settings.InstrumentMap;
+        _useMap = settings.UseInstrumentMap;
         _forkCalibration = settings.ForkCalibration;
         if (_instrumentMap is not null) _mapDraft = new InstrumentMap { Notes = new(_instrumentMap.Notes) };
+        UpdateMappingMode();
         _initializing = initializing;
     }
 
@@ -102,7 +132,7 @@ internal sealed partial class TunerForm
         _mapSave.Text = T("Zapisz plik mapingu", "Save mapping file");
         _mapLoad.Text = T("Wczytaj plik mapingu", "Open mapping file");
         _mapUse.Text = T("Użyj mapy do strojenia", "Use map for tuning");
-        _mapClear.Text = T("Przywróć strój standardowy", "Restore standard tuning");
+        _mapClear.Text = T("Strój standardowy", "Standard tuning");
         _calibrationLoad.Text = T("Wczytaj kalibrację kamertonu", "Open fork calibration");
         _calibrationClear.Text = T("Przywróć fabryczną barwę kamertonu", "Restore default fork calibration");
         _mapStart.Enabled = _mapMic is null;
@@ -302,6 +332,8 @@ internal sealed partial class TunerForm
                 file.Validate();
                 StopMapping(false);
                 _mapDraft = file;
+                if (_useMap && _instrumentMap is not null) SetMappingMode(file.Notes.Count != 0);
+                UpdateMappingMode();
                 UpdateMappingNotes();
                 MappingStatus(T("Wczytano mapę instrumentu.", "Instrument map loaded."));
             }
@@ -309,5 +341,6 @@ internal sealed partial class TunerForm
         catch (Exception error) { MessageBox.Show(this, error.Message, dialog.Title); }
     }
 
-    private double TargetFrequency(int midi, double reference) => _instrumentMap?.Frequency(midi, reference) ?? PitchDetector.NoteFromMidi(midi, reference).Frequency;
+    private double TargetFrequency(int midi, double reference) =>
+        (_mappingActiveForTuning ? _instrumentMap?.Frequency(midi, reference) : null) ?? PitchDetector.NoteFromMidi(midi, reference).Frequency;
 }

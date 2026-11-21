@@ -107,7 +107,7 @@ internal static class CurrentReleaseChecks
                     pause.Text="2";typeof(EditableNumber).GetMethod("OnKeyDown",Hidden)!.Invoke(pause,new object[]{new KeyEventArgs(Keys.Enter)});
                     if(pause.Value!=2)throw new Exception("Hybrid pause numeric entry");
                     if(Get<ComboBox>(form,"_language").Items.Count!=6)throw new Exception("Six languages missing");
-                    if(Get<ComboBox>(form,"_target").SelectedItem!.ToString()!.Contains(KeyboardGuide.Position(67,code))!=(view==TunerView.Beginner))throw new Exception("Classic description leak: "+code);
+                    if(Get<ComboBox>(form,"_target").SelectedItem!.ToString()!.Contains(KeyboardGuide.Position(roundtrip.TargetMidi,code))!=(view==TunerView.Beginner))throw new Exception("Classic description leak: "+code);
                     var input=Get<EditableNumber>(form,"_concertA");
                     if(input.AccessibilityObject.Role!=AccessibleRole.Text || input.Controls.Count!=0 || input.AccessibilityObject.Value!=input.Text)throw new Exception("Numeric input duplicates its value or spin role");
                     if(string.IsNullOrEmpty(input.AccessibleDescription)!=(view==TunerView.Classic))throw new Exception("Arrow hint view mismatch");
@@ -126,7 +126,7 @@ internal static class CurrentReleaseChecks
                 if(((Preferences)Call(form,"ReadSettings")!).Language!=UiLanguages.Codes[language.SelectedIndex])throw new Exception("Language selector does not save");
             }
             Call(form,"ApplySettings",new Preferences {Method=TuningMethod.TuningFork,ForkTapAdvance=true,AutoStrike=true,AutomaticUpdates=false});
-            if(Get<Button>(form,"_start").Visible || Get<Button>(form,"_stop").Visible)throw new Exception("Fork exposes mic controls");
+            if(Get<Button>(form,"_start").Visible)throw new Exception("Fork exposes mic controls");
             // Exercise the timer's real command independently of a microphone driver.
             typeof(TunerForm).GetField("_automaticStrikesRunning",Hidden)!.SetValue(form,true);
             Call(form,"UpdateStrikeTimer");
@@ -138,6 +138,36 @@ internal static class CurrentReleaseChecks
             if(tap.Observe(.1,.01,at.AddSeconds(1.3),1200))throw new Exception("Single attack advanced");
             tap.Observe(0,.01,at.AddSeconds(1.5),1200);
             if(!tap.Observe(.08,.01,at.AddSeconds(2),1200))throw new Exception("Unequal two attacks not recognized");
+            var impulseNavigator = new TapNavigator();
+            short[] capture = new short[48000 * 2];
+            for (int i = 4800; i < 17000; i++)
+                capture[i] = (short)(8000 * Math.Sin(i * .32));
+            for (int i = 24000; i < 27840; i++)
+                capture[i] = (short)(8000 * Math.Sin(i * .17));
+            if (impulseNavigator.ObserveImpulses(capture, 48000, .008, at, 1200))
+                throw new Exception("A note followed by a vocal-like swell advanced the fork.");
+            Array.Clear(capture);
+            for (int i = 4800; i < 5200; i++) capture[i] = (short)(i % 2 == 0 ? 8000 : -8000);
+            if (impulseNavigator.ObserveImpulses(capture, 48000, .008, at.AddSeconds(2), 1200))
+                throw new Exception("A single impulsive tap advanced the fork.");
+            impulseNavigator.Reset();
+            for (int i = 24000; i < 24500; i++) capture[i] = (short)(i % 2 == 0 ? 8000 : -8000);
+            if (!impulseNavigator.ObserveImpulses(capture, 48000, .008, at.AddSeconds(4), 1200))
+                throw new Exception("Two genuine impulsive taps did not advance the fork.");
+            if (ForkCalibration.Effective(null, 21) != new ForkTone(200, 150, 50)
+                || ForkCalibration.Effective(null, 89) != ForkTone.Default
+                || ForkCalibration.Effective(new() { Notes = new() { [21] = new ForkTone(80, 95) } }, 21) != new ForkTone(80, 95, 50))
+                throw new Exception("Factory calibration or legacy override");
+            Call(form, "ApplySettings", new Preferences { AutomaticUpdates = false });
+            var defaults = (Preferences)Call(form, "ReadSettings")!;
+            if (defaults.Method != TuningMethod.HybridSpeakers || defaults.TargetMidi != 21)
+                throw new Exception("Initial ascending piano target or tuning method");
+            Call(form, "NavigateTargetKey", Keys.C);
+            Call(form, "NavigateTargetKey", Keys.D4);
+            if (((Preferences)Call(form, "ReadSettings")!).TargetMidi != 60) throw new Exception("C4 note jump");
+            Call(form, "NavigateTargetKey", Keys.Control | Keys.Up);
+            if (((Preferences)Call(form, "ReadSettings")!).TargetMidi != 72) throw new Exception("Ctrl+Up octave jump");
+            Console.WriteLine("Short acoustic impulses, factory preset, C4 and octave navigation: OK");
             var cycle=new PracticeCycle();cycle.Result(at,13);cycle.Speech(at.AddSeconds(20),13);
             if(cycle.NeedsFork(at.AddSeconds(32)) || !cycle.NeedsFork(at.AddSeconds(33)))throw new Exception("Hybrid fails to wait after speech completion");
             int black=60;
@@ -147,7 +177,7 @@ internal static class CurrentReleaseChecks
             foreach(int midi in Enumerable.Range(21,88))
             foreach(int span in new[]{0,7,12}) {
                 if(midi+span>108)continue;
-                using var wave=TuningFork.BuildWave(PitchDetector.NoteFromMidi(midi,440).Frequency,span==0?null:PitchDetector.NoteFromMidi(midi+span,440).Frequency);
+                using var wave=TuningFork.BuildWave(PitchDetector.NoteFromMidi(midi,440).Frequency,span==0?null:PitchDetector.NoteFromMidi(midi+span,440).Frequency, ForkCalibration.Effective(null,midi), ForkCalibration.Effective(null,midi+span));
                 byte[] data=wave.ToArray();int peak=0;
                 for(int i=44;i<data.Length;i+=2)peak=Math.Max(peak,Math.Abs((int)BitConverter.ToInt16(data,i)));
                 if(peak>=32760 || peak<500)throw new Exception("Fork clipping/silence: "+midi+"/"+span+" peak="+peak);
@@ -185,9 +215,18 @@ internal static class CurrentReleaseChecks
         }
         double average = Get<InstrumentMap>(form,"_mapDraft").Notes[69];
         if (Math.Abs(average-427)>.15) throw new Exception("Mapping lost selected note or averaged incorrectly: "+average);
-        Get<Button>(form,"_mapUse").PerformClick();
+        var useMap = Get<RadioButton>(form,"_mapUse");
+        var standard = Get<RadioButton>(form,"_mapClear");
+        useMap.PerformClick();
         if (Math.Abs((double)Call(form,"TargetFrequency",69,440.0)!-427)>.15 || (double)Call(form,"TargetFrequency",81,440.0)! != 880)
             throw new Exception("Active partial map did not supply reference/fallback");
+        standard.PerformClick();
+        var inactive = (Preferences)Call(form, "ReadSettings")!;
+        if (!standard.Checked || useMap.Checked || inactive.UseInstrumentMap || inactive.InstrumentMap?.Notes[69] != average ||
+            (double)Call(form, "TargetFrequency", 69, 440.0)! != 440.0)
+            throw new Exception("Standard tuning removed the map or left it enabled.");
+        useMap.PerformClick();
+        if (!useMap.Checked || standard.Checked) throw new Exception("Map option does not expose its selection.");
         tabs.SelectedTab = Get<TabPage>(form,"_tunerTab");
         typeof(TunerForm).GetField("_microphone",Hidden)!.SetValue(form,new Microphone());
         at = DateTime.UtcNow;

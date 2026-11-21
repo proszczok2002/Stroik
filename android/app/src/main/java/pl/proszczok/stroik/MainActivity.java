@@ -24,6 +24,12 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   private TextView heading, result, guide, status, referenceHelp, beginnerHelp, methodHelp;
   private ScrollView scroll;
   private Spinner targetList, octaveList;
+  private TargetSlider targetSlider;
+  private TextView magicTapHelp;
+  private View visualVoiceControls;
+  private CheckBox mapUse;
+  private int noteKey;
+  private long noteKeyUntil;
   private final Button[] tabs = new Button[4];
   private JSONObject mapDraft;
   private int mappingMidi = 69, mappingCount = 1;
@@ -351,6 +357,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     View focused = accessibilityFocus(root);
     visible(pairControls, model.interval != 0 && model.method != 0);
     visible(micControls, model.method != 0);
+    visible(magicTapHelp, model.beginner && !model.graphics);
+    if (targetSlider != null) targetSlider.sync();
     visible(forkControls, model.method == 0);
     visible(forkTapControls, model.method != 1);
     visible(monitorControls, model.method == 3);
@@ -375,7 +383,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
 
   private void updateInstrumentSections() {
     visible(ukuleleControls, model.instrument == 2);
-    visible(orderControls, !model.strings());
+    visible(orderControls, model.instrument == 0);
   }
 
   private void selectSilently(Spinner spinner, int position) {
@@ -438,11 +446,14 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     heading.setTextColor(model.dark ? Color.WHITE : Color.BLACK);
     String[] pages = {t("Stroik", "Tuner"), t("Ustawienia", "Settings"), t("Pomoc", "Help"), t("Mapowanie instrumentu", "Instrument mapping")};
     heading.setText("Stroik " + version() + " — " + pages[page]);
-    result = guide = status = null;
+    result = guide = status = beginnerHelp = methodHelp = referenceHelp = null;
     consonanceList = null;
     targetList = octaveList = null;
+    targetSlider = null;
     targetsBox = null;
     microphoneButton = null;
+    mapUse = null;
+    visualVoiceControls = null;
     mappingStart = mappingFinish = null;
     pairControls = micControls = forkControls = monitorControls = advanceControls = null;
     ukuleleControls = orderControls = null;
@@ -635,6 +646,29 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       if ((event.isCtrlPressed() || event.isAltPressed()) && key == KeyEvent.KEYCODE_N) { nextMapped(); return true; }
       if (event.isAltPressed() && key == KeyEvent.KEYCODE_U) return true;
     }
+    if (page == 0 && event.isAltPressed() && key == KeyEvent.KEYCODE_M) {
+      if (event.getRepeatCount() == 0) magicTap();
+      return true;
+    }
+    if (page == 0 && targetList != null && (targetList.hasFocus() || targetSlider.hasFocus()) && !model.strings()) {
+      if (event.isCtrlPressed() && (key == KeyEvent.KEYCODE_DPAD_UP || key == KeyEvent.KEYCODE_DPAD_DOWN)) {
+        changeOctave(key == KeyEvent.KEYCODE_DPAD_UP ? 1 : -1);
+        return true;
+      }
+      if (!event.isCtrlPressed() && !event.isAltPressed()) {
+        int letter = event.getUnicodeChar();
+        if ((letter >= 'a' && letter <= 'h') || (letter >= 'A' && letter <= 'H')) {
+          noteKey = letter;
+          noteKeyUntil = SystemClock.elapsedRealtime() + 1800;
+          return true;
+        }
+        if (letter >= '0' && letter <= '8' && SystemClock.elapsedRealtime() <= noteKeyUntil) {
+          noteKeyUntil = 0;
+          setTarget(Model.parseNote("" + (char)noteKey + (char)letter), true);
+          return true;
+        }
+      }
+    }
     if (event.isCtrlPressed()) {
       if (key == KeyEvent.KEYCODE_Q) {
         session.stop();
@@ -715,6 +749,35 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           render();
         });
     instrument();
+    forkTapControls =
+        section(() -> {
+          check(
+              t(
+                  "Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną"
+                      + " kolejnością",
+                  "Two strikes advance to the next note in the selected order"),
+              model.forkTap,
+              v -> {
+                model.forkTap = v;
+                updateTunerSections();
+                if (model.method == 0) {
+                  if (v && active) startMic();
+                  else if (!v) session.stop();
+                }
+              });
+        });
+    advanceControls =
+        section(() ->
+            check(
+                t(
+                    "Po dobrym wyniku dwa uderzenia wybierają następną nutę",
+                    "After an in-tune result two strikes advance"),
+                model.advance,
+                v -> model.advance = v));
+    targetIds = nextId;
+    targetsBox = (LinearLayout) section(this::targets);
+    guide = text("", false);
+    updateGuide();
     choice(
         t("Metoda strojenia", "Tuning method"),
         new String[] {
@@ -735,7 +798,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     consonanceList =
         choice(
             consonanceLabel,
-            new String[] {t("Wyłączone", "Off"), t("Kwinty", "Fifths"), t("Oktawy", "Octaves")},
+            new String[] {t("Wyłączone", "Off"), t("Kwinty", "Fifths"), t("Oktawy", "Octaves"),
+                model.beginner ? t("Sprawdzaj współbrzmienie co 5 dźwięków wybranej kolejności strojenia",
+                    "Check consonance every five notes in the selected tuning order")
+                    : t("Sprawdzaj współbrzmienie co kwintę wybranej kolejności strojenia",
+                        "Check a fifth every five notes in the selected tuning order")},
             model.interval,
             v -> {
               model.interval = v;
@@ -754,22 +821,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                   model.pairMode = v;
                   updateGuide();
                 }));
-    targetIds = nextId;
-    targetsBox = (LinearLayout) section(this::targets);
-    guide = text("", false);
-    updateGuide();
     methodHelp = text(model.methodGuidance(), false);
-    beginnerHelp =
-        text(
-            t(
-                "Zbyt słabe lub zbyt mocne uderzenia mogą powodować przekłamane odczyty. Graj"
-                    + " równomiernie, bez przesterowania. Stare pianino powinien ocenić technik"
-                    + " przed podnoszeniem naciągu. Zacznij od środka, zmieniaj strony równomiernie"
-                    + " i wytłumiaj pozostałe struny.",
-                "Strikes that are too weak or too strong can cause inaccurate readings. Play evenly"
-                    + " without clipping. Have an old piano assessed before raising tension. Start"
-                    + " near the middle, work evenly on both sides and mute unused strings."),
-            false);
+    beginnerHelp = text(model.beginnerGuidance(), false);
     status =
         text(
             audio.running()
@@ -778,8 +831,77 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
             false);
     // The microphone state belongs to the toggle, not a duplicate dead stop.
     status.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+    monitorControls =
+        section(() -> {
+          monitorCheck =
+              check(
+                  t(
+                      "Odsłuch mikrofonu — tylko w słuchawkach",
+                      "Microphone monitoring — headphones only"),
+                  model.monitor,
+                  v -> {
+                    if (v
+                        && !AudioEngine.headphones(
+                            (AudioManager) getSystemService(AUDIO_SERVICE))) {
+                      model.monitor = false;
+                      monitorCheck.setChecked(false);
+                      message(t("Najpierw podłącz słuchawki.", "Connect headphones first."));
+                    } else model.monitor = v;
+                  });
+        });
+    choice(
+        t("Czułość mikrofonu", "Microphone sensitivity"),
+        new String[] {
+          t("Wysoka — ciche instrumenty", "High — quiet instruments"),
+          t("Normalna", "Normal"),
+          t("Niska — hałas w tle", "Low — background noise")
+        },
+        model.sensitivity,
+        v -> model.sensitivity = v);
+    number(
+        t("Tolerancja oceny dobrze, centy (1–20)", "In-tune tolerance, cents (1–20)"),
+        model.tolerance,
+        1,
+        20,
+        v -> model.tolerance = v);
+    hybridPauseControls =
+        section(() -> number(
+            t("Przerwa po komunikacie w hybrydzie, sekundy (0–60):",
+              "Hybrid pause after spoken result, seconds (0–60):"),
+            model.hybridPause, 0, 60, 1, v -> model.hybridPause = (int) v));
+    number(
+        t(
+            "Maksymalny odstęp dwóch uderzeń, sekundy (0,5–2,5)",
+            "Maximum gap between two strikes, seconds (0.5–2.5)"),
+        model.gap,
+        .5,
+        2.5,
+        v -> model.gap = v);
+    result =
+        text(
+            lastResult.isEmpty()
+                ? t(
+                    "Wynik pojawi się po wyciszeniu nuty.",
+                    "The result appears after the note stops.")
+                : lastResult,
+            false);
+    // Read-only feedback must not acquire input focus or start text-selection
+    // navigation while TalkBack is traversing the controls below it.
+    result.setTextIsSelectable(false);
+    result.setFocusable(false);
+    result.setContentDescription(t("Ostatni wynik: ", "Last result: ") + result.getText());
+    button(
+        t("Powtórz wynik", "Repeat result"),
+        () -> say(lastResult.isEmpty() ? t("Brak wyniku.", "No result.") : lastResult));
+    button(
+        t("Sprawdź komunikat czytnika ekranu", "Test screen reader announcement"),
+        () -> say(t("Stroik. Komunikaty są dostępne.", "Stroik. Announcements are available.")));
+    button(t("Zapisz plik ustawień", "Save settings file"), this::saveProfile);
+    button(t("Wczytaj plik ustawień", "Open settings file"), this::loadProfile);
     micControls =
         section(() -> {
+          magicTapHelp = text(t("Dwukrotne stuknięcie dwoma palcami włącza mikrofon.",
+              "A two-finger double tap starts the microphone."), false);
           microphoneButton =
               button(
                   audio.running()
@@ -823,88 +945,17 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
               10,
               v -> model.forkSeconds = v);
         });
-    forkTapControls =
-        section(() -> {
-          check(
-              t(
-                  "Dwukrotne stuknięcie przechodzi do kolejnego dźwięku zgodnego z wybraną"
-                      + " kolejnością",
-                  "Two strikes advance to the next note in the selected order"),
-              model.forkTap,
-              v -> {
-                model.forkTap = v;
-                updateTunerSections();
-                if (model.method == 0) {
-                  if (v && active) startMic();
-                  else if (!v) session.stop();
-                }
-              });
-        });
-    monitorControls =
-        section(() -> {
-          monitorCheck =
-              check(
-                  t(
-                      "Odsłuch mikrofonu — tylko w słuchawkach",
-                      "Microphone monitoring — headphones only"),
-                  model.monitor,
-                  v -> {
-                    if (v
-                        && !AudioEngine.headphones(
-                            (AudioManager) getSystemService(AUDIO_SERVICE))) {
-                      model.monitor = false;
-                      monitorCheck.setChecked(false);
-                      message(t("Najpierw podłącz słuchawki.", "Connect headphones first."));
-                    } else model.monitor = v;
-                  });
-        });
-    advanceControls =
-        section(() ->
-            check(
-                t(
-                    "Po dobrym wyniku dwa uderzenia wybierają następną nutę",
-                    "After an in-tune result two strikes advance"),
-                model.advance,
-                v -> model.advance = v));
-    hybridPauseControls =
-        section(() -> number(
-            t("Przerwa po komunikacie w hybrydzie, sekundy (0–60):",
-              "Hybrid pause after spoken result, seconds (0–60):"),
-            model.hybridPause, 0, 60, 1, v -> model.hybridPause = (int) v));
-    number(
-        t(
-            "Maksymalny odstęp dwóch uderzeń, sekundy (0,5–2,5)",
-            "Maximum gap between two strikes, seconds (0.5–2.5)"),
-        model.gap,
-        .5,
-        2.5,
-        v -> model.gap = v);
-    button(t("Następny dźwięk", "Next note"), this::advance);
-    result =
-        text(
-            lastResult.isEmpty()
-                ? t(
-                    "Wynik pojawi się po wyciszeniu nuty.",
-                    "The result appears after the note stops.")
-                : lastResult,
-            false);
-    // Read-only feedback must not acquire input focus or start text-selection
-    // navigation while TalkBack is traversing the controls below it.
-    result.setTextIsSelectable(false);
-    result.setFocusable(false);
-    result.setContentDescription(t("Ostatni wynik: ", "Last result: ") + result.getText());
-    button(
-        t("Powtórz wynik", "Repeat result"),
-        () -> say(lastResult.isEmpty() ? t("Brak wyniku.", "No result.") : lastResult));
-    button(
-        t("Sprawdź komunikat czytnika ekranu", "Test screen reader announcement"),
-        () -> say(t("Stroik. Komunikaty są dostępne.", "Stroik. Announcements are available.")));
-    button(t("Zapisz plik ustawień", "Save settings file"), this::saveProfile);
-    button(t("Wczytaj plik ustawień", "Open settings file"), this::loadProfile);
     updateTunerSections();
   }
 
   private void targets() {
+    targetSlider = new TargetSlider(this);
+    targetSlider.setId(nextId++);
+    body.addView(targetSlider);
+    targetSlider.sync();
+    if (model.beginner)
+      text(t("Na suwaku przesuń palcem w górę lub w dół, aby zmienić dźwięk. Dwoma palcami zmienisz oktawę. W TalkBacku użyj akcji suwaka. Dotknij suwaka, aby wpisać dźwięk, np. C4.",
+          "Swipe up or down on the slider to change note. Use two fingers to change octave. With TalkBack, use the slider actions. Tap the slider to enter a note such as C4."), false);
     {
       String[] oct = new String[9];
       for (int i = 0; i < 9; i++) oct[i] = model.octave(i);
@@ -949,13 +1000,33 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
             v -> {
               model.target = options[v];
               model.anchor = model.base();
+              targetSlider.sync();
               if (octaveList != null) selectSilently(octaveList, model.base() / 12 - 1);
               updateGuide();
             });
     targetList.setTag(options);
   }
 
+  boolean setTarget(int midi, boolean newAnchor) {
+    if (midi < 21 || midi > 108 || (model.strings() && Arrays.stream(model.stringsMidi()).noneMatch(note -> note == midi))) return false;
+    model.target = midi;
+    if (newAnchor) model.anchor = midi;
+    changed();
+    syncTarget();
+    return true;
+  }
+
+  void changeOctave(int direction) {
+    if (!model.strings()) setTarget(Math.max(21, Math.min(108, model.base() + 12 * direction)), true);
+  }
+
+  void stepTarget(int direction) {
+    int next = model.move(direction);
+    if (next != model.base()) setTarget(next, false);
+  }
+
   private void syncTarget() {
+    if (targetSlider != null) targetSlider.sync();
     if (octaveList != null) selectSilently(octaveList, model.base() / 12 - 1);
     if (targetList != null) {
       int[] options = (int[]) targetList.getTag();
@@ -970,6 +1041,10 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
 
   private void updateGuide() {
     visible(referenceHelp, model.beginner && model.instrument == 0);
+    if (beginnerHelp != null && model.beginner) {
+      String instructions = model.beginnerGuidance();
+      if (!instructions.contentEquals(beginnerHelp.getText())) beginnerHelp.setText(instructions);
+    }
     visible(beginnerHelp, model.beginner);
     visible(methodHelp, model.beginner);
     if (methodHelp != null) methodHelp.setText(model.methodGuidance());
@@ -983,7 +1058,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       }
       meter.invalidate();
     }
-    if (model.beginner && model.interval != 0) {
+    if (model.beginner && model.effectiveInterval() != 0) {
       int upper = model.base() + model.semitones();
       value +=
           "\n"
@@ -1011,7 +1086,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     }
     if (consonanceList != null)
       consonanceList.setStateDescription(
-          model.interval == 0
+          !model.beginner || model.effectiveInterval() == 0
               ? null
               : model.spokenNote(model.base())
                   + " + "
@@ -1039,7 +1114,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         model.instrument,
         v -> {
           model.instrument = v;
-          model.target = model.strings() ? model.stringsMidi()[0] : 67;
+          model.target = model.strings() ? model.stringsMidi()[0] : v == 0 && model.order == 0 ? 21 : 67;
           model.anchor = model.base();
           updateInstrumentSections();
           refreshTargets();
@@ -1058,6 +1133,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                   model.target = model.stringsMidi()[0];
                   refreshTargets();
                 }));
+    referenceControl();
     orderControls =
         section(() ->
             choice(
@@ -1070,9 +1146,10 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 model.order,
                 v -> {
                   model.order = v;
+                  if (v == 0) model.target = 21;
                   model.anchor = model.base();
+                  syncTarget();
                 }));
-    referenceControl();
     referenceHelp =
         text(
             t(
@@ -1083,21 +1160,6 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                     + " technician assess old instruments before raising tension. Ukulele G/A can"
                     + " be swapped. Use chromatic mode for other tunings."),
             false);
-    choice(
-        t("Czułość mikrofonu", "Microphone sensitivity"),
-        new String[] {
-          t("Wysoka — ciche instrumenty", "High — quiet instruments"),
-          t("Normalna", "Normal"),
-          t("Niska — hałas w tle", "Low — background noise")
-        },
-        model.sensitivity,
-        v -> model.sensitivity = v);
-    number(
-        t("Tolerancja oceny dobrze, centy (1–20)", "In-tune tolerance, cents (1–20)"),
-        model.tolerance,
-        1,
-        20,
-        v -> model.tolerance = v);
     updateInstrumentSections();
   }
 
@@ -1129,19 +1191,23 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     updateMappingStatus();
     button(t("Zapisz plik mapingu", "Save mapping file"), this::saveMapping);
     button(t("Wczytaj plik mapingu", "Open mapping file"), () -> openTuningFile(false));
-    button(t("Użyj mapy do strojenia", "Use map for tuning"), () -> {
-      if (mapDraft.optJSONObject("notes").length() == 0) return;
-      model.instrumentMap = mapDraft.toString();
-      model.refreshTuningFiles();
-      changed();
-      sayAction(t("Mapa aktywna.", "Instrument map active."), mappingStatus);
-    });
-    button(t("Przywróć strój standardowy", "Restore standard tuning"), () -> {
-      model.instrumentMap = "";
-      model.refreshTuningFiles();
-      changed();
-      sayAction(t("Przywrócono strój standardowy.", "Standard tuning restored."), mappingStatus);
-    });
+    mapUse = check(t("Użyj mapy do strojenia", "Use map for tuning"),
+        model.useInstrumentMap && !model.instrumentMap.isEmpty(), enabled -> {
+          model.useInstrumentMap = enabled;
+          if (enabled) {
+            model.instrumentMap = mapDraft.toString();
+            model.refreshTuningFiles();
+          }
+          mapUse.setStateDescription(mappingMode());
+        });
+    mapUse.setStateDescription(mappingMode());
+    updateMappingStatus();
+  }
+
+  private String mappingMode() {
+    return model.useInstrumentMap && !model.instrumentMap.isEmpty()
+        ? t("Mapa aktywna.", "Instrument map active.")
+        : t("Strój standardowy", "Standard tuning");
   }
 
   private void configureMapping() {
@@ -1155,6 +1221,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
 
   private void updateMappingStatus() {
     if (mappingStatus == null) return;
+    if (mapUse != null) mapUse.setEnabled(mapDraft.optJSONObject("notes").length() != 0);
     double hz = mapDraft.optJSONObject("notes").optDouble(Integer.toString(mappingMidi), 0);
     mappingStatus.setText(hz > 0 ? storedMapping(hz) : t("Zagraj wybrany dźwięk i pozwól mu ucichnąć po każdym uderzeniu.", "Play the selected note and let it decay after each strike."));
   }
@@ -1186,6 +1253,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
       try { mapDraft.optJSONObject("notes").put(Integer.toString(midi), average); }
       catch (org.json.JSONException error) { audio.speechFinished(); message(error.getMessage()); return; }
       persistMapDraft();
+      if (mapUse != null) mapUse.setEnabled(true);
       reading = storedMapping(average);
     } else reading = String.format(model.locale(), t("Pomiar %1$d z %2$d.", "Measurement %1$d of %2$d."), count, needed);
     mappingStatus.setText(reading);
@@ -1204,6 +1272,12 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
   }
 
   private void settings() {
+    String announcements = t("Personalizacja komunikatów strojenia", "Customize tuning announcements");
+    text(announcements, true);
+    choice(announcements,
+        new String[] {t("Tylko centy", "Cents only"), t("Tylko herce", "Hertz only"),
+            t("Centy i herce", "Cents then hertz"), t("Herce i centy", "Hertz then cents")},
+        model.resultUnits, v -> model.resultUnits = v);
     number(t("Głośność kamertonu, procent", "Fork volume, percent"), model.forkVolume, 0, 100, 1, v -> model.forkVolume = (int)v);
     number(t("Głośność odsłuchu mikrofonu, procent", "Microphone monitoring volume, percent"), model.monitorVolume, 0, 100, 1, v -> model.monitorVolume = (int)v);
     button(t("Wczytaj kalibrację kamertonu", "Open fork calibration"), () -> openTuningFile(true));
@@ -1239,6 +1313,8 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         model.graphics,
         v -> {
           model.graphics = v;
+          visible(visualVoiceControls, v);
+          rebuildTraversal();
           if (v && !getSharedPreferences("stroik", 0).getBoolean("visualVoiceHint", false)) {
             getSharedPreferences("stroik", 0).edit().putBoolean("visualVoiceHint", true).apply();
             showText(
@@ -1252,10 +1328,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 null);
           }
         });
-    check(
-        t("Odczyt głosowy w trybie wizualnym", "Spoken feedback in visual mode"),
-        model.voiceInVisual,
-        v -> model.voiceInVisual = v);
+    visualVoiceControls = section(() -> check(t("Odczyt głosowy w trybie wizualnym", "Spoken feedback in visual mode"),
+        model.voiceInVisual, v -> model.voiceInVisual = v));
+    visible(visualVoiceControls, model.graphics);
     check(
         t("Nie pozwalaj na autoblokadę ekranu", "Keep screen awake"),
         model.keepScreenOn,
@@ -1629,6 +1704,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
           } else {
             session.stop();
             mapDraft = new JSONObject(json);
+            if (mapUse != null && mapUse.isChecked()) {
+              model.instrumentMap = json;
+              model.refreshTuningFiles();
+              changed();
+            }
             persistMapDraft();
             updateMappingStatus();
             sayAction(t("Wczytano mapę instrumentu.", "Instrument map loaded."), mappingStatus);

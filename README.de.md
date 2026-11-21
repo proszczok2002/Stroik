@@ -1,5 +1,12 @@
 # Stroik 1.26 — Anleitung
 
+- Neue Profile starten im Lautsprecher-Hybridmodus. Ein aufsteigender Klavierplan beginnt bei A0. Bestehende Einstellungen bleiben erhalten.
+- Ansagen können Cent, Hertz oder beide Einheiten in beliebiger Reihenfolge enthalten. An jeder fünften Position lässt sich eine Quinte prüfen.
+- Für 71 Töne gibt es eine Werkskalibrierung. Hohe Bass-Obertöne sind gedämpft. Im Stimmgabelmodus wechseln zwei kurze, durch Stille getrennte Klopfzeichen zum nächsten Ton.
+- Der Schalter zeigt, ob Instrumentenkarte oder Standardstimmung aktiv ist. Messwerte bleiben beim Wechsel erhalten.
+- Der Windows-Kalibrator 1.0.2 bietet automatische Wiedergabe und einen Regler für hohe Bass-Obertöne. Strg+O öffnet eine JSON-Datei, Strg+S speichert Änderungen in derselben Datei. Beide Stroik-Versionen lesen alte und neue Kalibrierdateien.
+- Geben Sie z. B. C4 in der Tonliste ein. Strg+Pfeil hoch/runter wechselt die Oktave. Alt+M schaltet das Mikrofon.
+
 - Für den ersten Download wählen Sie das vollständige Windows-ZIP. Entpacken Sie es in einen Ordner, um Stroik.exe, Stroik-Kalibrator.exe, Anleitungen und Prüfsummen zusammen zu erhalten.
 - Fehlt der Kalibrator oder ist er veraltet, fragt Stroik beim Start nach dem Download. Bei Ablehnung wird für das fehlende Programm oder dieselbe Version nicht erneut gefragt. In den Einstellungen können Sie die Startprüfung abschalten und den Kalibrator weiterhin manuell prüfen.
 - Nach Bestätigung prüft Stroik Größe, SHA-256 und Version und speichert den Kalibrator neben seiner EXE. Kalibrator 1.0.1 zeigt die Version im Fenstertitel.

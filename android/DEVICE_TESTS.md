@@ -1,5 +1,10 @@
 # Android device verification
 
+## Android 1.11 (111), 2026-11-21
+
+- The signed production candidate and the separate instrumentation APK compiled. The production certificate matches 1.10. JVM tests cover the new note parser and fresh defaults, four announcement formats, periodic fifths, bass partial attenuation, and synthetic single/two-impulse cases. Longer tone bursts did not trigger the fork navigation in these tests.
+- Repeated `adb devices -l` and `adb mdns services` returned no connected/discovered Pixel 11. The instrumentation APK was built for a later device run. This release has no new physical TalkBack/Commentary gesture, microphone, locked-screen or system-installer verification on the Pixel.
+
 ## 1.10 / 110 — Pixel 11, 2026-11-18
 
 - Pixel 11 connected over Wi-Fi ADB. BackTalk, PixelSpeechEQ and AutoSpeaker stayed enabled. The display was unlocked for interface and installation checks.

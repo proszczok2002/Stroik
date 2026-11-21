@@ -7,6 +7,10 @@ public final class Model {
   public String language = "";
   public String instrumentMap = "", forkCalibration = "";
   private JSONObject mappedNotes, calibratedNotes;
+  private static JSONObject factoryNotes;
+  static void loadFactoryCalibration(String json) throws org.json.JSONException {
+    factoryNotes = TuningFiles.parse(json, TuningFiles.CALIBRATION);
+  }
   public boolean english,
       dark,
       beginner = true,
@@ -18,11 +22,13 @@ public final class Model {
       updates = true,
       swapped = false,
       voiceInVisual = true,
-      keepScreenOn = false;
-  public int method = 0,
+      keepScreenOn = false,
+      useInstrumentMap = true;
+  public int method = 2,
       instrument = 0,
-      target = 67,
-      anchor = 67,
+      target = 21,
+      anchor = 21,
+      resultUnits = 1,
       order = 0,
       interval = 0,
       pairMode = 0,
@@ -156,12 +162,16 @@ public final class Model {
   }
 
   public double targetHz(int midi) {
-    return mappedNotes == null ? hz(midi, reference) : mappedNotes.optDouble(Integer.toString(midi), hz(midi, reference));
+    return !useInstrumentMap || mappedNotes == null ? hz(midi, reference) : mappedNotes.optDouble(Integer.toString(midi), hz(midi, reference));
   }
 
   public int tone(int midi, String setting) {
     JSONObject note = calibratedNotes == null ? null : calibratedNotes.optJSONObject(Integer.toString(midi));
-    return note == null ? 100 : note.optInt(setting, 100);
+    JSONObject factory = factoryNotes == null ? null : factoryNotes.optJSONObject(Integer.toString(midi));
+    int defaultValue = setting.equals("upperPartials") && midi >= 21 && midi < 48
+        ? Math.max(50, 50 + (midi - 44) * 12) : 100;
+    int baseline = factory == null ? defaultValue : factory.optInt(setting, defaultValue);
+    return note == null ? baseline : note.optInt(setting, baseline);
   }
 
   public void refreshTuningFiles() {
@@ -169,6 +179,67 @@ public final class Model {
       mappedNotes = instrumentMap.isEmpty() ? null : TuningFiles.parse(instrumentMap, TuningFiles.MAP);
       calibratedNotes = forkCalibration.isEmpty() ? null : TuningFiles.parse(forkCalibration, TuningFiles.CALIBRATION);
     } catch (Exception invalid) { throw new IllegalArgumentException("Invalid Stroik tuning file", invalid); }
+  }
+
+  String resultDeviation(double hertz, double cents) {
+    String inHertz = String.format(locale(), t("%+.1f herca", "%+.1f hertz"), hertz);
+    String inCents = String.format(locale(), t("%+.1f centy", "%+.1f cents"), cents);
+    switch (resultUnits) {
+      case 0: return inCents;
+      case 2: return inCents + ", " + inHertz;
+      case 3: return inHertz + ", " + inCents;
+      default: return inHertz;
+    }
+  }
+
+  int effectiveInterval() {
+    if (interval != 3) return interval;
+    int index = orderNotes().indexOf(base());
+    return index >= 0 && (index + 1) % 5 == 0 && base() <= 101 ? 1 : 0;
+  }
+
+  List<Integer> navigableNotes() {
+    List<Integer> notes = orderNotes();
+    if (method != 1 && (interval == 1 || interval == 2))
+      notes.removeIf(midi -> midi > 108 - semitones() && midi != base());
+    return notes;
+  }
+
+  List<Integer> orderNotes() {
+    List<Integer> notes = new ArrayList<>();
+    if (strings()) {
+      for (int midi : stringsMidi()) notes.add(midi);
+    } else if (order == 0 || instrument != 0) {
+      for (int midi = anchor; midi <= 108; midi++) notes.add(midi);
+    } else {
+      notes.add(anchor);
+      int step = order == 2 ? 2 : 1;
+      for (int first = 1; first <= 88; first += 5)
+        for (int dir : new int[] {1, -1})
+          for (int i = first; i < first + 5; i++) {
+            int midi = anchor + dir * i * step;
+            if (midi >= 21 && midi <= 108) notes.add(midi);
+          }
+    }
+    return notes;
+  }
+
+  static int parseNote(String text) {
+    java.util.regex.Matcher note = java.util.regex.Pattern.compile("([A-Ha-h])([#♯b♭]?)([0-8])")
+        .matcher(text.trim());
+    if (!note.matches()) return -1;
+    int pitch = switch (note.group(1).toUpperCase(Locale.ROOT)) {
+      case "C" -> 0;
+      case "D" -> 2;
+      case "E" -> 4;
+      case "F" -> 5;
+      case "G" -> 7;
+      case "A" -> 9;
+      default -> 11;
+    };
+    pitch += switch (note.group(2)) { case "#", "♯" -> 1; case "b", "♭" -> -1; default -> 0; };
+    int midi = 12 * (Integer.parseInt(note.group(3)) + 1) + pitch;
+    return midi >= 21 && midi <= 108 ? midi : -1;
   }
 
   public int semitones() {
@@ -221,7 +292,7 @@ public final class Model {
 
   public int move(int direction) {
     if (direction != -1 && direction != 1) throw new IllegalArgumentException("Direction");
-    int highest = method == 1 || interval == 0 ? 108 : 108 - semitones();
+    int highest = method == 1 || interval == 0 || interval == 3 ? 108 : 108 - semitones();
     if (strings()) {
       int[] n = stringsMidi();
       for (int i = 0; i < n.length; i++)
@@ -236,19 +307,11 @@ public final class Model {
               && base() + direction <= highest
           ? base() + direction
           : base();
-    List<Integer> p = new ArrayList<>();
-    p.add(anchor);
-    int step = order == 2 ? 2 : 1;
-    for (int first = 1; first <= 88; first += 5)
-      for (int dir : new int[] {1, -1})
-        for (int i = first; i < first + 5; i++) {
-          int v = anchor + dir * i * step;
-          if (v >= 21 && v <= 108) p.add(v);
-        }
-    int at = p.indexOf(base());
+    List<Integer> notes = orderNotes();
+    int at = notes.indexOf(base());
     if (at >= 0)
-      for (int i = at + direction; i >= 0 && i < p.size(); i += direction)
-        if (p.get(i) <= highest) return p.get(i);
+      for (int i = at + direction; i >= 0 && i < notes.size(); i += direction)
+        if (notes.get(i) <= highest) return notes.get(i);
     return base();
   }
 
@@ -390,12 +453,9 @@ public final class Model {
             "Strikes that are too weak or too strong can cause inaccurate readings. Play evenly"
                 + " without clipping. ");
     if (instrument == 0)
-      return common
-          + t(
-              "Stare pianino powinien ocenić technik przed podnoszeniem naciągu. Zacznij od środka,"
-                  + " zmieniaj strony równomiernie i wytłumiaj pozostałe struny.",
-              "Have an old piano assessed before raising tension. Start near the middle, work"
-                  + " evenly on both sides and mute unused strings.") + " " + t(
+      return common + t(
+          "Wskazówka dla początkujących: przy starych pianinach i fortepianach zwykle zaczyna się od środka i pracuje równomiernie w obie strony, np. kwintami. Klucz ustaw możliwie pionowo, na godzinę dwunastą. Wsuń kołek jak najgłębiej w gniazdo klucza, aby klucz znajdował się blisko ramy. Użyj klinów do wytłumienia bocznych strun. Najpierw nastrój środkową, potem boczne, aż ustanie dudnienie. Praca przy napiętych strunach może uszkodzić instrument lub zranić. Stan zabytkowego instrumentu powinien ocenić technik. Stroik pokazuje strój matematyczny bez indywidualnego rozciągania oktaw.",
+          "Beginner guidance: on older pianos, work from the middle evenly toward both ends, for example in fifths. Keep the tuning lever as upright as practical, at twelve o'clock. Seat the pin fully in the lever socket so the lever is close to the frame. Use wedges to mute the outer strings. Tune the middle string first, then the outer strings until beating stops. High-tension strings can damage the instrument or cause injury. Ask a technician to assess a historic piano. Stroik shows mathematical tuning without individual octave stretching.") + " " + t(
               "Dla pianin powojennych A4 = 440 Hz to zwykły punkt odniesienia. Pianina przedwojenne mogły być przewidziane do niższego stroju. Przed podniesieniem stroju starego pianina poproś technika o ocenę instrumentu.",
               "A4 = 440 Hz is the usual reference for postwar pianos. Prewar pianos may have been designed for lower pitch. Ask a technician to assess an old piano before raising its pitch.");
     return common
@@ -438,6 +498,13 @@ public final class Model {
   public static Model from(JSONObject j) throws Exception {
     if (j.optInt("profileVersion", 1) != 1) throw new IllegalArgumentException("Profile version");
     Model m = new Model();
+    if (j.length() != 0) {
+      // Preserve the former defaults when reading a sparse legacy profile.
+      if (!j.has("method")) m.method = 0;
+      if (!j.has("target")) m.target = 67;
+      if (!j.has("anchor")) m.anchor = 67;
+      if (!j.has("resultUnits")) m.resultUnits = 3;
+    }
     for (java.lang.reflect.Field f : Model.class.getFields()) {
       if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || !j.has(f.getName())) continue;
       if (f.getType() == String.class) f.set(m, j.getString(f.getName()));
@@ -465,7 +532,8 @@ public final class Model {
         || order < 0
         || order > 2
         || interval < 0
-        || interval > 2
+        || interval > 3
+        || resultUnits < 0 || resultUnits > 3
         || pairMode < 0
         || pairMode > 1
         || sensitivity < 0
